@@ -123,9 +123,9 @@ const extensions = [
     HTMLAttributes: {
       class: css({
         '&:not(ul ul):not([data-node-view] &)': {
-          paddingLeft: '[calc((100% - 720px) / 2 + 15px)]',
+          paddingLeft: { lg: '[calc((100% - 720px) / 2 + 22px)]' },
         }, // ul 루트 노드
-        paddingLeft: '15px',
+        paddingLeft: '22px',
         listStylePosition: 'outside',
         listStyleType: 'disc',
         'ul ul&': { listStyleType: 'circle' },
@@ -143,16 +143,16 @@ const extensions = [
     HTMLAttributes: {
       class: css({
         '&:not(ol ol):not([data-node-view] &)': {
-          paddingLeft: '[calc((100% - 720px) / 2 + 15px)]',
+          paddingLeft: { base: '18px', lg: '[calc((100% - 720px) / 2 + 18px)]' },
         }, // ol 루트 노드
-        paddingLeft: '15px',
+        paddingLeft: '22px',
         listStylePosition: 'outside',
         listStyleType: 'decimal',
         'ol ol&': { listStyleType: 'lower-alpha' },
         '& li + li': {
           marginTop: '4px',
         },
-        '& p + ul': {
+        '& p + ol': {
           marginTop: '4px',
         },
         '& p': { paddingLeft: '4px' },
