@@ -789,5 +789,6 @@ enum UserState {
 
 type UserWithAccessToken {
   accessToken: String!
+  isNewUser: Boolean!
   user: User!
 }

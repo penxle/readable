@@ -13,6 +13,7 @@
     mutation SSOGooglePage_AuthorizeSingleSignOn_Mutation($input: AuthorizeSingleSignOnInput!) {
       authorizeSingleSignOn(input: $input) {
         accessToken
+        isNewUser
       }
     }
   `);
@@ -26,6 +27,7 @@
 
     mixpanel.track('user:login:success', {
       provider: SingleSignOnProvider.GOOGLE,
+      isNewUser: resp.isNewUser,
     });
 
     await goto('/', {

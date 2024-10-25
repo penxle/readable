@@ -37,6 +37,7 @@ const UserWithAccessToken = builder.simpleObject('UserWithAccessToken', {
   fields: (t) => ({
     user: t.field({ type: User }),
     accessToken: t.string(),
+    isNewUser: t.boolean(),
   }),
 });
 
@@ -95,6 +96,7 @@ builder.mutationFields((t) => ({
         return {
           user: user.id,
           accessToken: await createSessionAndReturnAccessToken(user.id),
+          isNewUser: false,
         };
       }
 
@@ -113,6 +115,7 @@ builder.mutationFields((t) => ({
       return {
         user: newUser.id,
         accessToken: await createSessionAndReturnAccessToken(newUser.id),
+        isNewUser: true,
       };
     },
   }),
@@ -140,6 +143,7 @@ builder.mutationFields((t) => ({
         return {
           user: sso.userId,
           accessToken: await createSessionAndReturnAccessToken(sso.userId),
+          isNewUser: false,
         };
       }
 
@@ -176,6 +180,7 @@ builder.mutationFields((t) => ({
       return {
         user: user.id,
         accessToken: await createSessionAndReturnAccessToken(user.id),
+        isNewUser: true,
       };
     },
   }),

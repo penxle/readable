@@ -12,6 +12,7 @@
     mutation AuthEmailPage_AuthorizeEmail_Mutation($input: AuthorizeEmailInput!) {
       authorizeEmail(input: $input) {
         accessToken
+        isNewUser
       }
     }
   `);
@@ -25,6 +26,7 @@
 
     mixpanel.track('user:login:success', {
       provider: 'EMAIL',
+      isNewUser: resp.isNewUser,
     });
 
     await goto('/', {
