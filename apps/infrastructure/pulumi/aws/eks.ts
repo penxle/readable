@@ -27,7 +27,7 @@ const adminRole = new aws.iam.Role('admin@eks', {
 
 export const cluster = new aws.eks.Cluster('readable', {
   name: 'readable',
-  version: '1.30',
+  version: '1.31',
   roleArn: clusterRole.arn,
 
   bootstrapSelfManagedAddons: false,
