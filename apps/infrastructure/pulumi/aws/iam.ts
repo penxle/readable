@@ -74,6 +74,27 @@ new aws.iam.UserPolicy('developer@team', {
   },
 });
 
+const adminRole = new aws.iam.Role('admin@team', {
+  name: 'admin@team',
+  assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({
+    AWS: '886436942314',
+  }),
+});
+
+new aws.iam.RolePolicy('admin@team', {
+  role: adminRole.name,
+  policy: {
+    Version: '2012-10-17',
+    Statement: [
+      {
+        Effect: 'Allow',
+        Action: '*',
+        Resource: '*',
+      },
+    ],
+  },
+});
+
 const developerAccessKey = new aws.iam.AccessKey('developer@team', {
   user: developer.name,
 });
