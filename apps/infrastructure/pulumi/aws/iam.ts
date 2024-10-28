@@ -2,45 +2,22 @@ import * as aws from '@pulumi/aws';
 import * as pulumi from '@pulumi/pulumi';
 import { buckets } from '$aws/s3';
 
-const admin = new aws.iam.Group('admin', {
-  name: 'admin',
+const admin = new aws.iam.Role('admin@team', {
+  name: 'admin@team',
+  assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({
+    AWS: '886436942314',
+  }),
 });
 
-new aws.iam.GroupPolicy('admin', {
-  group: admin.name,
+new aws.iam.RolePolicy('admin@team', {
+  role: admin.name,
   policy: {
     Version: '2012-10-17',
     Statement: [
       {
         Effect: 'Allow',
-        Action: ['*'],
-        Resource: ['*'],
-      },
-    ],
-  },
-});
-
-const team = new aws.iam.Group('team', {
-  name: 'team',
-});
-
-new aws.iam.GroupPolicy('team', {
-  group: team.name,
-  policy: {
-    Version: '2012-10-17',
-    Statement: [
-      {
-        Effect: 'Allow',
-        Action: [
-          'iam:GetUser',
-          'iam:ChangePassword',
-          'iam:GetAccessKeyLastUsed',
-          'iam:ListAccessKeys',
-          'iam:CreateAccessKey',
-          'iam:UpdateAccessKey',
-          'iam:DeleteAccessKey',
-        ],
-        Resource: 'arn:aws:iam::*:user/${aws:username}',
+        Action: '*',
+        Resource: '*',
       },
     ],
   },
@@ -74,27 +51,6 @@ new aws.iam.UserPolicy('developer@team', {
   },
 });
 
-const adminRole = new aws.iam.Role('admin@team', {
-  name: 'admin@team',
-  assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({
-    AWS: '886436942314',
-  }),
-});
-
-new aws.iam.RolePolicy('admin@team', {
-  role: adminRole.name,
-  policy: {
-    Version: '2012-10-17',
-    Statement: [
-      {
-        Effect: 'Allow',
-        Action: '*',
-        Resource: '*',
-      },
-    ],
-  },
-});
-
 const developerAccessKey = new aws.iam.AccessKey('developer@team', {
   user: developer.name,
 });
@@ -112,6 +68,7 @@ const datadogIntegration = new aws.iam.Role('integration@datadog', {
   assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({
     AWS: '417141415827',
   }),
+  managedPolicyArns: [aws.iam.ManagedPolicy.SecurityAudit],
 });
 
 new aws.iam.RolePolicy('integration@datadog', {
@@ -141,6 +98,8 @@ new aws.iam.RolePolicy('integration@datadog', {
           'dynamodb:List*',
           'dynamodb:Describe*',
           'ec2:Describe*',
+          'ec2:GetTransitGatewayPrefixListReferences',
+          'ec2:SearchTransitGatewayRoutes',
           'ecs:Describe*',
           'ecs:List*',
           'elasticache:Describe*',
@@ -213,6 +172,43 @@ new aws.iam.RolePolicy('integration@datadog', {
           'tag:GetTagValues',
           'xray:BatchGetTraces',
           'xray:GetTraceSummaries',
+        ],
+        Effect: 'Allow',
+        Resource: '*',
+      },
+      {
+        Action: [
+          'application-autoscaling:DescribeScalingActivities',
+          'application-autoscaling:DescribeScalingPolicies',
+          'athena:ListWorkGroups',
+          'backup:ListRecoveryPointsByBackupVault',
+          'bcm-data-exports:GetExport',
+          'bcm-data-exports:ListExports',
+          'cassandra:Select',
+          'cur:DescribeReportDefinitions',
+          'ec2:GetSnapshotBlockPublicAccessState',
+          'glacier:GetVaultNotifications',
+          'glue:ListRegistries',
+          'iam:GenerateCredentialReport',
+          'iam:GetAccountAuthorizationDetails',
+          'iam:GetAccountSummary',
+          'iam:GetPolicyVersion',
+          'iam:ListVirtualMFADevices',
+          'kafka:ListClustersV2',
+          'lightsail:GetInstancePortStates',
+          's3:ListAccessGrants',
+          'savingsplans:DescribeSavingsPlanRates',
+          'savingsplans:DescribeSavingsPlans',
+          'sqs:getqueueattributes',
+          'timestream:DescribeEndpoints',
+          'timestream:ListTables',
+          'waf-regional:ListRuleGroups',
+          'waf-regional:ListRules',
+          'waf:ListRuleGroups',
+          'waf:ListRules',
+          'wafv2:GetIPSet',
+          'wafv2:GetRegexPatternSet',
+          'wafv2:GetRuleGroup',
         ],
         Effect: 'Allow',
         Resource: '*',
