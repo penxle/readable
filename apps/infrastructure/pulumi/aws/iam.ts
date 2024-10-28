@@ -259,6 +259,11 @@ new aws.iam.RolePolicy('actions@github', {
   },
 });
 
+export const roles = {
+  admin,
+  actions: githubActionsRole,
+};
+
 export const outputs = {
   AWS_IAM_DEVELOPER_ACCESS_KEY_ID: developerAccessKey.id,
   AWS_IAM_DEVELOPER_SECRET_ACCESS_KEY: developerAccessKey.secret,

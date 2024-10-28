@@ -100,7 +100,7 @@ jobs:
           tags: tag:github-actions
 
       - name: Update kubeconfig
-        run: aws eks update-kubeconfig --name readable --role-arn=arn:aws:iam::637423633734:role/admin@eks
+        run: aws eks update-kubeconfig --name readable
 
       - name: Apply infrastructure
         uses: pulumi/actions@v5

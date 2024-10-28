@@ -1,5 +1,6 @@
 import * as aws from '@pulumi/aws';
 import * as tls from '@pulumi/tls';
+import { roles } from '$aws/iam';
 import { securityGroups, subnets } from '$aws/vpc';
 
 const clusterRole = new aws.iam.Role('cluster@eks', {
@@ -16,13 +17,6 @@ const fargateRole = new aws.iam.Role('fargate@eks', {
     Service: 'eks-fargate-pods.amazonaws.com',
   }),
   managedPolicyArns: [aws.iam.ManagedPolicy.AmazonEKSFargatePodExecutionRolePolicy],
-});
-
-const adminRole = new aws.iam.Role('admin@eks', {
-  name: 'admin@eks',
-  assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({
-    AWS: 'arn:aws:iam::637423633734:root',
-  }),
 });
 
 export const cluster = new aws.eks.Cluster('readable', {
@@ -104,17 +98,37 @@ new aws.eks.AccessEntry('fargate@eks', {
   type: 'FARGATE_LINUX',
 });
 
-new aws.eks.AccessEntry('admin@eks', {
+const admin = new aws.eks.AccessEntry('admin@team', {
   clusterName: cluster.name,
-  principalArn: adminRole.arn,
+  principalArn: roles.admin.arn,
 });
 
-new aws.eks.AccessPolicyAssociation('admin@eks', {
+new aws.eks.AccessPolicyAssociation(
+  'admin@team',
+  {
+    clusterName: cluster.name,
+    principalArn: roles.admin.arn,
+    policyArn: 'arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy',
+    accessScope: { type: 'cluster' },
+  },
+  { dependsOn: [admin] },
+);
+
+const actions = new aws.eks.AccessEntry('actions@github', {
   clusterName: cluster.name,
-  principalArn: adminRole.arn,
-  policyArn: 'arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy',
-  accessScope: { type: 'cluster' },
+  principalArn: roles.actions.arn,
 });
+
+new aws.eks.AccessPolicyAssociation(
+  'actions@github',
+  {
+    clusterName: cluster.name,
+    principalArn: roles.actions.arn,
+    policyArn: 'arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy',
+    accessScope: { type: 'cluster' },
+  },
+  { dependsOn: [actions] },
+);
 
 export const fargate = new aws.eks.FargateProfile('karpenter', {
   fargateProfileName: 'karpenter',
