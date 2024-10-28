@@ -10,6 +10,7 @@
   export let editor: Editor;
   export let pos: number;
   export let transition = false;
+  export let menuContainerEl: HTMLElement;
 
   let nodeId: string;
 
@@ -31,17 +32,15 @@
       return;
     }
 
-    const element = node.children[offset];
+    const element = node.children[offset] as HTMLElement;
     if (!element) {
       return;
     }
 
-    const rect = element.getBoundingClientRect();
-
-    top = rect.top;
-    left = rect.left;
-    width = rect.width;
-    height = rect.height;
+    top = element.offsetTop;
+    left = element.offsetLeft;
+    width = element.offsetWidth;
+    height = element.offsetHeight;
   };
 
   $: {
@@ -68,8 +67,8 @@
     style:left={`${left}px`}
     style:width={`${width}px`}
     style:height={`${height}px`}
-    class={flex({ gap: '8px', position: 'absolute', pointerEvents: 'none', zIndex: '50' })}
-    use:portal
+    class={flex({ gap: '8px', position: 'absolute', pointerEvents: 'none' })}
+    use:portal={menuContainerEl}
     transition:fade|global={{ duration: transition ? 150 : 0, easing: sineIn }}
   >
     <div class={flex({ flex: '1', justify: 'flex-end', align: 'center', height: '[1lh]' })}>

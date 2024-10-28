@@ -158,6 +158,7 @@
   let editor: Editor | undefined;
 
   let titleEl: HTMLElement;
+  let menuContainerEl: HTMLElement;
 
   const createStore = (name: 'title' | 'subtitle'): Writable<string> => {
     const text = doc.getText(name);
@@ -389,55 +390,58 @@
       {JSON.stringify(editor.state.doc.resolve(editor.state.selection.$from.start(1)).node().toJSON())}
     {/if} -->
 
-    <TiptapEditor
-      style={css.raw({
-        flex: '1',
-        color: 'text.primary',
-        paddingBottom: '128px',
+    <div class={css({ position: 'relative', flexGrow: '1' })}>
+      <TiptapEditor
+        style={css.raw({
+          color: 'text.primary',
+          paddingBottom: '128px',
 
-        minWidth: '720px',
-        width: 'full',
-
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-
-        '& > *': {
+          minWidth: '720px',
           width: 'full',
-          overflowX: 'auto',
-          paddingX: '[calc((100% - 720px) / 2)]',
-        },
-      })}
-      {awareness}
-      {doc}
-      handleEmbed={async (url, noCache = false) => {
-        return await unfurlEmbed({ url, noCache });
-      }}
-      handleFileUpload={async (file) => {
-        const path = await uploadBlob(file);
-        return await persistBlobAsFile({ path });
-      }}
-      handleImageUpload={async (file) => {
-        const path = await uploadBlob(file);
-        return await persistBlobAsImage({ path });
-      }}
-      handleLink={async (url) => {
-        const resp = await unfurlLink({ siteId: $query.page.site.id, url });
-        return resp.__typename === 'Page'
-          ? {
-              name: resp.title,
-              href: `page:///${resp.id}`,
-              host: $page.url.origin,
-              url: `/${$query.page.site.team.id}/${$query.page.site.id}/${resp.id}`,
-            }
-          : { href: resp.url };
-      }}
-      bind:editor
-      on:file={(e) => handleFiles(e.detail.pos, e.detail.files)}
-    />
+
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+
+          '& > *': {
+            width: 'full',
+            overflowX: 'auto',
+            paddingX: '[calc((100% - 720px) / 2)]',
+          },
+        })}
+        {awareness}
+        {doc}
+        handleEmbed={async (url, noCache = false) => {
+          return await unfurlEmbed({ url, noCache });
+        }}
+        handleFileUpload={async (file) => {
+          const path = await uploadBlob(file);
+          return await persistBlobAsFile({ path });
+        }}
+        handleImageUpload={async (file) => {
+          const path = await uploadBlob(file);
+          return await persistBlobAsImage({ path });
+        }}
+        handleLink={async (url) => {
+          const resp = await unfurlLink({ siteId: $query.page.site.id, url });
+          return resp.__typename === 'Page'
+            ? {
+                name: resp.title,
+                href: `page:///${resp.id}`,
+                host: $page.url.origin,
+                url: `/${$query.page.site.team.id}/${$query.page.site.id}/${resp.id}`,
+              }
+            : { href: resp.url };
+        }}
+        bind:editor
+        on:file={(e) => handleFiles(e.detail.pos, e.detail.files)}
+      />
+
+      <div bind:this={menuContainerEl} />
+    </div>
   </div>
 </div>
 
 {#if editor}
-  <MenuHandler {$query} {editor} />
+  <MenuHandler {$query} {editor} {menuContainerEl} />
 {/if}
