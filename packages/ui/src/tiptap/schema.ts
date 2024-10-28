@@ -119,46 +119,26 @@ const extensions = [
       ];
     },
   }),
-  BulletList.configure({
-    HTMLAttributes: {
-      class: css({
-        '&:not(ul ul):not([data-node-view] &)': {
-          paddingLeft: { lg: '[calc((100% - 720px) / 2 + 22px)]' },
-        }, // ul 루트 노드
-        paddingLeft: '22px',
-        listStylePosition: 'outside',
-        listStyleType: 'disc',
-        'ul ul&': { listStyleType: 'circle' },
-        '& li + li': {
-          marginTop: '4px',
-        },
-        '& p + ul': {
-          marginTop: '4px',
-        },
-        // '& p': { paddingLeft: '4px' },
-      }),
+  BulletList.extend({
+    renderHTML({ HTMLAttributes }) {
+      return [
+        'div',
+        [
+          'ul',
+          mergeAttributes(HTMLAttributes, {
+            class: css({
+              paddingLeft: '15px',
+              listStylePosition: 'outside',
+              listStyleType: 'disc',
+              'ul ul&': { listStyleType: 'circle' },
+            }),
+          }),
+          0,
+        ],
+      ];
     },
   }),
-  OrderedList.configure({
-    HTMLAttributes: {
-      class: css({
-        '&:not(ol ol):not([data-node-view] &)': {
-          paddingLeft: { base: '18px', lg: '[calc((100% - 720px) / 2 + 18px)]' },
-        }, // ol 루트 노드
-        paddingLeft: '22px',
-        listStylePosition: 'outside',
-        listStyleType: 'decimal',
-        'ol ol&': { listStyleType: 'lower-alpha' },
-        '& li + li': {
-          marginTop: '4px',
-        },
-        '& p + ol': {
-          marginTop: '4px',
-        },
-        '& p': { paddingLeft: '4px' },
-      }),
-    },
-  }).extend({
+  OrderedList.extend({
     addAttributes() {
       return {
         start: {
@@ -173,9 +153,39 @@ const extensions = [
         },
       };
     },
+
+    renderHTML({ HTMLAttributes }) {
+      return [
+        'div',
+        [
+          'ol',
+          mergeAttributes(HTMLAttributes, {
+            class: css({
+              paddingLeft: '15px',
+              listStylePosition: 'outside',
+              listStyleType: 'decimal',
+              'ol ol&': { listStyleType: 'lower-alpha' },
+            }),
+          }),
+          0,
+        ],
+      ];
+    },
   }),
   ListItem.extend({
     content: 'paragraph (paragraph | bulletList | orderedList)*',
+
+    renderHTML({ HTMLAttributes }) {
+      return [
+        'li',
+        mergeAttributes(HTMLAttributes, {
+          class: css({
+            marginTop: '4px',
+          }),
+        }),
+        0,
+      ];
+    },
   }),
   extendNodeToNodeView(Table, TableComponent).configure({
     resizable: true,
