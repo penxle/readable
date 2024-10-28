@@ -12,5 +12,6 @@ new k8s.storage.v1.StorageClass('efs', {
     provisioningMode: 'efs-ap',
     fileSystemId: filesystems.eks.id,
     directoryPerms: '700',
+    ensureUniqueDirectory: 'true',
   },
 });

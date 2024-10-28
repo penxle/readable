@@ -7,7 +7,7 @@ const password = new random.RandomPassword('meilisearch', {
   special: false,
 });
 
-const pvc = new k8s.core.v1.PersistentVolumeClaim('meilisearch', {
+const pvc = new k8s.core.v1.PersistentVolumeClaim('meilisearch@infra', {
   metadata: {
     name: 'meilisearch',
     namespace: namespace.metadata.name,
@@ -26,7 +26,7 @@ const pvc = new k8s.core.v1.PersistentVolumeClaim('meilisearch', {
 
 new k8s.helm.v3.Chart('meilisearch', {
   chart: 'meilisearch',
-  version: '0.10.1',
+  version: '0.10.2',
   namespace: namespace.metadata.name,
   fetchOpts: {
     repo: 'https://meilisearch.github.io/meilisearch-kubernetes',

@@ -42,56 +42,6 @@ export const cluster = new aws.eks.Cluster('readable', {
   },
 });
 
-new aws.eks.Addon('coredns', {
-  clusterName: cluster.name,
-  addonName: 'coredns',
-  addonVersion: aws.eks.getAddonVersionOutput({
-    addonName: 'coredns',
-    kubernetesVersion: cluster.version,
-    mostRecent: true,
-  }).version,
-});
-
-new aws.eks.Addon('kube-proxy', {
-  clusterName: cluster.name,
-  addonName: 'kube-proxy',
-  addonVersion: aws.eks.getAddonVersionOutput({
-    addonName: 'kube-proxy',
-    kubernetesVersion: cluster.version,
-    mostRecent: true,
-  }).version,
-});
-
-new aws.eks.Addon('vpc-cni', {
-  clusterName: cluster.name,
-  addonName: 'vpc-cni',
-  addonVersion: aws.eks.getAddonVersionOutput({
-    addonName: 'vpc-cni',
-    kubernetesVersion: cluster.version,
-    mostRecent: true,
-  }).version,
-});
-
-new aws.eks.Addon('aws-efs-csi-driver', {
-  clusterName: cluster.name,
-  addonName: 'aws-efs-csi-driver',
-  addonVersion: aws.eks.getAddonVersionOutput({
-    addonName: 'aws-efs-csi-driver',
-    kubernetesVersion: cluster.version,
-    mostRecent: true,
-  }).version,
-});
-
-new aws.eks.Addon('eks-pod-identity-agent', {
-  clusterName: cluster.name,
-  addonName: 'eks-pod-identity-agent',
-  addonVersion: aws.eks.getAddonVersionOutput({
-    addonName: 'eks-pod-identity-agent',
-    kubernetesVersion: cluster.version,
-    mostRecent: true,
-  }).version,
-});
-
 new aws.eks.AccessEntry('fargate@eks', {
   clusterName: cluster.name,
   principalArn: fargateRole.arn,
@@ -148,4 +98,100 @@ export const oidcProvider = new aws.iam.OpenIdConnectProvider('cluster@eks', {
   url: cluster.identities[0].oidcs[0].issuer,
   clientIdLists: ['sts.amazonaws.com'],
   thumbprintLists: [certificate.certificates[0].sha1Fingerprint],
+});
+
+const awsEfsCsiDriverRole = new aws.iam.Role('aws-efs-csi-driver@eks', {
+  name: 'aws-efs-csi-driver@eks',
+  assumeRolePolicy: {
+    Version: '2012-10-17',
+    Statement: [
+      {
+        Effect: 'Allow',
+        Principal: { Federated: oidcProvider.arn },
+        Action: 'sts:AssumeRoleWithWebIdentity',
+        Condition: oidcProvider.url.apply((url) => ({
+          StringEquals: {
+            [`${url}:aud`]: 'sts.amazonaws.com',
+            [`${url}:sub`]: 'system:serviceaccount:kube-system:efs-csi-controller-sa',
+          },
+        })),
+      },
+    ],
+  },
+  // spell-checker:disable-next-line
+  managedPolicyArns: [aws.iam.ManagedPolicy.AmazonEFSCSIDriverPolicy],
+});
+
+const vpcCniRole = new aws.iam.Role('vpc-cni@eks', {
+  name: 'vpc-cni@eks',
+  assumeRolePolicy: {
+    Version: '2012-10-17',
+    Statement: [
+      {
+        Effect: 'Allow',
+        Principal: { Federated: oidcProvider.arn },
+        Action: 'sts:AssumeRoleWithWebIdentity',
+        Condition: oidcProvider.url.apply((url) => ({
+          StringEquals: {
+            [`${url}:aud`]: 'sts.amazonaws.com',
+            [`${url}:sub`]: 'system:serviceaccount:kube-system:aws-node',
+          },
+        })),
+      },
+    ],
+  },
+  // spell-checker:disable-next-line
+  managedPolicyArns: [aws.iam.ManagedPolicy.AmazonEKS_CNI_Policy],
+});
+
+new aws.eks.Addon('coredns', {
+  clusterName: cluster.name,
+  addonName: 'coredns',
+  addonVersion: aws.eks.getAddonVersionOutput({
+    addonName: 'coredns',
+    kubernetesVersion: cluster.version,
+    mostRecent: true,
+  }).version,
+});
+
+new aws.eks.Addon('kube-proxy', {
+  clusterName: cluster.name,
+  addonName: 'kube-proxy',
+  addonVersion: aws.eks.getAddonVersionOutput({
+    addonName: 'kube-proxy',
+    kubernetesVersion: cluster.version,
+    mostRecent: true,
+  }).version,
+});
+
+new aws.eks.Addon('vpc-cni', {
+  clusterName: cluster.name,
+  addonName: 'vpc-cni',
+  addonVersion: aws.eks.getAddonVersionOutput({
+    addonName: 'vpc-cni',
+    kubernetesVersion: cluster.version,
+    mostRecent: true,
+  }).version,
+  serviceAccountRoleArn: vpcCniRole.arn,
+});
+
+new aws.eks.Addon('aws-efs-csi-driver', {
+  clusterName: cluster.name,
+  addonName: 'aws-efs-csi-driver',
+  addonVersion: aws.eks.getAddonVersionOutput({
+    addonName: 'aws-efs-csi-driver',
+    kubernetesVersion: cluster.version,
+    mostRecent: true,
+  }).version,
+  serviceAccountRoleArn: awsEfsCsiDriverRole.arn,
+});
+
+new aws.eks.Addon('eks-pod-identity-agent', {
+  clusterName: cluster.name,
+  addonName: 'eks-pod-identity-agent',
+  addonVersion: aws.eks.getAddonVersionOutput({
+    addonName: 'eks-pod-identity-agent',
+    kubernetesVersion: cluster.version,
+    mostRecent: true,
+  }).version,
 });
