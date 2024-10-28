@@ -9,7 +9,6 @@
   import type { Editor_CommentPopover_pageContentComment, Editor_MenuHandler_query } from '$graphql';
 
   export let editor: Editor;
-  export let menuContainerEl: HTMLElement;
   let _query: Editor_MenuHandler_query;
   export { _query as $query };
 
@@ -88,7 +87,7 @@
 <svelte:window on:pointermove={handlePointerMove} />
 
 {#if pos !== null}
-  <VirtualElement {editor} {menuContainerEl} {pos} transition>
+  <VirtualElement {editor} {pos} transition>
     <Floating slot="left" {editor} {pos} />
     <svelte:fragment slot="right">
       {#if !commentsByPos.has(pos)}
@@ -99,7 +98,7 @@
 {/if}
 
 {#each commentsByPos.entries() as [pos, comments], index (index)}
-  <VirtualElement {editor} {menuContainerEl} {pos}>
+  <VirtualElement {editor} {pos}>
     <Comment slot="right" commentCount={comments.length} {pos} on:click={(e) => (commentOpen = e.detail)} />
   </VirtualElement>
 {/each}

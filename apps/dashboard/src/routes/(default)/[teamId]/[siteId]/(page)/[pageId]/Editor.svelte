@@ -158,7 +158,6 @@
   let editor: Editor | undefined;
 
   let titleEl: HTMLElement;
-  let menuContainerEl: HTMLElement;
 
   const createStore = (name: 'title' | 'subtitle'): Writable<string> => {
     const text = doc.getText(name);
@@ -437,11 +436,11 @@
         on:file={(e) => handleFiles(e.detail.pos, e.detail.files)}
       />
 
-      <div bind:this={menuContainerEl} />
+      <div>
+        {#if editor}
+          <MenuHandler {$query} {editor} />
+        {/if}
+      </div>
     </div>
   </div>
 </div>
-
-{#if editor}
-  <MenuHandler {$query} {editor} {menuContainerEl} />
-{/if}

@@ -1,7 +1,6 @@
 <script lang="ts">
   import { css } from '@readable/styled-system/css';
   import { flex } from '@readable/styled-system/patterns';
-  import { portal } from '@readable/ui/actions';
   import { Editor } from '@tiptap/core';
   import { onMount } from 'svelte';
   import { sineIn } from 'svelte/easing';
@@ -10,7 +9,6 @@
   export let editor: Editor;
   export let pos: number;
   export let transition = false;
-  export let menuContainerEl: HTMLElement;
 
   let nodeId: string;
 
@@ -68,7 +66,6 @@
     style:width={`${width}px`}
     style:height={`${height}px`}
     class={flex({ gap: '8px', position: 'absolute', pointerEvents: 'none' })}
-    use:portal={menuContainerEl}
     transition:fade|global={{ duration: transition ? 150 : 0, easing: sineIn }}
   >
     <div class={flex({ flex: '1', justify: 'flex-end', align: 'center', height: '[1lh]' })}>
