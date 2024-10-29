@@ -14,3 +14,18 @@ declare global {
     // interface Platform {}
   }
 }
+
+declare module 'svelte' {
+  type Context = {
+    // see routes/+layout.svelte
+    mobileNavOpen: Writable<boolean>;
+    searchBarOpen: Writable<boolean>;
+    hasCmd: Writable<boolean>;
+  };
+
+  export function getContext<T>(key: T extends keyof Context ? T : never): Context[T];
+
+  export function setContext<T>(key: T extends keyof Context ? T : never, context: Context[T]): void;
+
+  export function getAllContexts(): Map<keyof Context, Context[keyof Context]>;
+}

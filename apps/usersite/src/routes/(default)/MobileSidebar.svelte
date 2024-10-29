@@ -3,14 +3,15 @@
   import { flex } from '@readable/styled-system/patterns';
   import { Icon } from '@readable/ui/components';
   import qs from 'query-string';
+  import { getContext } from 'svelte';
   import { fade, fly } from 'svelte/transition';
   import CloseIcon from '~icons/lucide/x';
   import ReadableIcon from '~icons/rdbl/readable';
   import { env } from '$env/dynamic/public';
-  import { mobileNavOpen } from '$lib/stores/ui';
 
   export let siteId: string;
   export let siteUrl: string;
+  const mobileNavOpen = getContext('mobileNavOpen');
 </script>
 
 <svelte:window

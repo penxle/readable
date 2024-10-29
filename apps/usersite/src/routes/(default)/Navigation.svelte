@@ -2,12 +2,13 @@
   import { css, cx } from '@readable/styled-system/css';
   import { flex } from '@readable/styled-system/patterns';
   import { Icon } from '@readable/ui/components';
+  import { getContext } from 'svelte';
+  import { writable } from 'svelte/store';
   import ChevronDownIcon from '~icons/lucide/chevron-down';
   import ChevronRightIcon from '~icons/lucide/chevron-right';
   import { beforeNavigate } from '$app/navigation';
   import { page } from '$app/stores';
   import { fragment, graphql } from '$graphql';
-  import { mobileNavOpen, treeOpenState } from '$lib/stores/ui';
   import { pageUrl } from '$lib/utils/url';
   import type { Navigation_publicSite } from '$graphql';
 
@@ -82,6 +83,9 @@
   }
 
   let currentPageId: string;
+  const treeOpenState = writable<Record<string, boolean>>({});
+  const mobileNavOpen = getContext('mobileNavOpen');
+
   $: if (currentSlug) {
     // NOTE: 모바일에서 사이드바를 열 때는 현재 페이지만 트리에서 열도록 함
     if ($mobileNavOpen) {

@@ -3,7 +3,7 @@
   import { center, flex } from '@readable/styled-system/patterns';
   import { HorizontalDivider, Icon } from '@readable/ui/components';
   import * as R from 'remeda';
-  import { tick } from 'svelte';
+  import { getContext, tick } from 'svelte';
   import { writable } from 'svelte/store';
   import SvelteMarkdown from 'svelte-markdown';
   import ChevronLeftIcon from '~icons/lucide/chevron-left';
@@ -14,11 +14,13 @@
   import { beforeNavigate, goto } from '$app/navigation';
   import { page } from '$app/stores';
   import { fragment, graphql } from '$graphql';
-  import { hasCmd, searchBarOpen } from '$lib/stores/ui';
   import { pageUrl } from '$lib/utils/url';
   import AiIcon from './@ai/AiIcon.svelte';
   import AiLoading from './@ai/AiLoading.svelte';
   import type { SearchBar_publicSite } from '$graphql';
+
+  const searchBarOpen = getContext('searchBarOpen');
+  const hasCmd = getContext('hasCmd');
 
   let _publicSite: SearchBar_publicSite;
   export { _publicSite as $publicSite };

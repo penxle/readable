@@ -4,7 +4,7 @@
   import { Icon } from '@readable/ui/components';
   import { getAccessibleTextColor, hexToRgb } from '@readable/ui/utils';
   import qs from 'query-string';
-  import { setContext } from 'svelte';
+  import { getContext, setContext } from 'svelte';
   import { writable } from 'svelte/store';
   import { swipe } from 'svelte-gestures';
   import CommandIcon from '~icons/lucide/command';
@@ -14,7 +14,6 @@
   import { env } from '$env/dynamic/public';
   import { graphql } from '$graphql';
   import { Img } from '$lib/components';
-  import { hasCmd, mobileNavOpen, searchBarOpen } from '$lib/stores/ui';
   import MobileSidebar from './MobileSidebar.svelte';
   import Navigation from './Navigation.svelte';
   import SearchBar from './SearchBar.svelte';
@@ -75,6 +74,10 @@
   const blurEffect = writable(browser ? window.scrollY < blurEffectThreshold : true);
 
   setContext('blurEffect', blurEffect);
+
+  const mobileNavOpen = getContext('mobileNavOpen');
+  const searchBarOpen = getContext('searchBarOpen');
+  const hasCmd = getContext('hasCmd');
 
   function openSearchBar() {
     searchBarOpen.set(true);

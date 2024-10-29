@@ -8,7 +8,6 @@
   import { browser } from '$app/environment';
   import { env } from '$env/dynamic/public';
   import { graphql } from '$graphql';
-  import { mobileNavOpen } from '$lib/stores/ui';
   import Breadcrumb from './Breadcrumb.svelte';
   import Toc from './Toc.svelte';
   import type { Writable } from 'svelte/store';
@@ -45,6 +44,7 @@
   let headings: { level: number; text: string; scrollTop: number }[] = [];
 
   const blurEffect = getContext<Writable<boolean>>('blurEffect');
+  const mobileNavOpen = getContext('mobileNavOpen');
 
   const reportPageView = async (pageId: string) => {
     const { getFingerprint } = await import('$lib/utils/fingerprint');
