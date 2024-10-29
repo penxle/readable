@@ -10,7 +10,7 @@ permissions:
   id-token: write
 
 env:
-  TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+  TURBO_TEAM: penxle
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
   TURBO_REMOTE_ONLY: true
 
@@ -51,8 +51,8 @@ jobs:
           push: true
           context: .
           build-args: |
-            TURBO_TEAM=${{ secrets.TURBO_TEAM }}
-            TURBO_TOKEN=${{ secrets.TURBO_TOKEN }}
+            TURBO_TEAM=${{ env.TURBO_TEAM }}
+            TURBO_TOKEN=${{ env.TURBO_TOKEN }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=registry,ref=637423633734.dkr.ecr.ap-northeast-2.amazonaws.com/readable:cache
@@ -95,7 +95,7 @@ jobs:
       - name: Connect tailnet
         uses: tailscale/github-action@v2
         with:
-          oauth-client-id: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
+          oauth-client-id: ${{ vars.TAILSCALE_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ secrets.TAILSCALE_OAUTH_CLIENT_SECRET }}
           tags: tag:github-actions
 

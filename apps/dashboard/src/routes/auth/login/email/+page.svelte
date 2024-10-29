@@ -103,7 +103,7 @@
     <div class={flex({ align: 'center', justify: 'space-between' })}>
       <FullLogo class={css({ height: { base: '20px', md: '24px' } })} />
 
-      <a aria-label="GitHub" href="https://github.com/readable-team" rel="noopener noreferrer" target="_blank">
+      <a aria-label="GitHub" href="https://github.com/penxle" rel="noopener noreferrer" target="_blank">
         <Icon style={css.raw({ color: '[#181717]', hideFrom: 'md' })} icon={IconGithub} size={20} />
         <Icon style={css.raw({ color: '[#181717]', hideBelow: 'md' })} icon={IconGithub} size={24} />
       </a>
