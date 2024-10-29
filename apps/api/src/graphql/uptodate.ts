@@ -3,11 +3,12 @@ import { zodResponseFormat } from 'openai/helpers/zod.mjs';
 import { uniqueBy } from 'remeda';
 import { z } from 'zod';
 import { builder } from '@/builder';
-import { db, PageContentChunks, PageContents, Pages } from '@/db';
+import { db, firstOrThrow, PageContentChunks, PageContents, Pages, Sites } from '@/db';
 import { PageState } from '@/enums';
 import * as openai from '@/external/openai';
 import { fixByChangePrompt, keywordExtractionPrompt } from '@/prompt/fix-by-change';
 import { assertSitePermission } from '@/utils/permissions';
+import { assertTeamPlanRule } from '@/utils/plan';
 import { Page } from './objects';
 
 type FindOutdatedContent = {
@@ -53,6 +54,19 @@ builder.queryFields((t) => ({
       await assertSitePermission({
         siteId: args.siteId,
         userId: ctx.session.userId,
+      });
+
+      const site = await db
+        .select({
+          teamId: Sites.teamId,
+        })
+        .from(Sites)
+        .where(eq(Sites.id, args.siteId))
+        .then(firstOrThrow);
+
+      await assertTeamPlanRule({
+        teamId: site.teamId,
+        rule: 'aiSearch',
       });
 
       const keyword = await openai.client.beta.chat.completions

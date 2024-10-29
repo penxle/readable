@@ -24,6 +24,18 @@
 
         team {
           id
+
+          plan {
+            id
+
+            plan {
+              id
+
+              rules {
+                aiSearch
+              }
+            }
+          }
         }
 
         # NOTE: maxDepth = 2
@@ -189,13 +201,15 @@
     overflowY: 'auto',
   })}
 >
-  <Button
-    style={css.raw({ margin: '20px', marginBottom: '0' })}
-    variant="secondary"
-    on:click={() => (findOutdatedsModalOpen = true)}
-  >
-    콘텐츠 최신화
-  </Button>
+  {#if $site.team.plan.plan.rules.aiSearch}
+    <Button
+      style={css.raw({ margin: '20px', marginBottom: '0' })}
+      variant="secondary"
+      on:click={() => (findOutdatedsModalOpen = true)}
+    >
+      콘텐츠 최신화
+    </Button>
+  {/if}
 
   <nav class={flex({ flex: '1', flexDirection: 'column', overflow: 'auto' })}>
     <div
