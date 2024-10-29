@@ -686,7 +686,7 @@ builder.mutationFields((t) => ({
         role: TeamMemberRole.ADMIN,
       });
 
-      return await db
+      const siteHeaderLink = await db
         .insert(SiteHeaderLinks)
         .values({ siteId: input.siteId, label: input.label, url: input.url })
         .returning()
@@ -695,6 +695,10 @@ builder.mutationFields((t) => ({
           set: { label: input.label, url: input.url, state: SiteHeaderLinkState.ACTIVE },
         })
         .then(firstOrThrow);
+
+      await invalidateSiteCache(input.siteId);
+
+      return siteHeaderLink;
     },
   }),
 
@@ -717,12 +721,16 @@ builder.mutationFields((t) => ({
         role: TeamMemberRole.ADMIN,
       });
 
-      return await db
+      const siteHeaderLink = await db
         .update(SiteHeaderLinks)
         .set({ state: SiteHeaderLinkState.DISABLED })
         .where(eq(SiteHeaderLinks.id, input.siteHeaderLinkId))
         .returning()
         .then(firstOrThrow);
+
+      await invalidateSiteCache(site.id);
+
+      return siteHeaderLink;
     },
   }),
 
