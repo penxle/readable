@@ -197,7 +197,7 @@
         </h1>
       </a>
 
-      <div class={flex({ align: 'center', justify: 'flex-end', gap: '8px' })}>
+      <div class={flex({ align: 'center', justify: 'flex-end', gap: '8px', flex: 'none' })}>
         <button
           class={flex({
             alignItems: 'center',
