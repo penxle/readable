@@ -2,17 +2,10 @@ import * as aws from '@pulumi/aws';
 import { securityGroups, subnets } from '$aws/vpc';
 
 const eks = new aws.efs.FileSystem('eks', {
-  throughputMode: 'elastic',
+  throughputMode: 'bursting',
   encrypted: true,
 
-  lifecyclePolicies: [
-    {
-      transitionToIa: 'AFTER_30_DAYS',
-    },
-    {
-      transitionToArchive: 'AFTER_90_DAYS',
-    },
-  ],
+  lifecyclePolicies: [{ transitionToIa: 'AFTER_30_DAYS' }, { transitionToPrimaryStorageClass: 'AFTER_1_ACCESS' }],
 
   tags: {
     Name: 'eks',
