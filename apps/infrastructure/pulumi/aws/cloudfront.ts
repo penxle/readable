@@ -152,7 +152,7 @@ const cdn = new aws.cloudfront.Distribution('cdn', {
       originId: 'cdn',
       domainName: buckets.cdn.bucketRegionalDomainName,
       originAccessControlId: s3OriginAccessControl.id,
-      originShield: { enabled: true, originShieldRegion: 'ap-northeast-2' },
+      originShield: { enabled: false, originShieldRegion: 'ap-northeast-2' },
     },
   ],
 
@@ -205,14 +205,14 @@ const usercontents = new aws.cloudfront.Distribution('usercontents', {
       originId: 'usercontents',
       domainName: buckets.usercontents.bucketRegionalDomainName,
       originAccessControlId: s3OriginAccessControl.id,
-      originShield: { enabled: true, originShieldRegion: 'ap-northeast-2' },
+      originShield: { enabled: false, originShieldRegion: 'ap-northeast-2' },
     },
     {
       originId: 'usercontents-literoom',
       // spell-checker:disable-next-line
       domainName: 'usercontents-literoo-daeepnuproy4fzfnt4im8nr6apn2a--ol-s3.s3.ap-northeast-2.amazonaws.com',
       originAccessControlId: s3OriginAccessControl.id,
-      originShield: { enabled: true, originShieldRegion: 'ap-northeast-2' },
+      originShield: { enabled: false, originShieldRegion: 'ap-northeast-2' },
     },
   ],
 
@@ -279,7 +279,7 @@ const sdk = new aws.cloudfront.Distribution('sdk', {
       originId: 'sdk',
       domainName: buckets.sdk.bucketRegionalDomainName,
       originAccessControlId: s3OriginAccessControl.id,
-      originShield: { enabled: true, originShieldRegion: 'ap-northeast-2' },
+      originShield: { enabled: false, originShieldRegion: 'ap-northeast-2' },
     },
   ],
 
