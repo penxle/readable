@@ -14,7 +14,7 @@
     "@readable/styled-system": "workspace:*",
     "@readable/ui": "workspace:*",
     "@sentry/sveltekit": "^8.35.0",
-    "@supabase/supabase-js": "^2.45.6",
+    "@supabase/supabase-js": "^2.46.1",
     "query-string": "^9.1.1"
   },
   "devDependencies": {
@@ -24,12 +24,12 @@
     "@readable/adapter-bun": "workspace:*",
     "@readable/pulumi": "workspace:*",
     "@readable/tsconfig": "workspace:*",
-    "@sveltejs/kit": "^2.7.2",
+    "@sveltejs/kit": "^2.7.3",
     "@sveltejs/vite-plugin-svelte": "^3.1.2",
     "svelte": "^4.2.19",
     "svelte-check": "^4.0.5",
     "svelte-preprocess": "^6.0.3",
-    "tsx": "^4.19.1",
+    "tsx": "^4.19.2",
     "typescript": "^5.6.3",
     "unplugin-icons": "^0.19.3",
     "vite": "^5.4.10"
