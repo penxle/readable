@@ -1,7 +1,5 @@
 config:
-  aws:profile: readable
   aws:defaultTags:
     tags:
       pulumi.rdbl.app/project: infrastructure
       pulumi.rdbl.app/stack: base
-  kubernetes:context: arn:aws:eks:ap-northeast-2:637423633734:cluster/readable
