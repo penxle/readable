@@ -125,7 +125,7 @@
 <div
   bind:this={popoverEl}
   class={css({
-    position: 'relative',
+    position: 'fixed',
     width: 'screen',
     height: 'screen',
     pointerEvents: 'none',
