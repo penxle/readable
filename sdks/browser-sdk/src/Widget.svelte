@@ -1,5 +1,7 @@
 <script lang="ts">
   import { Readability } from '@mozilla/readability';
+  import stringHash from '@sindresorhus/string-hash';
+  import stringify from 'fast-json-stable-stringify';
   import { onMount } from 'svelte';
   import { fly, scale } from 'svelte/transition';
   import IconX from '~icons/lucide/x';
@@ -27,11 +29,12 @@
   ];
 
   let loadingCount = 0;
+  let lastHash = 0;
+
   let response: {
     site: { id: string; name: string; url: string };
     pages: { id: string; title: string; score: number }[];
   } | null = null;
-  let lastQueriedKeywords: string[] = [];
 
   $: pages = response?.pages.filter((page) => page.score > 0.5);
 
@@ -69,34 +72,29 @@
       const readability = new Readability(document.cloneNode(true) as Document);
       const article = readability.parse();
 
-      const texts = [...elements.map((element) => element.textContent), article?.title, article?.textContent]
+      const keywords = elements
+        .map((element) => element.textContent)
         .map((text) => text?.replaceAll(/\s+/g, ' ').trim())
         .filter((text) => text?.length) as string[];
 
-      if (texts.length === 0) {
+      const text = article?.textContent?.replaceAll(/\s+/g, ' ').trim();
+
+      const hash = stringHash(stringify({ keywords, text }));
+
+      if (hash === lastHash) {
         return;
       }
 
-      // 간단한 캐싱
-      if (JSON.stringify(lastQueriedKeywords) === JSON.stringify(texts)) {
-        return;
-      }
-
-      lastQueriedKeywords = texts;
+      lastHash = hash;
 
       const url = import.meta.env.PROD ? 'https://api.rdbl.io/widget/query' : 'http://localhost:3000/widget/query';
       const resp = await fetch(url, {
         method: 'POST',
-        body: JSON.stringify({ keywords: texts, siteId }),
+        body: JSON.stringify({ siteId, keywords, text }),
         headers: {
           'Content-Type': 'application/json',
         },
       });
-
-      // 쿼리 결과가 한번에 여러개 들어오는 경우 마지막 쿼리 결과만 사용하도록 함
-      if (lastQueriedKeywords !== texts) {
-        return;
-      }
 
       response = await resp.json();
     } finally {

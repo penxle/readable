@@ -10,7 +10,9 @@
   },
   "dependencies": {
     "@mozilla/readability": "^0.5.0",
-    "@readable/styled-system": "workspace:*"
+    "@readable/styled-system": "workspace:*",
+    "@sindresorhus/string-hash": "^2.0.0",
+    "fast-json-stable-stringify": "^2.1.0"
   },
   "devDependencies": {
     "@iconify-json/lucide": "^1.2.10",

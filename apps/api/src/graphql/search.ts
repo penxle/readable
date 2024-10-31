@@ -1,12 +1,13 @@
-import { and, cosineDistance, desc, eq, gt, sql } from 'drizzle-orm';
+import { ChatPromptTemplate } from '@langchain/core/prompts';
+import { RunnableSequence } from '@langchain/core/runnables';
+import { and, asc, cosineDistance, eq } from 'drizzle-orm';
 import DOMPurify from 'isomorphic-dompurify';
-import { zodResponseFormat } from 'openai/helpers/zod';
 import { z } from 'zod';
 import { builder } from '@/builder';
 import { db, PageContentChunks, PageContents, Pages } from '@/db';
 import { PageState } from '@/enums';
 import { ReadableError } from '@/errors';
-import * as openai from '@/external/openai';
+import * as langchain from '@/external/langchain';
 import { keywordExtractionPrompt, naturalLanguageSearchPrompt } from '@/prompt/natural-language-search';
 import { searchIndex } from '@/search';
 import { assertSitePermission } from '@/utils/permissions';
@@ -34,21 +35,13 @@ type VectorSearchParams = {
 };
 
 const vectorSearch = async ({ query, siteId }: VectorSearchParams) => {
-  console.log('vectorSearch', query);
-
-  const queryVector = await openai.client.embeddings
-    .create({
-      model: 'text-embedding-3-small',
-      input: query,
-    })
-    .then((response) => response.data[0].embedding);
-
-  const similarity = sql<number>`1 - (${cosineDistance(PageContentChunks.vector, queryVector)})`;
+  const queryVector = await langchain.embeddings.embedQuery(query);
+  const distance = cosineDistance(PageContentChunks.vector, queryVector);
 
   return await db
     .select({
       pageId: PageContentChunks.pageId,
-      similarity,
+      similarity: distance,
       title: PageContents.title,
       subtitle: PageContents.subtitle,
       text: PageContents.text,
@@ -56,9 +49,9 @@ const vectorSearch = async ({ query, siteId }: VectorSearchParams) => {
     .from(PageContentChunks)
     .innerJoin(Pages, eq(Pages.id, PageContentChunks.pageId))
     .innerJoin(PageContents, eq(PageContents.pageId, PageContentChunks.pageId))
-    .where(and(eq(Pages.siteId, siteId), eq(Pages.state, PageState.PUBLISHED), gt(similarity, 0.35)))
-    .orderBy(desc(similarity))
-    .limit(10);
+    .where(and(eq(Pages.siteId, siteId), eq(Pages.state, PageState.PUBLISHED)))
+    .orderBy(asc(distance))
+    .limit(5);
 };
 
 const PageSearchHighlight = builder.objectRef<Partial<PageSearchData>>('PageSearchHighlight');
@@ -183,28 +176,22 @@ builder.queryFields((t) => ({
         rule: 'aiSearch',
       });
 
-      const keyword = await openai.client.beta.chat.completions
-        .parse({
-          model: 'gpt-4o-mini',
-          messages: [
-            {
-              role: 'system',
-              content: keywordExtractionPrompt,
-            },
-            {
-              role: 'user',
-              content: args.query,
-            },
-          ],
+      const chain1 = RunnableSequence.from([
+        ChatPromptTemplate.fromMessages([
+          ['system', keywordExtractionPrompt],
+          ['user', '{query}'],
+        ]),
 
-          response_format: zodResponseFormat(
-            z.object({
-              keyword: z.string(),
-            }),
-            'keyword',
-          ),
-        })
-        .then((response) => response.choices[0].message.parsed?.keyword);
+        langchain.model.withStructuredOutput(
+          z.object({
+            keyword: z.string(),
+          }),
+        ),
+      ]);
+
+      const { keyword } = await chain1.invoke({
+        query: args.query,
+      });
 
       if (!keyword) {
         throw new ReadableError({
@@ -220,43 +207,36 @@ builder.queryFields((t) => ({
         });
       }
 
-      const result = await openai.client.beta.chat.completions
-        .parse({
-          model: 'gpt-4o-mini',
-          messages: [
-            {
-              role: 'system',
-              content: naturalLanguageSearchPrompt,
-            },
-            {
-              role: 'user',
-              content: JSON.stringify({
-                keyword,
-                pages,
-              }),
-            },
-          ],
+      const chain2 = RunnableSequence.from([
+        ChatPromptTemplate.fromMessages([
+          ['system', naturalLanguageSearchPrompt],
+          ['user', '{context}'],
+          ['user', '{query}'],
+        ]),
 
-          response_format: zodResponseFormat(
-            z.object({
-              cannotAnswer: z.boolean(),
-              answer: z.string(),
-              references: z.array(z.string()),
-            }),
-            'search-public-page-by-natural-language-result',
-          ),
-        })
-        .then((response) => response.choices[0].message.parsed);
+        langchain.model.withStructuredOutput(
+          z.object({
+            cannotAnswer: z.boolean(),
+            answer: z.string(),
+            references: z.array(z.string()),
+          }),
+        ),
+      ]);
 
-      if (!result || result.cannotAnswer) {
+      const { cannotAnswer, answer, references } = await chain2.invoke({
+        context: pages,
+        query: args.query,
+      });
+
+      if (cannotAnswer) {
         throw new ReadableError({
           code: 'NOT_FOUND',
         });
       }
 
       return {
-        answer: result.answer,
-        pageIds: result.references,
+        answer,
+        pageIds: references,
       };
     },
   }),

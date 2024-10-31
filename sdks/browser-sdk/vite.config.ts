@@ -17,7 +17,7 @@ export default defineConfig({
     },
   },
   build: {
-    target: 'es2015',
+    target: 'es2020',
     lib: {
       name: 'Readable',
       entry: './src/script.ts',

@@ -1,7 +1,6 @@
 import { schema } from '@readable/ui/tiptap/server';
-import { Node } from '@tiptap/pm/model';
 import dayjs from 'dayjs';
-import { and, desc, eq, gt, inArray, notInArray, sql } from 'drizzle-orm';
+import { and, desc, eq, gt, sql } from 'drizzle-orm';
 import * as R from 'remeda';
 import { yXmlFragmentToProseMirrorRootNode } from 'y-prosemirror';
 import * as Y from 'yjs';
@@ -18,7 +17,7 @@ import {
   Pages,
 } from '@/db';
 import { PageState } from '@/enums';
-import * as openai from '@/external/openai';
+import * as langchain from '@/external/langchain';
 import { pubsub } from '@/pubsub';
 import { searchIndex } from '@/search';
 import { hashPageContent } from '@/utils/page';
@@ -161,8 +160,6 @@ export const PageSummarizeJob = defineJob('page:summarize', async (pageId: strin
   const page = await db
     .select({
       title: PageContents.title,
-      subtitle: PageContents.subtitle,
-      content: PageContents.content,
       text: PageContents.text,
     })
     .from(Pages)
@@ -170,72 +167,19 @@ export const PageSummarizeJob = defineJob('page:summarize', async (pageId: strin
     .where(and(eq(Pages.id, pageId), eq(Pages.state, PageState.PUBLISHED)))
     .then(first);
 
-  // 별다른 이유는 없지만 5글자도 안 되는 문서를 검색할 필요가 없지 않을까요...? 아님말구
-  if (!page || page.text.length < 5) {
+  if (!page) {
     return;
   }
 
-  const content = Node.fromJSON(schema, page.content);
-
-  const chunks: { str: string; hash: string }[] = [];
-
-  if (page.title) {
-    chunks.push({ str: page.title, hash: Bun.hash(page.title).toString() });
-  }
-
-  if (page.subtitle) {
-    chunks.push({ str: page.subtitle, hash: Bun.hash(page.subtitle).toString() });
-  }
-
-  content.forEach((node) => {
-    const text = node.textBetween(0, node.content.size, '\n');
-    if (text.length > 0) {
-      chunks.push({ str: text, hash: Bun.hash(text).toString() });
-    }
-  });
+  const content = `${page.title}${page.text}`.replaceAll(/\s+/g, ' ');
+  const splits = await langchain.textSplitter.splitText(content);
+  const vectors = await langchain.embeddings.embedDocuments(splits);
 
   await db.transaction(async (tx) => {
-    await tx.delete(PageContentChunks).where(
-      and(
-        eq(PageContentChunks.pageId, pageId),
-        notInArray(
-          PageContentChunks.hash,
-          chunks.map((chunk) => chunk.hash),
-        ),
-      ),
-    );
+    await tx.delete(PageContentChunks).where(eq(PageContentChunks.pageId, pageId));
 
-    const rows = await tx
-      .select()
-      .from(PageContentChunks)
-      .where(
-        inArray(
-          PageContentChunks.hash,
-          chunks.map((chunk) => chunk.hash),
-        ),
-      );
-    const values = R.groupBy(rows, (row) => row.hash);
-
-    await Promise.all(
-      chunks
-        .filter((chunk) => (values[chunk.hash]?.length ?? 0) === 0)
-        .map(async (chunk) => {
-          const vector = await openai.client.embeddings
-            .create({
-              input: chunk.str,
-              model: 'text-embedding-3-small',
-            })
-            .then((response) => response.data[0].embedding);
-
-          await tx
-            .insert(PageContentChunks)
-            .values({
-              pageId,
-              hash: chunk.hash,
-              vector,
-            })
-            .onConflictDoNothing();
-        }),
-    );
+    for (const vector of vectors) {
+      await tx.insert(PageContentChunks).values({ pageId, vector });
+    }
   });
 });
