@@ -181,7 +181,7 @@ new k8s.helm.v3.Chart('karpenter', {
     },
 
     podLabels: {
-      app: 'karpenter',
+      'k8s.rdbl.app/workspace': 'woodshop',
     },
 
     settings: {

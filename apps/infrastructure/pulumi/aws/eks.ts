@@ -80,13 +80,13 @@ new aws.eks.AccessPolicyAssociation(
   { dependsOn: [actions] },
 );
 
-export const fargate = new aws.eks.FargateProfile('karpenter', {
-  fargateProfileName: 'karpenter',
+new aws.eks.FargateProfile('woodshop', {
+  fargateProfileName: 'woodshop',
 
   clusterName: cluster.name,
   podExecutionRoleArn: fargateRole.arn,
 
-  selectors: [{ namespace: 'kube-system', labels: { app: 'karpenter' } }],
+  selectors: [{ namespace: 'kube-system', labels: { 'k8s.rdbl.app/workspace': 'woodshop' } }],
   subnetIds: [subnets.private.az1.id, subnets.private.az2.id],
 });
 
