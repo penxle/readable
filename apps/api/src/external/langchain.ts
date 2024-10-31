@@ -4,6 +4,7 @@ import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 
 export const model = new ChatAnthropic({
   model: 'claude-3-5-sonnet-20241022',
+  // model: 'claude-3-5-sonnet-20240620',
   temperature: 0,
 });
 
@@ -12,6 +13,6 @@ export const embeddings = new VoyageEmbeddings({
 });
 
 export const textSplitter = new RecursiveCharacterTextSplitter({
-  chunkSize: 1000,
-  chunkOverlap: 200,
+  chunkSize: 200,
+  chunkOverlap: 40,
 });

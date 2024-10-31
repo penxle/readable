@@ -4,7 +4,7 @@ import { and, asc, cosineDistance, eq } from 'drizzle-orm';
 import DOMPurify from 'isomorphic-dompurify';
 import { z } from 'zod';
 import { builder } from '@/builder';
-import { db, PageContentChunks, PageContents, Pages } from '@/db';
+import { db, PageContentChunks, Pages } from '@/db';
 import { PageState } from '@/enums';
 import { ReadableError } from '@/errors';
 import * as langchain from '@/external/langchain';
@@ -40,18 +40,15 @@ const vectorSearch = async ({ query, siteId }: VectorSearchParams) => {
 
   return await db
     .select({
-      pageId: PageContentChunks.pageId,
-      similarity: distance,
-      title: PageContents.title,
-      subtitle: PageContents.subtitle,
-      text: PageContents.text,
+      id: Pages.id,
+      text: PageContentChunks.text,
+      distance,
     })
     .from(PageContentChunks)
     .innerJoin(Pages, eq(Pages.id, PageContentChunks.pageId))
-    .innerJoin(PageContents, eq(PageContents.pageId, PageContentChunks.pageId))
     .where(and(eq(Pages.siteId, siteId), eq(Pages.state, PageState.PUBLISHED)))
     .orderBy(asc(distance))
-    .limit(5);
+    .limit(10);
 };
 
 const PageSearchHighlight = builder.objectRef<Partial<PageSearchData>>('PageSearchHighlight');

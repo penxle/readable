@@ -19,6 +19,7 @@
     "@langchain/anthropic": "^0.3.7",
     "@langchain/community": "^0.3.11",
     "@langchain/core": "^0.3.16",
+    "@langchain/openai": "^0.3.11",
     "@paralleldrive/cuid2": "^2.2.2",
     "@portone/server-sdk": "^0.2.1",
     "@pothos/core": "^4.3.0",

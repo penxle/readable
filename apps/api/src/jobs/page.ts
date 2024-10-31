@@ -171,15 +171,19 @@ export const PageSummarizeJob = defineJob('page:summarize', async (pageId: strin
     return;
   }
 
-  const content = `${page.title}${page.text}`.replaceAll(/\s+/g, ' ');
+  const content = `${page.title}\n${page.text}`.replaceAll(/\s+/g, ' ');
   const splits = await langchain.textSplitter.splitText(content);
   const vectors = await langchain.embeddings.embedDocuments(splits);
 
   await db.transaction(async (tx) => {
     await tx.delete(PageContentChunks).where(eq(PageContentChunks.pageId, pageId));
 
-    for (const vector of vectors) {
-      await tx.insert(PageContentChunks).values({ pageId, vector });
+    for (const [index, text] of splits.entries()) {
+      await tx.insert(PageContentChunks).values({
+        pageId,
+        text,
+        vector: vectors[index],
+      });
     }
   });
 });

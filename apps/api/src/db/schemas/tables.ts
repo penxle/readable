@@ -183,6 +183,7 @@ export const PageContentChunks = pgTable(
     pageId: text('page_id')
       .notNull()
       .references(() => Pages.id, { onUpdate: 'cascade', onDelete: 'restrict' }),
+    text: text('text').notNull(),
     vector: vector('vector', { dimensions: 1024 }).notNull(),
     createdAt: datetime('created_at')
       .notNull()
