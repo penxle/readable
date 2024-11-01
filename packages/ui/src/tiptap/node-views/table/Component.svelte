@@ -95,15 +95,43 @@
   }
 </script>
 
-<NodeView style={css.raw({ position: 'relative', width: 'full' })}>
-  <div
-    class={css({
+<NodeView
+  style={css.raw(
+    {
       position: 'relative',
-      width: 'full',
-      paddingX: '24px',
-      paddingY: '24px',
-      overflowX: 'auto',
-    })}
+      width: editor?.isEditable ? 'fit' : 'full',
+    },
+    // 바깥으로 튀어나온 행/열 핸들과 행/열 추가 버튼이 보일 수 있도록 함
+    editor?.isEditable && {
+      '* + &': {
+        marginTop: '[calc(-10px + var(--prosemirror-block-gap))]',
+      },
+      marginTop: '-10px',
+      paddingTop: '10px',
+      '&:last-child': {
+        marginBottom: '-23px',
+      },
+      marginBottom: '[calc(var(--prosemirror-block-gap) * -1)]',
+      paddingBottom: '23px',
+
+      '.block-selection-decoration &': {
+        marginTop: '0 !important',
+        paddingTop: '0',
+        marginBottom: '0 !important',
+        paddingBottom: '0',
+      },
+    },
+  )}
+>
+  <div
+    class={css(
+      {
+        position: 'relative',
+        width: editor?.isEditable ? 'fit' : 'full',
+        overflowX: editor?.isEditable ? 'unset' : 'auto',
+      },
+      editor?.isEditable && { paddingY: '24px' },
+    )}
   >
     <table
       on:pointerover={handlePointerover}
