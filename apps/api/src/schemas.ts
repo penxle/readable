@@ -91,8 +91,22 @@ export const dataSchemas = {
     slug: z
       .string({ required_error: '페이지 주소를 입력해 주세요' })
       .trim()
-      .refine((str) => str.charAt(0) !== '.', { message: '페이지 주소는 온점으로 시작할 수 없어요' })
-      .transform((str) => encodeURIComponent(str)),
+      .min(1, { message: '페이지 주소는 1글자 이상이여야 해요' })
+      .max(31, { message: '페이지 주소는 31글자를 넘을 수 없어요' })
+      .regex(/^[\da-z-]+$/, { message: '페이지 주소는 소문자, 숫자, 하이픈만 사용할 수 있어요' })
+      .regex(/^[\da-z][\da-z-]*[\da-z]$/, { message: '페이지 주소는 하이픈으로 시작하거나 끝날 수 없어요' })
+      .refine((str) => !str.includes('--'), { message: '페이지 주소에 하이픈을 연속으로 사용할 수 없어요' }),
+  },
+
+  category: {
+    slug: z
+      .string({ required_error: '카테고리 주소를 입력해 주세요' })
+      .trim()
+      .min(1, { message: '카테고리 주소는 1글자 이상이여야 해요' })
+      .max(31, { message: '카테고리 주소는 31글자를 넘을 수 없어요' })
+      .regex(/^[\da-z-]+$/, { message: '카테고리 주소는 소문자, 숫자, 하이픈만 사용할 수 있어요' })
+      .regex(/^[\da-z][\da-z-]*[\da-z]$/, { message: '카테고리 주소는 하이픈으로 시작하거나 끝날 수 없어요' })
+      .refine((str) => !str.includes('--'), { message: '카테고리 주소에 하이픈을 연속으로 사용할 수 없어요' }),
   },
 };
 

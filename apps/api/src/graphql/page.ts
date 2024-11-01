@@ -614,7 +614,7 @@ builder.mutationFields((t) => ({
 
   updateCategorySlug: t.withAuth({ session: true }).fieldWithInput({
     type: Category,
-    input: { categoryId: t.input.id(), slug: t.input.string({ validate: { schema: dataSchemas.page.slug } }) },
+    input: { categoryId: t.input.id(), slug: t.input.string({ validate: { schema: dataSchemas.category.slug } }) },
     resolve: async (_, { input }, ctx) => {
       await assertCategoryPermission({
         categoryId: input.categoryId,
@@ -634,7 +634,7 @@ builder.mutationFields((t) => ({
         .then(firstOrThrow)
         .catch((err) => {
           if (err.code === '23505') {
-            throw new ReadableError({ code: 'page_slug_exists' });
+            throw new ReadableError({ code: 'category_slug_exists' });
           }
 
           throw err;
