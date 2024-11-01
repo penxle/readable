@@ -59,11 +59,7 @@ widget.post(
 
       if (chunks.length === 0) {
         return {
-          site: {
-            id: site.id,
-            name: site.name,
-            url: siteUrl,
-          },
+          site: { id: site.id, name: site.name, url: siteUrl },
           pages: [],
         };
       }
@@ -115,14 +111,10 @@ widget.post(
     );
 
     return {
-      site: {
-        id: site.id,
-        name: site.name,
-        url: siteUrl,
-      },
+      site: { id: site.id, name: site.name, url: siteUrl },
       pages: sortedResultPages.map((page) => ({
         ...page,
-        score: result.pages.find((page) => page.id === page.id)?.score,
+        score: result.pages.find((p) => p.id === page.id)?.score,
       })),
     };
   },

@@ -36,7 +36,7 @@
     pages: { id: string; title: string; score: number }[];
   } | null = null;
 
-  $: pages = response?.pages.filter((page) => page.score > 0.5);
+  $: pages = response?.pages.filter((page) => page.score >= 0.8);
 
   $: if (open) {
     observe();
