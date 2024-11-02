@@ -24,7 +24,10 @@ export const extendNodeToNodeView = <Options = any, Storage = any>(
     ...options,
 
     parseHTML() {
-      return [{ tag: `node-view[data-node-view-type=${options?.name ?? this.name}]` }];
+      return [
+        { tag: `node-view[data-node-view-type=${options?.name ?? this.name}]` },
+        ...(options?.parseHTML?.bind(this)() ?? []),
+      ];
     },
 
     renderHTML({ node, HTMLAttributes }) {

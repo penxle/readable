@@ -35,6 +35,10 @@ export const CodeBlock = createNodeView<Options, Storage>(Component, {
   defining: true,
   isolating: true,
 
+  parseHTML() {
+    return [{ tag: 'pre' }];
+  },
+
   renderText: () => '',
 
   addOptions() {
