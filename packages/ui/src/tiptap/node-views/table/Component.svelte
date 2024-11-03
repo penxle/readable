@@ -114,6 +114,8 @@
       marginBottom: '[calc(var(--prosemirror-block-gap) * -1)]',
       paddingBottom: '23px',
 
+      overflowX: 'auto',
+
       '.block-selection-decoration &': {
         marginTop: '0 !important',
         paddingTop: '0',

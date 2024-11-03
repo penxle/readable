@@ -404,7 +404,6 @@
 
           '& > *': {
             width: 'full',
-            overflowX: 'auto',
             paddingX: '[calc((100% - 720px) / 2)]',
           },
         })}
