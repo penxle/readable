@@ -64,7 +64,7 @@ export const SlashMenu = Extension.create({
             }
 
             const matches = text.matchAll(pattern);
-            const match = matches.find(
+            const match = [...matches].find(
               (match) => $anchor.parentOffset > match.index && $anchor.parentOffset <= match.index + match[0].length,
             );
 
