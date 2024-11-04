@@ -176,15 +176,7 @@ const extensions = [
     content: 'paragraph (paragraph | bulletList | orderedList)*',
 
     renderHTML({ HTMLAttributes }) {
-      return [
-        'li',
-        mergeAttributes(HTMLAttributes, {
-          class: css({
-            marginTop: '4px',
-          }),
-        }),
-        0,
-      ];
+      return ['li', mergeAttributes(HTMLAttributes, {}), 0];
     },
   }),
   extendNodeToNodeView(Table, TableComponent).configure({
