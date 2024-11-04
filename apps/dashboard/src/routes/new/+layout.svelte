@@ -6,7 +6,6 @@
   class={flex({
     direction: 'column',
     grow: 1,
-    minWidth: '1280px',
     minHeight: 'screen',
   })}
 >

@@ -120,6 +120,7 @@
     align: 'center',
     gap: '40px',
     margin: 'auto',
+    paddingX: '20px',
     paddingBottom: '64px',
     width: 'full',
     maxWidth: '432px',
