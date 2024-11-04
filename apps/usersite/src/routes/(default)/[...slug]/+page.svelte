@@ -8,8 +8,10 @@
   import { browser } from '$app/environment';
   import { env } from '$env/dynamic/public';
   import { graphql } from '$graphql';
+  import Handler from './@floating/Handler.svelte';
   import Breadcrumb from './Breadcrumb.svelte';
   import Toc from './Toc.svelte';
+  import type { Editor } from '@tiptap/core';
   import type { Writable } from 'svelte/store';
 
   $: query = graphql(`
@@ -41,6 +43,7 @@
     }
   `);
 
+  let editor: Editor | undefined = undefined;
   let headings: { level: number; text: string; scrollTop: number }[] = [];
 
   const blurEffect = getContext<Writable<boolean>>('blurEffect');
@@ -168,18 +171,33 @@
       class={css({
         gridArea: 'content',
         paddingBottom: '120px',
-        maxWidth: '720px',
+        maxWidth: '800px',
+        marginX: '-40px',
         smOnly: {
           // NOTE: width 이렇게 넣어주지 않으면 큰 표가 가로 스크롤을 만듦
           width: '[calc(100vw - 40px)]',
+          marginX: '0',
         },
       })}
     >
       {#key $query.publicPage.id}
         <TiptapRenderer
+          style={css.raw({
+            '& > *': {
+              // NOTE: floating 요소를 위한 여백 (부모의 negative margin으로 상쇄됨)
+              paddingX: '40px',
+              smOnly: {
+                paddingX: '0',
+              },
+            },
+          })}
           content={$query.publicPage.content.content}
+          bind:editor
           on:tocUpdate={(e) => (headings = e.detail.headings)}
         />
+        {#if editor}
+          <Handler {editor} />
+        {/if}
       {/key}
     </div>
   </div>

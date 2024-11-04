@@ -4,6 +4,7 @@
 
 html {
   scroll-margin-top: 101px; /* 헤더 높이 + 37px */
+  scroll-padding-top: 101px;
 }
 
 /* for accessibility */

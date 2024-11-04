@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { css } from '@readable/styled-system/css';
   import { flex } from '@readable/styled-system/patterns';
   import { Editor } from '@tiptap/core';
   import { onMount } from 'svelte';
@@ -76,7 +75,7 @@
     <div class={flex({ flex: '1', justify: 'flex-end', align: 'center', height: '[1lh]' })}>
       <slot name="left" />
     </div>
-    <div class={css({ width: '720px' })} />
+    <div style:width={`${width - 80}px`} />
     <div class={flex({ flex: '1', justify: 'flex-start', align: 'center', height: '[1lh]' })}>
       <slot name="right" />
     </div>
