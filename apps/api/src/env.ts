@@ -8,7 +8,6 @@ const schema = z.object({
   IFRAMELY_API_KEY: z.string(),
   MEILISEARCH_API_KEY: z.string(),
   MEILISEARCH_URL: z.string(),
-  OPENAI_API_KEY: z.string(),
   PORTONE_API_KEY: z.string(),
   PORTONE_CHANNEL_KEY: z.string(),
   PUBLIC_DASHBOARD_URL: z.string(),

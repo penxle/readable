@@ -190,12 +190,6 @@ builder.queryFields((t) => ({
         query: args.query,
       });
 
-      if (!keyword) {
-        throw new ReadableError({
-          code: 'NOT_FOUND',
-        });
-      }
-
       const pages = await vectorSearch({ query: keyword, siteId: ctx.site.id });
 
       if (pages.length === 0) {

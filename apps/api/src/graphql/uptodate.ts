@@ -1,11 +1,12 @@
-import { and, cosineDistance, desc, eq, sql } from 'drizzle-orm';
-import { zodResponseFormat } from 'openai/helpers/zod.mjs';
+import { ChatPromptTemplate } from '@langchain/core/prompts';
+import { RunnableSequence } from '@langchain/core/runnables';
+import { and, asc, cosineDistance, eq } from 'drizzle-orm';
 import { uniqueBy } from 'remeda';
 import { z } from 'zod';
 import { builder } from '@/builder';
 import { db, PageContentChunks, PageContents, Pages } from '@/db';
 import { PageState } from '@/enums';
-import * as openai from '@/external/openai';
+import * as langchain from '@/external/langchain';
 import { fixByChangePrompt, keywordExtractionPrompt } from '@/prompt/fix-by-change';
 import { assertSitePermission } from '@/utils/permissions';
 import { Page } from './objects';
@@ -55,103 +56,78 @@ builder.queryFields((t) => ({
         userId: ctx.session.userId,
       });
 
-      const keyword = await openai.client.beta.chat.completions
-        .parse({
-          model: 'gpt-4o-mini',
-          messages: [
-            {
-              role: 'system',
-              content: keywordExtractionPrompt,
-            },
-            {
-              role: 'user',
-              content: JSON.stringify({
-                change: args.query,
-              }),
-            },
-          ],
-          response_format: zodResponseFormat(
-            z.object({
-              keyword: z.string(),
-            }),
-            'keyword',
-          ),
-        }) // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        .then((response) => response.choices[0].message.parsed!.keyword);
+      const chain1 = RunnableSequence.from([
+        ChatPromptTemplate.fromMessages([
+          ['system', keywordExtractionPrompt],
+          ['user', '{query}'],
+        ]),
 
-      const queryVector = await openai.client.embeddings
-        .create({
-          model: 'text-embedding-3-small',
-          input: keyword,
-        })
-        .then((response) => response.data[0].embedding);
+        langchain.model.withStructuredOutput(
+          z.object({
+            keyword: z.string(),
+          }),
+        ),
+      ]);
 
-      const similarity = sql<number>`1 - (${cosineDistance(PageContentChunks.vector, queryVector)})`;
+      const { keyword } = await chain1.invoke({
+        query: args.query,
+      });
+
+      const queryVector = await langchain.embeddings.embedQuery(keyword);
+      const distance = cosineDistance(PageContentChunks.vector, queryVector);
 
       const result = await db
         .select({
-          pageId: PageContentChunks.pageId,
-          similarity,
+          id: PageContentChunks.pageId,
           title: PageContents.title,
           subtitle: PageContents.subtitle,
           content: PageContents.content,
+          distance,
         })
         .from(PageContentChunks)
         .innerJoin(Pages, eq(Pages.id, PageContentChunks.pageId))
         .innerJoin(PageContents, eq(PageContents.pageId, PageContentChunks.pageId))
         .where(and(eq(Pages.siteId, args.siteId), eq(Pages.state, PageState.PUBLISHED)))
-        .orderBy(desc(similarity))
+        .orderBy(asc(distance))
         .limit(20)
-        .then((rows) => uniqueBy(rows, (row) => row.pageId))
-        .then((rows) => rows.filter((row) => row.similarity > rows[0].similarity * 0.6));
+        .then((rows) => uniqueBy(rows, (row) => row.id));
 
       return await Promise.all(
         result.map(async (page) => {
-          const llmResult = await openai.client.beta.chat.completions
-            .parse({
-              model: 'gpt-4o',
-              temperature: 0.5,
-              max_tokens: 4096,
-              response_format: zodResponseFormat(
-                z.object({
-                  fixes: z.array(
-                    z.object({
-                      relevance: z.number(),
-                      nodeId: z.string(),
-                      original: z.string(),
-                      suggestion: z.string(),
-                      reason: z.string(),
-                    }),
-                  ),
-                }),
-                'fixes',
-              ),
-              messages: [
-                {
-                  role: 'system',
-                  content: fixByChangePrompt,
-                },
-                {
-                  role: 'user',
-                  content: JSON.stringify({
-                    title: page.title,
-                    subtitle: page.subtitle,
-                    content: page.content,
+          const chain2 = RunnableSequence.from([
+            ChatPromptTemplate.fromMessages([
+              ['system', fixByChangePrompt],
+              ['user', '{context}'],
+              ['user', '{query}'],
+            ]),
+
+            langchain.model.withStructuredOutput(
+              z.object({
+                fixes: z.array(
+                  z.object({
+                    relevance: z.number(),
+                    nodeId: z.string(),
+                    original: z.string(),
+                    suggestion: z.string(),
+                    reason: z.string(),
                   }),
-                },
-                {
-                  role: 'user',
-                  content: JSON.stringify({
-                    change: args.query,
-                  }),
-                },
-              ],
-            })
-            .then((response) => response.choices[0].message.parsed?.fixes ?? []);
+                ),
+              }),
+            ),
+          ]);
+
+          const { fixes } = await chain2.invoke({
+            context: JSON.stringify({
+              title: page.title,
+              subtitle: page.subtitle,
+              content: page.content,
+            }),
+            query: args.query,
+          });
 
           return {
-            pageId: page.pageId,
-            fixes: llmResult,
+            pageId: page.id,
+            fixes,
           };
         }),
       ).then((pageFixes) => pageFixes.filter((page) => page.fixes.some((fix) => fix.relevance > 2.5)));
