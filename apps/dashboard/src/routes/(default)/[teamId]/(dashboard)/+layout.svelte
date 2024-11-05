@@ -4,22 +4,30 @@
   import { graphql } from '$graphql';
   import { Tabs } from '$lib/components';
 
-  $: query = graphql(`
-    query TeamDashboardLayout_Query($teamId: ID!) {
-      team(teamId: $teamId) {
-        id
-        name
+  type Props = {
+    children?: import('svelte').Snippet;
+  };
 
-        sites {
-          id
-        }
+  let { children }: Props = $props();
 
-        members {
+  let query = $derived(
+    graphql(`
+      query TeamDashboardLayout_Query($teamId: ID!) {
+        team(teamId: $teamId) {
           id
+          name
+
+          sites {
+            id
+          }
+
+          members {
+            id
+          }
         }
       }
-    }
-  `);
+    `),
+  );
 </script>
 
 <nav
@@ -63,5 +71,5 @@
     overflow: 'auto',
   })}
 >
-  <slot />
+  {@render children?.()}
 </div>

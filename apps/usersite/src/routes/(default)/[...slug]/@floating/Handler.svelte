@@ -3,13 +3,18 @@
   import { Icon } from '@readable/ui/components';
   import { createAnchorId } from '@readable/ui/utils';
   import { Editor } from '@tiptap/core';
+  import { run } from 'svelte/legacy';
   import HashIcon from '~icons/lucide/hash';
   import VirtualElement from './VirtualElement.svelte';
   import type { Node } from 'prosemirror-model';
 
-  export let editor: Editor;
+  type Props = {
+    editor: Editor;
+  };
 
-  let pos: number | null = null;
+  let { editor }: Props = $props();
+
+  let pos: number | null = $state(null);
 
   const handlePointerMove = (event: PointerEvent) => {
     const { clientX, clientY } = event;
@@ -27,24 +32,27 @@
     }
   };
 
-  let node: Node | null = null;
-  $: if (pos === null) {
-    node = null;
-  } else {
-    node = editor.state.doc.nodeAt(pos);
-  }
+  let node: Node | null = $state(null);
+  run(() => {
+    if (pos === null) {
+      node = null;
+    } else {
+      node = editor.state.doc.nodeAt(pos);
+    }
+  });
 </script>
 
-<svelte:window on:pointermove={handlePointerMove} />
+<svelte:window onpointermove={handlePointerMove} />
 
 {#if pos !== null && node?.type.name === 'heading'}
   <VirtualElement {editor} {pos}>
-    <a
-      slot="left"
-      class={css({ color: 'neutral.50', pointerEvents: 'auto', smOnly: { display: 'none' } })}
-      href={`#${createAnchorId(node.textContent)}`}
-    >
-      <Icon icon={HashIcon} size={16} />
-    </a>
+    {#snippet left()}
+      <a
+        class={css({ color: 'neutral.50', pointerEvents: 'auto', smOnly: { display: 'none' } })}
+        href={`#${createAnchorId(node.textContent)}`}
+      >
+        <Icon icon={HashIcon} size={16} />
+      </a>
+    {/snippet}
   </VirtualElement>
 {/if}

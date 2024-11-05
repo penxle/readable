@@ -7,13 +7,19 @@
   import FullLogo from '$assets/logos/full.svg?component';
   import { persistUtm } from '$lib/utm';
 
+  type Props = {
+    children?: import('svelte').Snippet;
+  };
+
+  let { children }: Props = $props();
+
   onMount(() => {
     persistUtm();
   });
 </script>
 
 <div class={flex({ direction: 'column', grow: '1', minHeight: 'screen', wordBreak: 'keep-all' })}>
-  <slot />
+  {@render children?.()}
 
   <footer
     class={flex({

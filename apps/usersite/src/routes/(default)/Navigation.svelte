@@ -3,6 +3,7 @@
   import { flex } from '@readable/styled-system/patterns';
   import { Icon } from '@readable/ui/components';
   import { getContext } from 'svelte';
+  import { run } from 'svelte/legacy';
   import { writable } from 'svelte/store';
   import ChevronDownIcon from '~icons/lucide/chevron-down';
   import ChevronRightIcon from '~icons/lucide/chevron-right';
@@ -12,33 +13,25 @@
   import { pageUrl } from '$lib/utils/url';
   import type { Navigation_publicSite } from '$graphql';
 
-  let _publicSite: Navigation_publicSite;
-  export { _publicSite as $publicSite };
+  type Props = {
+    $publicSite: Navigation_publicSite;
+  };
 
-  $: publicSite = fragment(
-    _publicSite,
-    graphql(`
-      fragment Navigation_publicSite on PublicSite {
-        # NOTE: maxDepth = 2
-        categories {
-          id
-          name
-          order
-          slug
+  let { $publicSite: _publicSite }: Props = $props();
 
-          pages {
+  let publicSite = $derived(
+    fragment(
+      _publicSite,
+      graphql(`
+        fragment Navigation_publicSite on PublicSite {
+          # NOTE: maxDepth = 2
+          categories {
             id
-            state
+            name
             order
             slug
-            title
 
-            parent {
-              id
-              slug
-            }
-
-            children {
+            pages {
               id
               state
               order
@@ -50,17 +43,30 @@
                 slug
               }
 
+              children {
+                id
+                state
+                order
+                slug
+                title
+
+                parent {
+                  id
+                  slug
+                }
+
+                ...PageUrl_publicPage
+              }
+
               ...PageUrl_publicPage
             }
-
-            ...PageUrl_publicPage
           }
         }
-      }
-    `),
+      `),
+    ),
   );
 
-  $: currentSlug = $page.params.slug;
+  let currentSlug = $derived($page.params.slug);
 
   function findPage(slug: string) {
     const [categorySlug, ...pageSlugs] = slug.split('/');
@@ -82,38 +88,42 @@
     return page;
   }
 
-  let currentPageId: string;
+  let currentPageId: string = $state();
   const treeOpenState = writable<Record<string, boolean>>({});
   const mobileNavOpen = getContext('mobileNavOpen');
 
-  $: if (currentSlug) {
-    // NOTE: 모바일에서 사이드바를 열 때는 현재 페이지만 트리에서 열도록 함
-    if ($mobileNavOpen) {
-      $treeOpenState = {};
-    }
-    const page = findPage(currentSlug);
+  run(() => {
+    if (currentSlug) {
+      // NOTE: 모바일에서 사이드바를 열 때는 현재 페이지만 트리에서 열도록 함
+      if ($mobileNavOpen) {
+        $treeOpenState = {};
+      }
+      const page = findPage(currentSlug);
 
-    if (page) {
-      currentPageId = page.id;
-      $treeOpenState[page.id] = true;
-      if (page.parent) {
-        $treeOpenState[page.parent.id] = true;
+      if (page) {
+        currentPageId = page.id;
+        $treeOpenState[page.id] = true;
+        if (page.parent) {
+          $treeOpenState[page.parent.id] = true;
+        }
       }
     }
-  }
+  });
 
-  let navEl: HTMLElement;
+  let navEl: HTMLElement = $state();
 
-  $: if (navEl) {
-    const currentEl = navEl.querySelector('[aria-current="page"]');
+  run(() => {
+    if (navEl) {
+      const currentEl = navEl.querySelector('[aria-current="page"]');
 
-    if (currentEl) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const navRect = navEl.parentElement!.getBoundingClientRect();
-      const currentRect = currentEl.getBoundingClientRect();
-      navEl.parentElement?.scrollTo({ top: currentRect.top - navRect.height / 2 });
+      if (currentEl) {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const navRect = navEl.parentElement!.getBoundingClientRect();
+        const currentRect = currentEl.getBoundingClientRect();
+        navEl.parentElement?.scrollTo({ top: currentRect.top - navRect.height / 2 });
+      }
     }
-  }
+  });
 
   beforeNavigate(() => {
     mobileNavOpen.set(false);
@@ -169,7 +179,7 @@
               })}
               aria-current={page.id === currentPageId ? 'page' : undefined}
               href={pageUrl(page)}
-              on:click={() => {
+              onclick={() => {
                 $treeOpenState[page.id] = true;
               }}
             >
@@ -192,10 +202,10 @@
                 })}
                 aria-expanded={$treeOpenState[page.id] ? 'true' : 'false'}
                 aria-label={$treeOpenState[page.id] ? '하위 메뉴 닫기' : '하위 메뉴 열기'}
-                type="button"
-                on:click={() => {
+                onclick={() => {
                   $treeOpenState[page.id] = !$treeOpenState[page.id];
                 }}
+                type="button"
               >
                 <Icon ariaHidden={true} icon={$treeOpenState[page.id] ? ChevronDownIcon : ChevronRightIcon} size={16} />
               </button>

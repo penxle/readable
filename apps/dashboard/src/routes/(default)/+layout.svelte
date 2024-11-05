@@ -2,33 +2,44 @@
   import { flex } from '@readable/styled-system/patterns';
   import mixpanel from 'mixpanel-browser';
   import qs from 'query-string';
+  import { run } from 'svelte/legacy';
   import { browser, dev } from '$app/environment';
   import { graphql } from '$graphql';
 
-  $: query = graphql(`
-    query DefaultLayout_Query {
-      me {
-        id
-        name
-        email
+  type Props = {
+    children?: import('svelte').Snippet;
+  };
 
-        avatar {
+  let { children }: Props = $props();
+
+  let query = $derived(
+    graphql(`
+      query DefaultLayout_Query {
+        me {
           id
-          url
+          name
+          email
+
+          avatar {
+            id
+            url
+          }
         }
       }
+    `),
+  );
+
+  run(() => {
+    if (browser && $query.me) {
+      mixpanel.identify($query.me.id);
+
+      mixpanel.people.set({
+        $email: $query.me.email,
+        $name: $query.me.name,
+        $avatar: qs.stringifyUrl({ url: $query.me.avatar.url, query: { s: 256, f: 'png' } }),
+      });
     }
-  `);
-
-  $: if (browser && $query.me) {
-    mixpanel.identify($query.me.id);
-
-    mixpanel.people.set({
-      $email: $query.me.email,
-      $name: $query.me.name,
-      $avatar: qs.stringifyUrl({ url: $query.me.avatar.url, query: { s: 256, f: 'png' } }),
-    });
-  }
+  });
 </script>
 
 <svelte:head>
@@ -47,5 +58,5 @@
     minHeight: 'screen',
   })}
 >
-  <slot />
+  {@render children?.()}
 </div>

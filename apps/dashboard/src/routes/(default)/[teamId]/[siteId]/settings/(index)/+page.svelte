@@ -13,6 +13,7 @@
   import { createMutationForm } from '@readable/ui/forms';
   import { toast } from '@readable/ui/notification';
   import mixpanel from 'mixpanel-browser';
+  import { run } from 'svelte/legacy';
   import { z } from 'zod';
   import { dataSchemas } from '@/schemas';
   import InfoIcon from '~icons/lucide/info';
@@ -26,25 +27,27 @@
   import TitledModal from '$lib/components/TitledModal.svelte';
   import { uploadBlobAsImage } from '$lib/utils/blob.svelte';
 
-  let deleteSiteOpen = false;
+  let deleteSiteOpen = $state(false);
 
-  let inputEl: HTMLInputElement;
+  let inputEl: HTMLInputElement = $state();
 
-  $: query = graphql(`
-    query SiteSettingsIndexPage_Query($siteId: ID!) {
-      site(siteId: $siteId) {
-        id
-        name
-        slug
-        themeColor
-
-        logo {
+  let query = $derived(
+    graphql(`
+      query SiteSettingsIndexPage_Query($siteId: ID!) {
+        site(siteId: $siteId) {
           id
-          ...Img_image
+          name
+          slug
+          themeColor
+
+          logo {
+            id
+            ...Img_image
+          }
         }
       }
-    }
-  `);
+    `),
+  );
 
   const updateSite = graphql(`
     mutation SiteSettingsIndexPage_UpdateSite_Mutation($input: UpdateSiteInput!) {
@@ -150,20 +153,24 @@
     },
   });
 
-  $: setInitialValues({
-    siteId: $query.site.id,
-    name: $query.site.name,
-    slug: $query.site.slug,
-    themeColor: $query.site.themeColor,
-    logoId: $query.site.logo?.id,
+  run(() => {
+    setInitialValues({
+      siteId: $query.site.id,
+      name: $query.site.name,
+      slug: $query.site.slug,
+      themeColor: $query.site.themeColor,
+      logoId: $query.site.logo?.id,
+    });
   });
 
-  $: setSlugInitialValues({
-    siteId: $query.site.id,
-    name: $query.site.name,
-    slug: $query.site.slug,
-    themeColor: $query.site.themeColor,
-    logoId: $query.site.logo?.id,
+  run(() => {
+    setSlugInitialValues({
+      siteId: $query.site.id,
+      name: $query.site.name,
+      slug: $query.site.slug,
+      themeColor: $query.site.themeColor,
+      logoId: $query.site.logo?.id,
+    });
   });
 </script>
 
@@ -190,10 +197,10 @@
 
   <div class={css({ position: 'relative', size: '64px', _hover: { '& > div': { display: 'flex' } } })}>
     <button
-      type="button"
-      on:click={() => {
+      onclick={() => {
         inputEl.click();
       }}
+      type="button"
     >
       {#if $data.logoId}
         <LoadableImg
@@ -241,8 +248,7 @@
     bind:this={inputEl}
     class={css({ display: 'none' })}
     accept="image/*"
-    type="file"
-    on:change={async (event) => {
+    onchange={async (event) => {
       const file = event.currentTarget.files?.[0];
       event.currentTarget.value = '';
       if (!file) {
@@ -258,6 +264,7 @@
       $data.logoId = resp.id;
       setIsDirty(true);
     }}
+    type="file"
   />
 
   <FormField name="name" style={css.raw({ marginTop: '24px' })} label="사이트 이름">
@@ -336,9 +343,11 @@
     })}
   >
     <div class={flex({ align: 'center', gap: '4px' })}>
-      <FormValidationMessage for="slug" let:message>
-        <Icon icon={InfoIcon} size={12} />
-        {message}
+      <FormValidationMessage for="slug">
+        {#snippet children({ message })}
+          <Icon icon={InfoIcon} size={12} />
+          {message}
+        {/snippet}
       </FormValidationMessage>
     </div>
   </div>
@@ -399,7 +408,9 @@
 </div>
 
 <TitledModal bind:open={deleteSiteOpen}>
-  <svelte:fragment slot="title">사이트 삭제</svelte:fragment>
+  {#snippet title()}
+    사이트 삭제
+  {/snippet}
 
   <p
     class={css({

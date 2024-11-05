@@ -14,6 +14,7 @@
   import { createMutationForm } from '@readable/ui/forms';
   import { toast } from '@readable/ui/notification';
   import mixpanel from 'mixpanel-browser';
+  import { run } from 'svelte/legacy';
   import { z } from 'zod';
   import { dataSchemas } from '@/schemas';
   import TriangleAlertIcon from '~icons/lucide/triangle-alert';
@@ -21,27 +22,29 @@
   import { graphql } from '$graphql';
   import { AvatarInput, TitledModal } from '$lib/components';
 
-  $: query = graphql(`
-    query TeamSettingsPage_Query($teamId: ID!) {
-      team(teamId: $teamId) {
-        id
-        name
-
-        meAsMember {
+  let query = $derived(
+    graphql(`
+      query TeamSettingsPage_Query($teamId: ID!) {
+        team(teamId: $teamId) {
           id
-          role
-        }
+          name
 
-        avatar {
-          id
-        }
+          meAsMember {
+            id
+            role
+          }
 
-        sites {
-          id
+          avatar {
+            id
+          }
+
+          sites {
+            id
+          }
         }
       }
-    }
-  `);
+    `),
+  );
 
   const deleteTeam = graphql(`
     mutation TeamSettingsPage_DeleteTeam_Mutation($input: DeleteTeamInput!) {
@@ -80,9 +83,11 @@
     },
   });
 
-  $: setInitialValues({ avatarId: $query.team.avatar.id, name: $query.team.name, teamId: $query.team.id });
+  run(() => {
+    setInitialValues({ avatarId: $query.team.avatar.id, name: $query.team.name, teamId: $query.team.id });
+  });
 
-  let deleteTeamOpen = false;
+  let deleteTeamOpen = $state(false);
 
   const {
     form: deleteForm,
@@ -172,7 +177,9 @@
 </div>
 
 <TitledModal bind:open={deleteTeamOpen}>
-  <svelte:fragment slot="title">팀 삭제</svelte:fragment>
+  {#snippet title()}
+    팀 삭제
+  {/snippet}
 
   <p
     class={css({

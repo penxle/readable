@@ -11,28 +11,35 @@
 
   type Size = 16 | 24 | 32 | 48 | 64 | 96 | 128 | 256 | 512 | 1024 | 'full';
 
-  export let url: string;
-  export let placeholder: string | undefined = undefined;
-  export let ratio: number | undefined = undefined;
+  type Props = {
+    url: string;
+    placeholder?: string;
+    ratio?: number;
+    alt: string;
+    style?: SystemStyleObject;
+    size: Size;
+    quality?: number;
+    progressive?: boolean;
+  };
 
-  export let alt: string;
-  export let style: SystemStyleObject | undefined = undefined;
-  export let size: Size;
-  export let quality: number | undefined = undefined;
-  export let progressive = false;
+  let { url, placeholder, ratio, alt, style, size, quality, progressive = false }: Props = $props();
 
-  let containerEl: HTMLDivElement | undefined;
-  let contentEl: HTMLDivElement | undefined;
-  let loaded = false;
+  let containerEl = $state<HTMLDivElement>();
+  let contentEl = $state<HTMLDivElement>();
+  let loaded = $state(false);
 
-  $: src = qs.stringifyUrl({ url, query: { s: size === 'full' ? undefined : size, q: quality } });
-  $: src2x = size !== 'full' && qs.stringifyUrl({ url, query: { s: size * 2, q: quality } });
-  $: src3x = size !== 'full' && qs.stringifyUrl({ url, query: { s: size * 3, q: quality } });
+  const src = $derived(qs.stringifyUrl({ url, query: { s: size === 'full' ? undefined : size, q: quality } }));
+  const src2x = $derived(size !== 'full' && qs.stringifyUrl({ url, query: { s: size * 2, q: quality } }));
+  const src3x = $derived(size !== 'full' && qs.stringifyUrl({ url, query: { s: size * 3, q: quality } }));
 
-  $: sizes = size === 'full' ? undefined : `${size}px`;
-  $: srcset = size === 'full' ? undefined : `${src} ${size}w, ${src2x} ${size * 2}w, ${src3x} ${size * 3}w`;
+  const sizes = $derived(size === 'full' ? undefined : `${size}px`);
+  const srcset = $derived(
+    size === 'full' ? undefined : `${src} ${size}w, ${src2x} ${size * 2}w, ${src3x} ${size * 3}w`,
+  );
 
-  $: placeholderUrl = progressive && placeholder ? thumbHashToDataURL(base64.parse(placeholder)) : undefined;
+  const placeholderUrl = $derived(
+    progressive && placeholder ? thumbHashToDataURL(base64.parse(placeholder)) : undefined,
+  );
 
   const load = async () => {
     const imgEl = new Image();
@@ -89,7 +96,7 @@
     })}
   >
     {#if loaded}
-      <div bind:this={contentEl} style:aspect-ratio={ratio} in:fade={{ duration: 200 }} />
+      <div bind:this={contentEl} style:aspect-ratio={ratio} in:fade={{ duration: 200 }}></div>
     {:else}
       <img style:aspect-ratio={ratio} class={css(style)} {alt} loading="lazy" src={placeholderUrl} />
       <div class={center({ position: 'absolute', inset: '0' })}>

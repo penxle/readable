@@ -2,10 +2,16 @@
   import '../app.css';
 
   import { setContext } from 'svelte';
+  import { run } from 'svelte/legacy';
   import { writable } from 'svelte/store';
   import { browser } from '$app/environment';
 
-  export let data: { hasCmd: boolean };
+  type Props = {
+    data: { hasCmd: boolean };
+    children?: import('svelte').Snippet;
+  };
+
+  let { data, children }: Props = $props();
 
   const mobileNavOpen = writable(false);
   const searchBarOpen = writable(false);
@@ -17,9 +23,11 @@
   setContext('searchBarOpen', searchBarOpen);
   setContext('hasCmd', hasCmd);
 
-  $: if (browser) {
-    hasCmd.set(navigator.platform.toUpperCase().includes('MAC') || /(ipad|iphone|ipod)/i.test(navigator.userAgent));
-  }
+  run(() => {
+    if (browser) {
+      hasCmd.set(navigator.platform.toUpperCase().includes('MAC') || /(ipad|iphone|ipod)/i.test(navigator.userAgent));
+    }
+  });
 </script>
 
-<slot />
+{@render children?.()}

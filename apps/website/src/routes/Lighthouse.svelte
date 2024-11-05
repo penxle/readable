@@ -6,9 +6,13 @@
   import { tweened } from 'svelte/motion';
   import { derived } from 'svelte/store';
 
-  export let title: string;
+  type Props = {
+    title: string;
+  };
 
-  let containerEl: HTMLDivElement;
+  let { title }: Props = $props();
+
+  let containerEl: HTMLDivElement = $state();
 
   const circumference = 2 * Math.PI * 45;
 

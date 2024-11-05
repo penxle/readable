@@ -9,20 +9,28 @@
   import { graphql } from '$graphql';
   import { SettingTabItem } from '$lib/components';
 
-  $: query = graphql(`
-    query TeamSettingsLayout_Query($teamId: ID!) {
-      team(teamId: $teamId) {
-        id
+  type Props = {
+    children?: import('svelte').Snippet;
+  };
 
-        meAsMember {
+  let { children }: Props = $props();
+
+  let query = $derived(
+    graphql(`
+      query TeamSettingsLayout_Query($teamId: ID!) {
+        team(teamId: $teamId) {
           id
-          role
+
+          meAsMember {
+            id
+            role
+          }
         }
       }
-    }
-  `);
+    `),
+  );
 
-  $: settings = [
+  let settings = $derived([
     {
       name: '일반',
       href: `/${$page.params.teamId}/settings`,
@@ -45,9 +53,9 @@
           },
         ]
       : []),
-  ];
+  ]);
 
-  let container: HTMLDivElement;
+  let container: HTMLDivElement = $state();
 
   afterNavigate(() => {
     container.scrollTo({ top: 0, behavior: 'auto' });
@@ -91,6 +99,6 @@
       height: 'fit',
     })}
   >
-    <slot />
+    {@render children?.()}
   </div>
 </div>

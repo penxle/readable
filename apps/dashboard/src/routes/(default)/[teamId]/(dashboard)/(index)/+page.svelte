@@ -28,41 +28,43 @@
   import { graphql } from '$graphql';
   import { Img, TitledModal } from '$lib/components';
 
-  let createSiteOpen = false;
+  let createSiteOpen = $state(false);
 
-  $: query = graphql(`
-    query TeamPage_Query($teamId: ID!) {
-      team(teamId: $teamId) {
-        id
-        name
-
-        sites {
+  let query = $derived(
+    graphql(`
+      query TeamPage_Query($teamId: ID!) {
+        team(teamId: $teamId) {
           id
           name
-          url
-          pageCount
-          pageUpdatedAt
 
-          logo {
+          sites {
             id
-            ...Img_image
-          }
-        }
+            name
+            url
+            pageCount
+            pageUpdatedAt
 
-        plan {
-          id
+            logo {
+              id
+              ...Img_image
+            }
+          }
 
           plan {
             id
 
-            rules {
-              siteLimit
+            plan {
+              id
+
+              rules {
+                siteLimit
+              }
             }
           }
         }
       }
-    }
-  `);
+    `),
+  );
 
   const createSite = graphql(`
     mutation TeamPage_CreateSite_Mutation($input: CreateSiteInput!) {
@@ -167,7 +169,7 @@
                   borderRadius: '6px',
                   size: '32px',
                 })}
-              />
+              ></div>
             {/if}
             <div class={css({ truncate: true })}>
               <p class={css({ marginBottom: '1px', textStyle: '15sb', truncate: true })}>{site.name}</p>
@@ -187,17 +189,18 @@
             </div>
           </a>
           <Menu style={css.raw({ position: 'absolute', right: '16px', top: '16px' })} placement="bottom-start">
-            <div
-              slot="button"
-              class={css({
-                borderRadius: '6px',
-                padding: '4px',
-                color: 'neutral.50',
-                _hover: { backgroundColor: 'neutral.20' },
-              })}
-            >
-              <Icon icon={EllipsisIcon} size={16} />
-            </div>
+            {#snippet button()}
+              <div
+                class={css({
+                  borderRadius: '6px',
+                  padding: '4px',
+                  color: 'neutral.50',
+                  _hover: { backgroundColor: 'neutral.20' },
+                })}
+              >
+                <Icon icon={EllipsisIcon} size={16} />
+              </div>
+            {/snippet}
             <MenuItem href={`/${$query.team.id}/${site.id}`} type="link">
               <Icon icon={AppWindowIcon} size={14} />
               <span>대시보드 이동</span>
@@ -238,7 +241,9 @@
 {/if}
 
 <TitledModal bind:open={createSiteOpen}>
-  <svelte:fragment slot="title">새 사이트 만들기</svelte:fragment>
+  {#snippet title()}
+    새 사이트 만들기
+  {/snippet}
 
   <FormProvider {context} {form}>
     <input name="teamId" type="hidden" value={$query.team.id} />

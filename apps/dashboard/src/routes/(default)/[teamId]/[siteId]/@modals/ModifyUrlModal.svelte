@@ -6,6 +6,7 @@
   import { toast } from '@readable/ui/notification';
   import mixpanel from 'mixpanel-browser';
   import { getContext } from 'svelte';
+  import { run } from 'svelte/legacy';
   import { z } from 'zod';
   import { ReadableError } from '@/errors';
   import { dataSchemas } from '@/schemas';
@@ -34,8 +35,12 @@
   };
 
   type Entity = PageEntity | CategoryEntity;
-  export let entity: Entity;
-  export let open: boolean;
+  type Props = {
+    entity: Entity;
+    open: boolean;
+  };
+
+  let { entity, open = $bindable() }: Props = $props();
 
   function getPrecedingPath(entity: Entity) {
     if (entity.__typename === 'Category') {
@@ -46,10 +51,12 @@
     }
   }
 
-  let precedingPath = '';
-  $: if (open) {
-    precedingPath = getPrecedingPath(entity);
-  }
+  let precedingPath = $state('');
+  run(() => {
+    if (open) {
+      precedingPath = getPrecedingPath(entity);
+    }
+  });
 
   const site = getContext<{
     url: string;
@@ -121,7 +128,8 @@
     },
   });
 
-  let form, context;
+  let form = $state(),
+    context = $state();
   if (entity.__typename === 'Category') {
     form = updateCategorySlugForm;
     context = updateCategorySlugContext;
@@ -132,7 +140,9 @@
 </script>
 
 <TitledModal bind:open>
-  <svelte:fragment slot="title">URL 변경</svelte:fragment>
+  {#snippet title()}
+    URL 변경
+  {/snippet}
 
   <FormProvider {context} {form}>
     <div class={flex({ direction: 'column', gap: '20px' })}>

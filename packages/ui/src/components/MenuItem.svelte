@@ -1,4 +1,7 @@
 <script generics="T extends 'button' | 'link' = 'button'" lang="ts">
+  import { createBubbler, handlers } from 'svelte/legacy';
+
+  const bubble = createBubbler();
   import { css, cva, cx } from '@readable/styled-system/css';
   import { flex } from '@readable/styled-system/patterns';
   import { getContext } from 'svelte';
@@ -17,42 +20,56 @@
 
   type $$Events = T extends 'link' ? unknown : { click: MouseEvent };
 
-  export let type: 'button' | 'link' = 'button';
+  type Props = {
+    type?: 'button' | 'link';
+    style?: SystemStyleObject | undefined;
+    variant?: 'default' | 'danger';
+    disabled?: boolean;
+    href?: string | undefined;
+    external?: any;
+    prefix?: import('svelte').Snippet;
+    children?: import('svelte').Snippet;
+    [key: string]: any;
+  };
 
-  export let style: SystemStyleObject | undefined = undefined;
+  let {
+    type = 'button',
+    style = undefined,
+    variant = 'default',
+    disabled = false,
+    href = undefined,
+    external = !href?.startsWith('/'),
+    prefix,
+    children,
+    ...rest
+  }: Props = $props();
 
-  export let variant: 'default' | 'danger' = 'default';
+  let element: 'a' | 'button' = $derived(type === 'link' ? 'a' : type);
 
-  export let disabled = false;
-  export let href: string | undefined = undefined;
-  export let external = !href?.startsWith('/');
-
-  let element: 'a' | 'button';
-  $: element = type === 'link' ? 'a' : type;
-  $: props =
+  let props = $derived(
     (type === 'link' && { href: disabled || href, 'data-sveltekit-preload-data': false }) ||
-    (type === 'button' && { type: 'button', disabled }) ||
-    {};
+      (type === 'button' && { type: 'button', disabled }) ||
+      {},
+  );
 
   let close = getContext<undefined | (() => void)>('close');
 
-  let focused = false;
+  let focused = $state(false);
 </script>
 
 <svelte:element
   this={element}
+  onblur={() => (focused = false)}
+  onclick={handlers(bubble('click'), close)}
+  onfocus={() => (focused = true)}
   role="menuitem"
   tabindex={focused ? 0 : -1}
-  on:focus={() => (focused = true)}
-  on:blur={() => (focused = false)}
-  on:click
-  on:click={close}
   {...external && {
     target: '_blank',
     rel: 'noopener noreferrer',
   }}
   {...props}
-  {...$$restProps}
+  {...rest}
   {...type === 'link' && {
     // NOTE: link 타입이어도 _enabled 스타일이 적용되도록 함
     'aria-disabled': 'false',
@@ -103,6 +120,6 @@
     css(style),
   )}
 >
-  <slot name="prefix" />
-  <slot />
+  {@render prefix?.()}
+  {@render children?.()}
 </svelte:element>

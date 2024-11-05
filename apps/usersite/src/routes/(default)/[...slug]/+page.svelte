@@ -4,6 +4,7 @@
   import { Helmet, Icon } from '@readable/ui/components';
   import { TiptapRenderer } from '@readable/ui/tiptap';
   import { getContext } from 'svelte';
+  import { run } from 'svelte/legacy';
   import MenuIcon from '~icons/lucide/menu';
   import { browser } from '$app/environment';
   import { env } from '$env/dynamic/public';
@@ -14,28 +15,30 @@
   import type { Editor } from '@tiptap/core';
   import type { Writable } from 'svelte/store';
 
-  $: query = graphql(`
-    query PagePage_Query($path: String!) {
-      publicSite {
-        id
-        name
-      }
-
-      publicPage(path: $path) {
-        id
-        slug
-
-        content {
+  let query = $derived(
+    graphql(`
+      query PagePage_Query($path: String!) {
+        publicSite {
           id
-          title
-          content
-          excerpt
+          name
         }
 
-        ...PagePage_Breadcrumb_publicPage
+        publicPage(path: $path) {
+          id
+          slug
+
+          content {
+            id
+            title
+            content
+            excerpt
+          }
+
+          ...PagePage_Breadcrumb_publicPage
+        }
       }
-    }
-  `);
+    `),
+  );
 
   const updatePageView = graphql(`
     mutation PagePage_UpdatePageView_Mutation($input: UpdatePageViewInput!) {
@@ -43,8 +46,8 @@
     }
   `);
 
-  let editor: Editor | undefined = undefined;
-  let headings: { level: number; text: string; scrollTop: number }[] = [];
+  let editor: Editor | undefined = $state(undefined);
+  let headings: { level: number; text: string; scrollTop: number }[] = $state([]);
 
   const blurEffect = getContext<Writable<boolean>>('blurEffect');
   const mobileNavOpen = getContext('mobileNavOpen');
@@ -59,9 +62,11 @@
     });
   };
 
-  $: if (browser) {
-    reportPageView($query.publicPage.id);
-  }
+  run(() => {
+    if (browser) {
+      reportPageView($query.publicPage.id);
+    }
+  });
 </script>
 
 <Helmet
@@ -104,8 +109,8 @@
         backdropBlur: '8px',
       })}
       aria-hidden="true"
-    />
-    <button aria-label="메뉴 열기" type="button" on:click={() => mobileNavOpen.set(true)}>
+    ></div>
+    <button aria-label="메뉴 열기" onclick={() => mobileNavOpen.set(true)} type="button">
       <Icon style={css.raw({ color: 'text.secondary' })} icon={MenuIcon} size={20} />
     </button>
     <Breadcrumb _publicPage={$query.publicPage} />

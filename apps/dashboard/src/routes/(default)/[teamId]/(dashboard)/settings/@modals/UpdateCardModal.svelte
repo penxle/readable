@@ -5,13 +5,18 @@
   import { createMutationForm } from '@readable/ui/forms';
   import { toast } from '@readable/ui/notification';
   import mixpanel from 'mixpanel-browser';
+  import { run } from 'svelte/legacy';
   import { z } from 'zod';
   import { dataSchemas } from '@/schemas';
   import { graphql } from '$graphql';
   import { TitledModal } from '$lib/components';
 
-  export let open = false;
-  export let teamId: string;
+  type Props = {
+    open?: boolean;
+    teamId: string;
+  };
+
+  let { open = $bindable(false), teamId }: Props = $props();
 
   const { form, isValid, context, data } = createMutationForm({
     mutation: graphql(`
@@ -42,7 +47,7 @@
     },
   });
 
-  $: maybeBusinessRegistrationNumber = $data.birthOrBusinessRegistrationNumber?.length > 6;
+  let maybeBusinessRegistrationNumber = $derived($data.birthOrBusinessRegistrationNumber?.length > 6);
 
   function formatBusinessNumber(event: Event) {
     const input = event.target as HTMLInputElement;
@@ -69,18 +74,22 @@
     { name: 'NICEPAY 전자금융거래 기본약관', url: 'https://www.nicepay.co.kr/cs/terms/policy1.do' },
   ];
 
-  let agreementChecks = agreements.map(() => false);
-  $: if (open) {
-    agreementChecks = agreements.map(() => false);
-  }
-  $: allChecked = agreementChecks.every(Boolean);
+  let agreementChecks = $state(agreements.map(() => false));
+  run(() => {
+    if (open) {
+      agreementChecks = agreements.map(() => false);
+    }
+  });
+  let allChecked = $derived(agreementChecks.every(Boolean));
   function handleAllCheck() {
     agreementChecks = agreementChecks.map(() => !allChecked);
   }
 </script>
 
 <TitledModal bind:open>
-  <svelte:fragment slot="title">카드 변경</svelte:fragment>
+  {#snippet title()}
+    카드 변경
+  {/snippet}
 
   <FormProvider class={flex({ flexDirection: 'column' })} {context} {form}>
     <div class={flex({ flexDirection: 'column', gap: '20px' })}>

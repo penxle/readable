@@ -144,7 +144,7 @@
         background: '[linear-gradient(270deg, rgba(244, 244, 245, 0.00) 0%, #F4F4F5 93.07%)]',
         zIndex: '10',
       })}
-    />
+    ></div>
     <div
       class={css({
         position: 'absolute',
@@ -155,7 +155,7 @@
         background: '[linear-gradient(90deg, rgba(244, 244, 245, 0.00) 0%, #F4F4F5 93.07%)]',
         zIndex: '10',
       })}
-    />
+    ></div>
 
     <!-- 윗줄 카드 (왼쪽으로 이동) -->
     <div

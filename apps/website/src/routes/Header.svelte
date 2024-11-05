@@ -3,6 +3,7 @@
   import { center, flex } from '@readable/styled-system/patterns';
   import { scrollLock } from '@readable/ui/actions';
   import { Button, Icon } from '@readable/ui/components';
+  import { run } from 'svelte/legacy';
   import { writable } from 'svelte/store';
   import ExternalLinkIcon from '~icons/lucide/external-link';
   import MenuIcon from '~icons/lucide/menu';
@@ -15,13 +16,17 @@
   import { withUtm } from '$lib/utm';
   import type { ColorToken } from '@readable/styled-system/tokens';
 
-  export let theme: HeaderTheme;
-  export let darkSections: HTMLElement[] = [];
+  type Props = {
+    theme: HeaderTheme;
+    darkSections?: HTMLElement[];
+  };
+
+  let { theme, darkSections = [] }: Props = $props();
 
   type HeaderTheme = 'light' | 'dark';
 
-  let scrollY = 0;
-  let headerElem: HTMLHeadElement;
+  let scrollY = $state(0);
+  let headerElem = $state<HTMLHeadElement>();
 
   const headerTheme = writable<HeaderTheme>(theme);
   const isMenuOpen = writable(false);
@@ -30,24 +35,26 @@
     $isMenuOpen = !$isMenuOpen;
   }
 
-  $: if (browser && darkSections.length > 0 && headerElem) {
-    let currentTheme: HeaderTheme = 'light';
+  run(() => {
+    if (browser && darkSections.length > 0 && headerElem) {
+      let currentTheme: HeaderTheme = 'light';
 
-    const headerHeight = headerElem.offsetHeight;
-    for (const section of darkSections) {
-      if (
-        section.offsetTop - headerHeight < scrollY &&
-        section.offsetTop + section.offsetHeight - headerHeight > scrollY
-      ) {
-        currentTheme = 'dark';
-        break;
+      const headerHeight = headerElem.offsetHeight;
+      for (const section of darkSections) {
+        if (
+          section.offsetTop - headerHeight < scrollY &&
+          section.offsetTop + section.offsetHeight - headerHeight > scrollY
+        ) {
+          currentTheme = 'dark';
+          break;
+        }
       }
+
+      headerTheme.set(currentTheme);
     }
+  });
 
-    headerTheme.set(currentTheme);
-  }
-
-  $: headerBgColor = ($headerTheme === 'light' ? 'white' : 'neutral.100') as ColorToken;
+  let headerBgColor = $derived(($headerTheme === 'light' ? 'white' : 'neutral.100') as ColorToken);
 
   beforeNavigate(() => {
     $isMenuOpen = false;
@@ -187,8 +194,8 @@
 
     <button
       class={flex({ lgOnly: { display: 'none' }, color: $headerTheme === 'dark' ? 'white' : 'gray.1000' })}
+      onclick={toggleMenu}
       type="button"
-      on:click={toggleMenu}
     >
       <Icon icon={$isMenuOpen ? CloseIcon : MenuIcon} size={24} />
     </button>
@@ -231,7 +238,7 @@
             src={FullLogo}
           />
         </a>
-        <button type="button" on:click={toggleMenu}>
+        <button onclick={toggleMenu} type="button">
           <Icon icon={CloseIcon} size={24} />
         </button>
       </div>

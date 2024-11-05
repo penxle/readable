@@ -6,6 +6,7 @@
   import diff from 'fast-diff';
   import mixpanel from 'mixpanel-browser';
   import { getContext } from 'svelte';
+  import { run } from 'svelte/legacy';
   import { z } from 'zod';
   import FileTextIcon from '~icons/lucide/file-text';
   import InfoIcon from '~icons/lucide/info';
@@ -16,15 +17,19 @@
   import AiIcon from './@ai/AiIcon.svelte';
   import AiLoading from './@ai/AiLoading.svelte';
 
-  export let open: boolean;
+  type Props = {
+    open: boolean;
+  };
+
+  let { open = $bindable() }: Props = $props();
 
   const site = getContext<{
     id: string;
   }>('site');
 
-  let lastQuery: string | null = null;
-  let loading = false;
-  let outdateds: Awaited<ReturnType<typeof findOutdatedContent.refetch>>['findOutdatedContent'] = [];
+  let lastQuery: string | null = $state(null);
+  let loading = $state(false);
+  let outdateds: Awaited<ReturnType<typeof findOutdatedContent.refetch>>['findOutdatedContent'] = $state([]);
 
   function reset() {
     lastQuery = null;
@@ -32,9 +37,11 @@
     outdateds = [];
   }
 
-  $: if (open) {
-    reset();
-  }
+  run(() => {
+    if (open) {
+      reset();
+    }
+  });
 
   const findOutdatedContent = graphql(`
     query FindOutdatedsModal_Query($query: String!, $siteId: String!) @manual {
@@ -119,7 +126,7 @@
 </script>
 
 <TitledModal style={css.raw({ width: '700px' })} bind:open>
-  <svelte:fragment slot="title">
+  {#snippet title()}
     <div class={flex({ alignItems: 'center', gap: '8px' })}>
       콘텐츠 최신화
       <div
@@ -135,7 +142,7 @@
         Beta
       </div>
     </div>
-  </svelte:fragment>
+  {/snippet}
 
   {#if lastQuery === null}
     <FormProvider {context} {form}>
@@ -171,7 +178,7 @@
             })}
             placeholder="콘텐츠에 반영해야 할 변경 사항을 자유롭게 입력해주세요"
             rows="4"
-          />
+          ></textarea>
         </label>
       </FormField>
       <Button

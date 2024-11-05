@@ -13,48 +13,33 @@
   import type { LeftSideBar_site } from '$graphql';
   import type { CategoryData, PageData } from './@page-tree/types';
 
-  let _site: LeftSideBar_site;
-  export { _site as $site };
+  type Props = {
+    $site: LeftSideBar_site;
+  };
 
-  $: site = fragment(
-    _site,
-    graphql(`
-      fragment LeftSideBar_site on Site {
-        id
+  let { $site: _site }: Props = $props();
 
-        team {
+  let site = $derived(
+    fragment(
+      _site,
+      graphql(`
+        fragment LeftSideBar_site on Site {
           id
-        }
 
-        # NOTE: maxDepth = 2
-        categories {
-          id
-          name
-          slug
-          order
-          recursivePageCount
-          __typename
-
-          pages {
+          team {
             id
+          }
+
+          # NOTE: maxDepth = 2
+          categories {
+            id
+            name
             slug
-            state
             order
-            recursiveChildCount
-            title
+            recursivePageCount
             __typename
 
-            category {
-              id
-              slug
-            }
-
-            parent {
-              id
-              slug
-            }
-
-            children {
+            pages {
               id
               slug
               state
@@ -72,11 +57,31 @@
                 id
                 slug
               }
+
+              children {
+                id
+                slug
+                state
+                order
+                recursiveChildCount
+                title
+                __typename
+
+                category {
+                  id
+                  slug
+                }
+
+                parent {
+                  id
+                  slug
+                }
+              }
             }
           }
         }
-      }
-    `),
+      `),
+    ),
   );
 
   async function onCreatePage(parent: CategoryData | PageData) {
@@ -169,7 +174,7 @@
     }
   `);
 
-  let findOutdatedsModalOpen = false;
+  let findOutdatedsModalOpen = $state(false);
 </script>
 
 <FindOutdatedsModal bind:open={findOutdatedsModalOpen} />

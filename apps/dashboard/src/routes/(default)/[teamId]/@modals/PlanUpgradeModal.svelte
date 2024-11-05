@@ -7,20 +7,24 @@
   import PlanCycleToggle from './PlanCycleToggle.svelte';
   import type { BillingCycle } from '@/enums';
 
-  export let open = false;
-  export let confirm: (cycle: BillingCycle) => void;
-  export let plan: { id: string; name: string; price: number };
-  export let planCycle: BillingCycle = 'MONTHLY';
+  type Props = {
+    open?: boolean;
+    confirm: (cycle: BillingCycle) => void;
+    plan: { id: string; name: string; price: number };
+    planCycle?: BillingCycle;
+  };
 
-  $: finalPaymentAmount = calculateDetailedAmount(
-    calculatePaymentAmount({ fee: plan.price, billingCycle: planCycle }).final,
+  let { open = $bindable(false), confirm, plan, planCycle = $bindable('MONTHLY') }: Props = $props();
+
+  let finalPaymentAmount = $derived(
+    calculateDetailedAmount(calculatePaymentAmount({ fee: plan.price, billingCycle: planCycle }).final),
   );
 </script>
 
 <TitledModal bind:open>
-  <svelte:fragment slot="title">
+  {#snippet title()}
     {plan.name} 플랜으로 업그레이드
-  </svelte:fragment>
+  {/snippet}
 
   <div class={flex({ flexDirection: 'column', gap: '20px' })}>
     <p class={css({ textStyle: '14r', color: 'text.tertiary' })}>

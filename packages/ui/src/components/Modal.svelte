@@ -4,26 +4,30 @@
   import { scrollLock } from '../actions';
   import Dialog from './dialog/Dialog.svelte';
   import type { SystemStyleObject } from '@readable/styled-system/types';
+  import type { Snippet } from 'svelte';
 
-  export let open = false;
-  export let close: () => void;
-  export let style: SystemStyleObject | undefined = undefined;
+  type Props = {
+    open?: boolean;
+    onclose?: () => void;
+    style?: SystemStyleObject;
+    children: Snippet;
+  };
+
+  let { open = $bindable(false), onclose, style, children }: Props = $props();
 </script>
 
-<svelte:window />
-
-<Dialog {open} on:close={close}>
+<Dialog {onclose} {open}>
   <div
     class={css({ position: 'absolute', inset: '0', backgroundColor: 'gray.1000/24' })}
+    onclick={() => {
+      open = false;
+      onclose?.();
+    }}
+    onkeypress={null}
     role="button"
     tabindex="-1"
-    on:click={() => {
-      open = false;
-      close();
-    }}
-    on:keypress={null}
     transition:fade={{ duration: 150 }}
-  />
+  ></div>
 
   <div
     class={css({
@@ -61,7 +65,7 @@
     >
       <div class={css({ height: 'full', overflowY: 'auto' }, style)} data-scroll-lock-ignore>
         <section class={css({ display: 'contents' })}>
-          <slot />
+          {@render children()}
         </section>
       </div>
     </div>

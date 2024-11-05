@@ -2,18 +2,21 @@
   import { css } from '@readable/styled-system/css';
   import { flex } from '@readable/styled-system/patterns';
   import { HorizontalDivider, Icon } from '@readable/ui/components';
-  import { createEventDispatcher } from 'svelte';
   import type { Editor } from '@tiptap/core';
   import type { MenuItem } from './types';
 
-  export let editor: Editor;
-  export let items: MenuItem[];
+  type Props = {
+    editor: Editor;
+    items: MenuItem[];
+    onexecute: (item: MenuItem) => void;
+    onclose: () => void;
+  };
 
-  let selectedIdx = 0;
+  let { editor, items, onexecute, onclose }: Props = $props();
 
-  const dispatch = createEventDispatcher<{ execute: MenuItem; close: undefined }>();
+  let selectedIdx = $state(0);
 
-  let isOnKeyboardNavigation = false;
+  let isOnKeyboardNavigation = $state(false);
 
   export const handleKeyDown = (event: KeyboardEvent) => {
     if (['ArrowDown', 'ArrowUp'].includes(event.key)) {
@@ -38,19 +41,19 @@
     }
 
     if (event.key === 'Escape') {
-      dispatch('close');
+      onclose();
     }
 
     if (event.key === 'Enter' && items[selectedIdx]) {
       event.preventDefault();
-      dispatch('execute', items[selectedIdx]);
+      onexecute(items[selectedIdx]);
       return true;
     }
 
     return false;
   };
 
-  let selectableElems: HTMLElement[] = [];
+  let selectableElems: HTMLElement[] = $state([]);
 </script>
 
 <div
@@ -86,17 +89,17 @@
         padding: '4px',
         backgroundColor: selectedIdx === idx ? 'neutral.20' : undefined,
       })}
-      role="menuitem"
-      tabindex="-1"
-      on:pointermove={() => {
+      onclick={() => onexecute(item)}
+      onkeydown={handleKeyDown}
+      onpointermove={() => {
         if (isOnKeyboardNavigation) {
           isOnKeyboardNavigation = false;
         } else {
           selectedIdx = idx;
         }
       }}
-      on:keydown={handleKeyDown}
-      on:click={() => dispatch('execute', item)}
+      role="menuitem"
+      tabindex="-1"
     >
       <div class={css({ padding: '4px' })}>
         <Icon icon={item.icon} />

@@ -3,9 +3,14 @@
   import type { DOMOutputSpec } from '@tiptap/pm/model';
   import type { VElement } from 'zeed-dom';
 
-  export let domOutputSpec: DOMOutputSpec | undefined;
+  type Props = {
+    domOutputSpec: DOMOutputSpec;
+    [key: string]: unknown;
+  };
 
-  let element: VElement;
+  let { domOutputSpec, ...rest }: Props = $props();
+
+  let element = $state<VElement>();
 
   function createElementFromSpec(spec: DOMOutputSpec): VElement {
     const [tag, attrs, ...children] = spec as [string, Record<string, string>, ...DOMOutputSpec[]];
@@ -28,18 +33,17 @@
     return el;
   }
 
-  $: if (domOutputSpec) {
-    element = createElementFromSpec(domOutputSpec);
-  }
+  $effect(() => {
+    if (domOutputSpec) {
+      element = createElementFromSpec(domOutputSpec);
+    }
+  });
 
-  let tag: keyof HTMLElementTagNameMap | undefined;
-  $: if (element) {
-    tag = element.tagName.toLowerCase() as keyof HTMLElementTagNameMap;
-  }
+  const tag = $derived(element ? (element.tagName.toLowerCase() as keyof HTMLElementTagNameMap) : undefined);
 </script>
 
 {#if element}
-  <svelte:element this={tag} {...element.attributes} {...$$restProps}>
+  <svelte:element this={tag} {...element.attributes} {...rest}>
     {@html element.innerHTML}
   </svelte:element>
 {/if}

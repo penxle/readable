@@ -5,6 +5,7 @@
   import { Icon, Tooltip } from '@readable/ui/components';
   import dayjs from 'dayjs';
   import { createEventDispatcher, onMount } from 'svelte';
+  import { preventDefault } from 'svelte/legacy';
   import ArrowUpIcon from '~icons/lucide/arrow-up';
   import CircleCheckBigIcon from '~icons/lucide/circle-check-big';
   import { fragment, graphql } from '$graphql';
@@ -12,33 +13,37 @@
   import type { Editor } from '@tiptap/core';
   import type { Editor_CommentPopover_pageContentComment } from '$graphql';
 
-  export let anchor: HTMLElement;
-  export let editor: Editor;
-  export let pos: number;
-  export let pageId: string;
+  type Props = {
+    anchor: HTMLElement;
+    editor: Editor;
+    pos: number;
+    pageId: string;
+    $comments: Editor_CommentPopover_pageContentComment[];
+  };
 
-  let _comments: Editor_CommentPopover_pageContentComment[];
-  export { _comments as $comments };
+  let { anchor, editor, pos, pageId, $comments: _comments }: Props = $props();
 
-  $: comments = fragment(
-    _comments,
-    graphql(`
-      fragment Editor_CommentPopover_pageContentComment on PageContentComment {
-        id
-        content
-        createdAt
-
-        user {
+  let comments = $derived(
+    fragment(
+      _comments,
+      graphql(`
+        fragment Editor_CommentPopover_pageContentComment on PageContentComment {
           id
-          name
+          content
+          createdAt
 
-          avatar {
+          user {
             id
-            ...Img_image
+            name
+
+            avatar {
+              id
+              ...Img_image
+            }
           }
         }
-      }
-    `),
+      `),
+    ),
   );
 
   const addPageContentComment = graphql(`
@@ -61,8 +66,8 @@
     offset: 8,
   });
 
-  let popoverEl: HTMLDivElement;
-  let content = '';
+  let popoverEl: HTMLDivElement = $state();
+  let content = $state('');
 
   const onClickOutside = (e: MouseEvent) => {
     if (!popoverEl.contains(e.target as Node)) {
@@ -110,7 +115,7 @@
   });
 </script>
 
-<svelte:window on:click|capture={onClickOutside} />
+<svelte:window onclickcapture={onClickOutside} />
 
 <div
   bind:this={popoverEl}
@@ -142,8 +147,8 @@
             color: 'text.tertiary',
             _hover: { backgroundColor: 'neutral.20' },
           })}
+          onclick={onResolve}
           type="button"
-          on:click={onResolve}
         >
           <Icon icon={CircleCheckBigIcon} size={16} />
         </button>
@@ -182,7 +187,7 @@
     </ul>
   {/if}
 
-  <form class={flex({ gap: '8px' })} on:submit|preventDefault={onSubmit}>
+  <form class={flex({ gap: '8px' })} onsubmit={preventDefault(onSubmit)}>
     <input
       class={css({
         flexGrow: '1',

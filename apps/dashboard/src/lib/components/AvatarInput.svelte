@@ -8,8 +8,12 @@
 
   const dispatch = createEventDispatcher<{ change: undefined }>();
 
-  export let id: string;
-  export let editable = true;
+  type Props = {
+    id: string;
+    editable?: boolean;
+  };
+
+  let { id = $bindable(), editable = true }: Props = $props();
 </script>
 
 <svelte:element
@@ -64,8 +68,7 @@
     <input
       accept="image/*"
       hidden
-      type="file"
-      on:change={async (event) => {
+      onchange={async (event) => {
         const file = event.currentTarget.files?.[0];
         event.currentTarget.value = '';
         if (!file) {
@@ -81,6 +84,7 @@
         id = resp.id;
         dispatch('change');
       }}
+      type="file"
     />
   {/if}
 </svelte:element>

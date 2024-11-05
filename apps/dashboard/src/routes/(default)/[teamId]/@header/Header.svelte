@@ -13,47 +13,52 @@
   import UserMenu from './UserMenu.svelte';
   import type { Header_query } from '$graphql';
 
-  let _query: Header_query;
-  export { _query as $query };
+  type Props = {
+    $query: Header_query;
+  };
 
-  $: query = fragment(
-    _query,
-    graphql(`
-      fragment Header_query on Query {
-        ...UserMenu_query
+  let { $query: _query }: Props = $props();
 
-        me @required {
-          id
-          ...TeamSwitcher_user
-        }
+  let query = $derived(
+    fragment(
+      _query,
+      graphql(`
+        fragment Header_query on Query {
+          ...UserMenu_query
 
-        team(teamId: $teamId) {
-          id
-          name
-          avatar {
+          me @required {
             id
-            ...Img_image
+            ...TeamSwitcher_user
           }
 
-          sites {
+          team(teamId: $teamId) {
             id
             name
-            logo {
+            avatar {
               id
               ...Img_image
             }
-          }
 
-          ...SiteSwitcher_team
+            sites {
+              id
+              name
+              logo {
+                id
+                ...Img_image
+              }
+            }
+
+            ...SiteSwitcher_team
+          }
         }
-      }
-    `),
+      `),
+    ),
   );
 
-  $: currentSiteId = $page.params.siteId;
-  $: currentSite = $query.team.sites.find((site) => site.id === currentSiteId);
+  let currentSiteId = $derived($page.params.siteId);
+  let currentSite = $derived($query.team.sites.find((site) => site.id === currentSiteId));
 
-  let isFeedbackModalOpen = false;
+  let isFeedbackModalOpen = $state(false);
 </script>
 
 <header

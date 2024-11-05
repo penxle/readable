@@ -12,10 +12,14 @@
   import { TitledModal } from '$lib/components';
   import type { BillingCycle } from '@/enums';
 
-  export let open = false;
-  export let teamId: string;
-  export let plan: { id: string; name: string; price: number };
-  export let planCycle: BillingCycle = 'MONTHLY';
+  type Props = {
+    open?: boolean;
+    teamId: string;
+    plan: { id: string; name: string; price: number };
+    planCycle?: BillingCycle;
+  };
+
+  let { open = $bindable(false), teamId, plan, planCycle = 'MONTHLY' }: Props = $props();
 
   const updateCard = graphql(`
     mutation EnrollPlanWithCardModal_UpdatePaymentMethod_Mutation($input: UpdatePaymentMethodInput!) {
@@ -81,7 +85,7 @@
     },
   });
 
-  $: maybeBusinessRegistrationNumber = $data.birthOrBusinessRegistrationNumber?.length > 6;
+  let maybeBusinessRegistrationNumber = $derived($data.birthOrBusinessRegistrationNumber?.length > 6);
 
   function formatBusinessNumber(event: Event) {
     const input = event.target as HTMLInputElement;
@@ -108,15 +112,17 @@
     { name: 'NICEPAY 전자금융거래 기본약관', url: 'https://www.nicepay.co.kr/cs/terms/policy1.do' },
   ];
 
-  let agreementChecks = agreements.map(() => false);
-  $: allChecked = agreementChecks.every(Boolean);
+  let agreementChecks = $state(agreements.map(() => false));
+  let allChecked = $derived(agreementChecks.every(Boolean));
   function handleAllCheck() {
     agreementChecks = agreementChecks.map(() => !allChecked);
   }
 </script>
 
 <TitledModal bind:open>
-  <svelte:fragment slot="title">카드 추가 및 결제</svelte:fragment>
+  {#snippet title()}
+    카드 추가 및 결제
+  {/snippet}
 
   <div
     class={flex({

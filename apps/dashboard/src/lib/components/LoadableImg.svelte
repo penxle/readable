@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { run } from 'svelte/legacy';
   import { browser } from '$app/environment';
   import { graphql } from '$graphql';
   import Img from './Img.svelte';
@@ -7,25 +8,33 @@
 
   type Size = ComponentProps<Img>['size'];
 
-  export let id: string;
-  export let alt: string;
-  export let style: SystemStyleObject | undefined = undefined;
-  export let size: Size;
-  export let quality: number | undefined = undefined;
-  export let progressive = false;
+  type Props = {
+    id: string;
+    alt: string;
+    style?: SystemStyleObject | undefined;
+    size: Size;
+    quality?: number | undefined;
+    progressive?: boolean;
+  };
 
-  $: query = graphql(`
-    query LoadableImg_Query($id: ID!) @manual {
-      image(id: $id) {
-        id
-        ...Img_image
+  let { id, alt, style = undefined, size, quality = undefined, progressive = false }: Props = $props();
+
+  let query = $derived(
+    graphql(`
+      query LoadableImg_Query($id: ID!) @manual {
+        image(id: $id) {
+          id
+          ...Img_image
+        }
       }
-    }
-  `);
+    `),
+  );
 
-  $: if (browser) {
-    query.refetch({ id });
-  }
+  run(() => {
+    if (browser) {
+      query.refetch({ id });
+    }
+  });
 </script>
 
 {#if $query}

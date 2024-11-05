@@ -10,21 +10,18 @@
   import Enlarge from './Enlarge.svelte';
   import type { NodeViewProps } from '@readable/ui/tiptap';
 
-  type $$Props = NodeViewProps;
-  $$restProps;
+  type Props = NodeViewProps;
 
-  export let node: NodeViewProps['node'];
-  export let editor: NodeViewProps['editor'] | undefined;
-  export let extension: NodeViewProps['extension'];
-  export let selected: NodeViewProps['selected'];
-  export let updateAttributes: NodeViewProps['updateAttributes'];
-  export let deleteNode: NodeViewProps['deleteNode'];
+  let { node, editor, extension, selected, updateAttributes, deleteNode }: Props = $props();
 
-  let inflight = false;
-  let pickerOpened = false;
-  $: pickerOpened = selected;
+  let inflight = $state(false);
+  let pickerOpened = $state(false);
 
-  let enlarged = false;
+  $effect(() => {
+    pickerOpened = selected;
+  });
+
+  let enlarged = $state(false);
 
   const { anchor, floating } = createFloatingActions({
     placement: 'bottom',
@@ -59,8 +56,8 @@
     picker.click();
   };
 
-  let containerEl: HTMLDivElement;
-  let proportion = node.attrs.proportion;
+  let containerEl = $state<HTMLDivElement>();
+  let proportion = $state(node.attrs.proportion);
 
   let initialResizeData: {
     x: number;
@@ -70,6 +67,10 @@
   } | null = null;
 
   const handleResizeStart = (event: PointerEvent, reverse: boolean) => {
+    if (!containerEl) {
+      return;
+    }
+
     const target = event.currentTarget as HTMLElement;
     target.setPointerCapture(event.pointerId);
 
@@ -109,8 +110,8 @@
           width: 'full',
           _hover: { '& button': { display: 'flex' } },
         })}
+        onclick={() => !editor?.isEditable && (enlarged = true)}
         role="presentation"
-        on:click={() => !editor?.isEditable && (enlarged = true)}
       >
         <Img
           style={css.raw({ width: 'full', borderRadius: '4px' }, !editor?.isEditable && { cursor: 'zoom-in' })}
@@ -137,8 +138,8 @@
               size: '28px',
               _hover: { backgroundColor: '[#363839/40]' },
             })}
+            onclick={() => deleteNode()}
             type="button"
-            on:click={() => deleteNode()}
           >
             <Icon icon={Trash2Icon} size={16} />
           </button>
@@ -155,11 +156,15 @@
                 cursor: 'col-resize',
                 _hover: { backgroundColor: '[#363839/40]' },
               })}
+              aria-label="이미지 크기 조절"
+              onpointerdown={(event) => {
+                event.preventDefault();
+                handleResizeStart(event, true);
+              }}
+              onpointermove={handleResize}
+              onpointerup={handleResizeEnd}
               type="button"
-              on:pointerdown|preventDefault={(event) => handleResizeStart(event, true)}
-              on:pointermove={handleResize}
-              on:pointerup={handleResizeEnd}
-            />
+            ></button>
           </div>
 
           <div class={flex({ position: 'absolute', top: '0', bottom: '0', right: '10px', alignItems: 'center' })}>
@@ -174,11 +179,15 @@
                 cursor: 'col-resize',
                 _hover: { backgroundColor: '[#363839/40]' },
               })}
+              aria-label="이미지 크기 조절"
+              onpointerdown={(event) => {
+                event.preventDefault();
+                handleResizeStart(event, false);
+              }}
+              onpointermove={handleResize}
+              onpointerup={handleResizeEnd}
               type="button"
-              on:pointerdown|preventDefault={(event) => handleResizeStart(event, false)}
-              on:pointermove={handleResize}
-              on:pointerup={handleResizeEnd}
-            />
+            ></button>
           </div>
         {/if}
       </div>
@@ -221,23 +230,23 @@
         </div>
 
         <Menu>
-          <div
-            slot="button"
-            class={css(
-              {
-                display: 'none',
-                marginRight: '12px',
-                borderRadius: '4px',
-                padding: '2px',
-                color: 'text.tertiary',
-                _hover: { backgroundColor: 'neutral.30' },
-              },
-              open && { display: 'flex' },
-            )}
-            let:open
-          >
-            <Icon icon={EllipsisIcon} size={20} />
-          </div>
+          {#snippet button({ open })}
+            <div
+              class={css(
+                {
+                  display: 'none',
+                  marginRight: '12px',
+                  borderRadius: '4px',
+                  padding: '2px',
+                  color: 'text.tertiary',
+                  _hover: { backgroundColor: 'neutral.30' },
+                },
+                open && { display: 'flex' },
+              )}
+            >
+              <Icon icon={EllipsisIcon} size={20} />
+            </div>
+          {/snippet}
 
           <MenuItem variant="danger" on:click={() => deleteNode()}>
             <Icon icon={Trash2Icon} size={12} />
@@ -266,12 +275,12 @@
     use:floating
   >
     <span class={css({ textStyle: '13r', color: 'text.tertiary' })}>아래 버튼을 클릭해 파일을 선택하세요</span>
-    <Button style={css.raw({ marginTop: '12px', width: 'full' })} size="sm" variant="secondary" on:click={handleUpload}>
+    <Button style={css.raw({ marginTop: '12px', width: 'full' })} onclick={handleUpload} size="sm" variant="secondary">
       이미지 선택
     </Button>
   </div>
 {/if}
 
 {#if enlarged}
-  <Enlarge {node} referenceEl={containerEl} on:close={() => (enlarged = false)} />
+  <Enlarge {node} onclose={() => (enlarged = false)} referenceEl={containerEl} />
 {/if}

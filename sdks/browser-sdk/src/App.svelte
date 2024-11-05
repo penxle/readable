@@ -4,7 +4,7 @@
   import { onMount } from 'svelte';
   import Widget from './Widget.svelte';
 
-  let loaded = false;
+  let loaded = $state(false);
 
   onMount(() => {
     loaded = true;

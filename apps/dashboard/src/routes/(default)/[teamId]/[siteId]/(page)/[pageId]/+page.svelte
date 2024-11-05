@@ -21,72 +21,74 @@
   import { pageUrl } from '$lib/utils/url';
   import Editor from './Editor.svelte';
 
-  let deletePageOpen = false;
-  let unpublishPageOpen = false;
+  let deletePageOpen = $state(false);
+  let unpublishPageOpen = $state(false);
 
-  $: query = graphql(`
-    query PagePage_Query($siteId: ID!, $pageId: ID!) {
-      site(siteId: $siteId) {
-        id
-
-        team {
+  let query = $derived(
+    graphql(`
+      query PagePage_Query($siteId: ID!, $pageId: ID!) {
+        site(siteId: $siteId) {
           id
-        }
-      }
 
-      page(pageId: $pageId) {
-        id
-        state
-        hasUnpublishedChanges
-        hasUnpublishedParents
-        lastPublishedAt
-        slug
-        recursiveChildCount
-
-        content {
-          id
-          title
-          updatedAt
+          team {
+            id
+          }
         }
 
-        parent {
+        page(pageId: $pageId) {
           id
+          state
+          hasUnpublishedChanges
+          hasUnpublishedParents
+          lastPublishedAt
           slug
-        }
+          recursiveChildCount
 
-        category {
-          id
-          slug
-        }
+          content {
+            id
+            title
+            updatedAt
+          }
 
-        children {
-          id
-        }
+          parent {
+            id
+            slug
+          }
 
-        site {
-          id
-          name
-          url
-        }
+          category {
+            id
+            slug
+          }
 
-        contentContributor {
-          id
+          children {
+            id
+          }
 
-          user {
+          site {
             id
             name
+            url
+          }
 
-            avatar {
+          contentContributor {
+            id
+
+            user {
               id
-              ...Img_image
+              name
+
+              avatar {
+                id
+                ...Img_image
+              }
             }
           }
         }
-      }
 
-      ...PagePage_Editor_query
-    }
-  `);
+        ...PagePage_Editor_query
+      }
+    `),
+  );
 
   const publishPage = graphql(`
     mutation PagePage_PublishPage_Mutation($input: PublishPageInput!) {
@@ -130,7 +132,7 @@
     }
   `);
 
-  let connectionState: 'idle' | 'connected' | 'disconnected' = 'idle';
+  let connectionState: 'idle' | 'connected' | 'disconnected' = $state('idle');
 
   afterNavigate(() => {
     // NOTE: maxDepth = 2
@@ -272,17 +274,18 @@
           </a>
         {/if}
         <Menu offset={2} placement="bottom-end">
-          <div
-            slot="button"
-            class={css({
-              borderRadius: '2px',
-              padding: '4px',
-              color: 'text.secondary',
-              _hover: { backgroundColor: 'neutral.10' },
-            })}
-          >
-            <Icon icon={EllipsisIcon} size={16} />
-          </div>
+          {#snippet button()}
+            <div
+              class={css({
+                borderRadius: '2px',
+                padding: '4px',
+                color: 'text.secondary',
+                _hover: { backgroundColor: 'neutral.10' },
+              })}
+            >
+              <Icon icon={EllipsisIcon} size={16} />
+            </div>
+          {/snippet}
 
           <MenuItem
             on:click={async () => {
@@ -466,10 +469,12 @@
   }}
   bind:open={deletePageOpen}
 >
-  <svelte:fragment slot="title">
+  {#snippet title()}
     "{$query.page.content?.title ?? '(제목 없음)'}" 페이지를 삭제하시겠어요?
-  </svelte:fragment>
-  <svelte:fragment slot="content">삭제된 페이지는 복구할 수 없습니다</svelte:fragment>
+  {/snippet}
+  {#snippet content()}
+    삭제된 페이지는 복구할 수 없습니다
+  {/snippet}
 
   {#if $query.page.recursiveChildCount > 0}
     <div
@@ -490,8 +495,12 @@
     </div>
   {/if}
 
-  <svelte:fragment slot="action">삭제</svelte:fragment>
-  <svelte:fragment slot="cancel">취소</svelte:fragment>
+  {#snippet action()}
+    삭제
+  {/snippet}
+  {#snippet cancel()}
+    취소
+  {/snippet}
 </Alert>
 
 <Alert
@@ -503,14 +512,14 @@
   }}
   bind:open={unpublishPageOpen}
 >
-  <svelte:fragment slot="title">
+  {#snippet title()}
     "{$query.page.content?.title ?? '(제목 없음)'}" 페이지 게시를 취소하시겠어요?
-  </svelte:fragment>
-  <svelte:fragment slot="content">
+  {/snippet}
+  {#snippet content()}
     사이트에서 이 페이지가 더 이상 노출되지 않습니다.
     <br />
     게시 취소한 페이지는 언제든 발행 버튼으로 다시 게시할 수 있습니다
-  </svelte:fragment>
+  {/snippet}
 
   {#if $query.page.recursiveChildCount > 0}
     <div
@@ -531,6 +540,10 @@
     </div>
   {/if}
 
-  <svelte:fragment slot="action">게시 취소</svelte:fragment>
-  <svelte:fragment slot="cancel">취소</svelte:fragment>
+  {#snippet action()}
+    게시 취소
+  {/snippet}
+  {#snippet cancel()}
+    취소
+  {/snippet}
 </Alert>

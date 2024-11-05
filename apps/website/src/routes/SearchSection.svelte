@@ -85,11 +85,11 @@
     };
   };
 
-  let animateQuestion = false;
-  let animateAnswer = false;
-  let animatePages = false;
+  let animateQuestion = $state(false);
+  let animateAnswer = $state(false);
+  let animatePages = $state(false);
 
-  let containerEl: HTMLDivElement;
+  let containerEl: HTMLDivElement = $state();
 
   onMount(() => {
     if (containerEl) {
@@ -121,18 +121,24 @@
     })}
   >
     <SectionTitle>
-      <span slot="subtitle" class={css({ color: '[#9C3BE8]' })}>고객 만족</span>
-      <span slot="title">
-        실제로
-        <br />
-        도움이 되는
-      </span>
-      <span slot="description">
-        <span>단순 키워드 검색만으로&nbsp;</span>
-        <em>질문의 요지를 이해하는 AI 검색</em>
-        <br class={css({ hideBelow: 'md' })} />
-        <span>문서 내용을 기반으로 가장 유용한 답변을 제공합니다</span>
-      </span>
+      {#snippet subtitle()}
+        <span class={css({ color: '[#9C3BE8]' })}>고객 만족</span>
+      {/snippet}
+      {#snippet title()}
+        <span>
+          실제로
+          <br />
+          도움이 되는
+        </span>
+      {/snippet}
+      {#snippet description()}
+        <span>
+          <span>단순 키워드 검색만으로&nbsp;</span>
+          <em>질문의 요지를 이해하는 AI 검색</em>
+          <br class={css({ hideBelow: 'md' })} />
+          <span>문서 내용을 기반으로 가장 유용한 답변을 제공합니다</span>
+        </span>
+      {/snippet}
     </SectionTitle>
 
     <div
@@ -180,13 +186,13 @@
             {#if animateQuestion}
               <p
                 class={css({ marginLeft: '8px', width: 'full' })}
-                on:introend={() => setTimeout(() => (animateAnswer = true), 500)}
+                onintroend={() => setTimeout(() => (animateAnswer = true), 500)}
                 in:typewriter={{ speed: 5 }}
               >
                 팀 이름을 변경하려면 어떻게 해야해?
               </p>
             {:else}
-              <p class={css({ marginLeft: '8px', width: 'full' })} />
+              <p class={css({ marginLeft: '8px', width: 'full' })}></p>
             {/if}
 
             <div class={css({ marginLeft: '14px', color: 'neutral.50' })}>
@@ -210,7 +216,7 @@
             {#if animateAnswer}
               <p
                 class={css({ textStyle: '14r' })}
-                on:introend={() => (animatePages = true)}
+                onintroend={() => (animatePages = true)}
                 in:typewriter={{ speed: 10, suffix: '' }}
               >
                 팀 이름을 변경하려면 팀 대시보드의 팀 설정 탭으로 이동해야 합니다.

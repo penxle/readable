@@ -1,15 +1,16 @@
 <script lang="ts">
   import { css, sva } from '@readable/styled-system/css';
   import { flex } from '@readable/styled-system/patterns';
-  import { createEventDispatcher } from 'svelte';
   import type { RecipeVariant } from '@readable/styled-system/css';
 
-  export let defaultValue: string | undefined = undefined;
-  export let items: {
-    label: string;
-    value: string;
-  }[] = [];
-  export let size: Variants['size'] = 'md';
+  type Props = {
+    defaultValue?: string;
+    items?: { label: string; value: string }[];
+    size?: Variants['size'];
+    onselect?: (value: string) => void;
+  };
+
+  let { defaultValue, items = [], size = 'md', onselect }: Props = $props();
 
   type Variants = RecipeVariant<typeof recipe>;
   const recipe = sva({
@@ -56,15 +57,15 @@
     },
   });
 
-  $: classes = recipe.raw({ size });
+  const classes = $derived(recipe.raw({ size }));
 
-  let selectedValue = defaultValue ?? items[0].value;
-  const dispatch = createEventDispatcher<{
-    select: string;
-  }>();
-  $: dispatch('select', selectedValue);
+  let selectedValue = $state(defaultValue ?? items[0].value);
 
-  $: selectedIndex = items.findIndex((item) => item.value === selectedValue);
+  $effect(() => {
+    onselect?.(selectedValue);
+  });
+
+  const selectedIndex = $derived(items.findIndex((item) => item.value === selectedValue));
 </script>
 
 <div
@@ -81,15 +82,15 @@
     style:width={`calc((100% - ${4 * (items.length + 1)}px) / ${items.length})`}
     class={css(classes.activeIndicator)}
     aria-hidden="true"
-  />
+  ></div>
 
   {#each items as item (item.value)}
     <button
       class={css(classes.button)}
       aria-selected={selectedValue === item.value}
+      onclick={() => (selectedValue = item.value)}
       role="tab"
       type="button"
-      on:click={() => (selectedValue = item.value)}
     >
       {item.label}
     </button>

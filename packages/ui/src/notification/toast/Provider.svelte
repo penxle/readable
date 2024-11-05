@@ -1,7 +1,7 @@
 <script lang="ts">
   import { flex } from '@readable/styled-system/patterns';
   import { portal } from '../../actions';
-  import { dialogStore } from '../../components';
+  import { openedDialogs } from '../../components';
   import Item from './Item.svelte';
   import { store } from './store';
 </script>
@@ -16,7 +16,7 @@
     paddingLeft: '20px',
     pointerEvents: 'none',
   })}
-  use:portal={$dialogStore.at(-1)}
+  use:portal={openedDialogs.at(-1)}
 >
   {#each $store as toast (toast.id)}
     <Item {toast} />

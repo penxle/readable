@@ -2,16 +2,23 @@
   import { css } from '@readable/styled-system/css';
   import { flex } from '@readable/styled-system/patterns';
   import { createEventDispatcher } from 'svelte';
+  import { run } from 'svelte/legacy';
 
-  export let defaultValue: 'MONTHLY' | 'YEARLY' = 'MONTHLY';
+  type Props = {
+    defaultValue?: 'MONTHLY' | 'YEARLY';
+  };
 
-  let selectedValue = defaultValue;
+  let { defaultValue = 'MONTHLY' }: Props = $props();
+
+  let selectedValue = $state(defaultValue);
   const dispatch = createEventDispatcher<{
     select: 'MONTHLY' | 'YEARLY';
   }>();
-  $: dispatch('select', selectedValue);
+  run(() => {
+    dispatch('select', selectedValue);
+  });
 
-  $: selectedIndex = selectedValue === 'MONTHLY' ? 0 : 1;
+  let selectedIndex = $derived(selectedValue === 'MONTHLY' ? 0 : 1);
 
   const length = 2;
 </script>
@@ -38,7 +45,7 @@
       transition: '[left 100ms cubic-bezier(0.3, 0, 0, 1)]',
     })}
     aria-hidden="true"
-  />
+  ></div>
   <button
     class={css({
       flex: '1',
@@ -51,9 +58,9 @@
       },
     })}
     aria-selected={selectedValue === 'MONTHLY'}
+    onclick={() => (selectedValue = 'MONTHLY')}
     role="tab"
     type="button"
-    on:click={() => (selectedValue = 'MONTHLY')}
   >
     월 결제
   </button>
@@ -69,9 +76,9 @@
       },
     })}
     aria-selected={selectedValue === 'YEARLY'}
+    onclick={() => (selectedValue = 'YEARLY')}
     role="tab"
     type="button"
-    on:click={() => (selectedValue = 'YEARLY')}
   >
     <div class={flex({ position: 'relative', gap: '8px', alignItems: 'center', justifyContent: 'center' })}>
       <span>연 결제</span>

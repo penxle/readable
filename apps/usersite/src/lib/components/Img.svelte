@@ -7,24 +7,29 @@
 
   type Size = ComponentProps<Img>['size'];
 
-  let _image: Img_image;
-  export { _image as $image };
-  export let alt: string;
-  export let style: SystemStyleObject | undefined = undefined;
-  export let size: Size;
-  export let quality: number | undefined = undefined;
-  export let progressive = false;
+  type Props = {
+    $image: Img_image;
+    alt: string;
+    style?: SystemStyleObject | undefined;
+    size: Size;
+    quality?: number | undefined;
+    progressive?: boolean;
+  };
 
-  $: image = fragment(
-    _image,
-    graphql(`
-      fragment Img_image on Image {
-        id
-        url
-        ratio
-        placeholder
-      }
-    `),
+  let { $image: _image, alt, style = undefined, size, quality = undefined, progressive = false }: Props = $props();
+
+  let image = $derived(
+    fragment(
+      _image,
+      graphql(`
+        fragment Img_image on Image {
+          id
+          url
+          ratio
+          placeholder
+        }
+      `),
+    ),
   );
 </script>
 

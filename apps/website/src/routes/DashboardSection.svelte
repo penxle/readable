@@ -10,10 +10,14 @@
   import EditingExperience from '$assets/dashboard-section/editing-experience.webp';
   import ModifyUrl from '$assets/dashboard-section/modify-url.svg?component';
 
-  export let section: HTMLElement;
+  type Props = {
+    section: HTMLElement;
+  };
 
-  let currentScroll = 0;
-  let carouselEl: HTMLDivElement;
+  let { section = $bindable() }: Props = $props();
+
+  let currentScroll = $state(0);
+  let carouselEl: HTMLDivElement = $state();
 
   const contents = [
     {
@@ -160,7 +164,7 @@
             },
           },
         })}
-        on:scroll={(e) => {
+        onscroll={(e) => {
           currentScroll = e.currentTarget.scrollLeft;
         }}
       >
@@ -245,8 +249,8 @@
         })}
         aria-label="이전"
         disabled={currentScroll <= 0}
+        onclick={scrollPrev}
         type="button"
-        on:click={scrollPrev}
       >
         <Icon icon={ChevronLeftIcon} size={24} />
       </button>
@@ -262,8 +266,8 @@
         })}
         aria-label="다음"
         disabled={carouselEl && currentScroll >= carouselEl.scrollWidth - carouselEl.clientWidth}
+        onclick={scrollNext}
         type="button"
-        on:click={scrollNext}
       >
         <Icon icon={ChevronRightIcon} size={24} />
       </button>

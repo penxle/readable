@@ -12,9 +12,9 @@
   import MachineFriendlySection from './MachineFriendlySection.svelte';
   import SearchSection from './SearchSection.svelte';
 
-  let heroSection: HTMLElement;
-  let dashboardSection: HTMLElement;
-  $: darkSections = [heroSection, dashboardSection].filter(Boolean);
+  let heroSection: HTMLElement = $state();
+  let dashboardSection: HTMLElement = $state();
+  let darkSections = $derived([heroSection, dashboardSection].filter(Boolean));
 </script>
 
 <Helmet

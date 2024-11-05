@@ -11,14 +11,18 @@
   import type { Editor } from '@tiptap/core';
   import type { Node } from '@tiptap/pm/model';
 
-  export let editor: Editor | null = null;
-  export let tableNode: Node;
-  export let tablePos: number;
-  export let i: number;
-  export let hoveredColumnIndex: number | null = null;
-  export let hasSpan = false;
+  type Props = {
+    editor?: Editor;
+    tableNode: Node;
+    tablePos: number;
+    i: number;
+    hoveredColumnIndex?: number | null;
+    hasSpan?: boolean;
+  };
 
-  $: map = TableMap.get(tableNode);
+  let { editor, tableNode, tablePos, i, hoveredColumnIndex, hasSpan = false }: Props = $props();
+
+  const map = $derived(TableMap.get(tableNode));
 
   function selectColumn(colIndex: number) {
     if (!editor) {
@@ -39,11 +43,11 @@
       bottom: map.height,
     });
 
-    const $anchorCell = tr.doc.resolve(tableStart + colCells[0]);
+    const anchorCell = tr.doc.resolve(tableStart + colCells[0]);
     // eslint-disable-next-line unicorn/prefer-at
-    const $headCell = tr.doc.resolve(tableStart + colCells[colCells.length - 1]);
+    const headCell = tr.doc.resolve(tableStart + colCells[colCells.length - 1]);
 
-    const colSelection = CellSelection.colSelection($anchorCell, $headCell);
+    const colSelection = CellSelection.colSelection(anchorCell, headCell);
     editor.view.dispatch(tr.setSelection(colSelection));
 
     return true;
@@ -103,95 +107,96 @@
 
 <Menu
   offset={4}
-  onOpen={() => {
+  onopen={() => {
     selectColumn(i);
   }}
   placement="bottom-start"
-  let:close
 >
-  <div
-    slot="button"
-    class={center({
-      display: open || hoveredColumnIndex === i ? 'flex' : 'none',
-      _hover: {
-        backgroundColor: 'neutral.20',
-      },
-      _pressed: {
-        color: 'white',
-        backgroundColor: '[var(--prosemirror-color-selection)]',
-        borderWidth: '0',
+  {#snippet button({ open })}
+    <div
+      class={center({
+        display: open || hoveredColumnIndex === i ? 'flex' : 'none',
         _hover: {
-          backgroundColor: '[var(--prosemirror-color-selection)]',
+          backgroundColor: 'neutral.20',
         },
-      },
-      width: '24px',
-      height: '18px',
-      color: 'neutral.50',
-      borderRadius: '4px',
-      backgroundColor: 'white',
-      borderWidth: '1px',
-      borderColor: 'neutral.30',
-      boxShadow: 'normal',
-    })}
-    aria-pressed={open}
-    let:open
-  >
-    <Icon icon={EllipsisIcon} size={14} />
-  </div>
-  {#if i !== 0}
-    <Tooltip enabled={hasSpan} message="표에 병합된 셀이 없을 때만 이동할 수 있습니다.">
-      <MenuItem
-        disabled={hasSpan}
-        on:click={() => {
-          close();
-          swapColumns(i, i - 1);
-        }}
-      >
-        <Icon icon={MoveLeftIcon} size={14} />
-        <span>왼쪽으로 이동</span>
-      </MenuItem>
-    </Tooltip>
-  {/if}
-  {#if i !== map.width - 1}
-    <Tooltip enabled={hasSpan} message="표에 병합된 셀이 없을 때만 이동할 수 있습니다.">
-      <MenuItem
-        disabled={hasSpan}
-        on:click={() => {
-          close();
-          swapColumns(i, i + 1);
-        }}
-      >
-        <Icon icon={MoveRightIcon} size={14} />
-        <span>오른쪽으로 이동</span>
-      </MenuItem>
-    </Tooltip>
-  {/if}
-  <MenuItem
-    on:click={() => {
-      close();
-      editor?.commands.addColumnBefore();
-    }}
-  >
-    <Icon icon={ArrowLeftToLineIcon} size={14} />
-    <span>왼쪽에 열 추가</span>
-  </MenuItem>
-  <MenuItem
-    on:click={() => {
-      close();
-      editor?.commands.addColumnAfter();
-    }}
-  >
-    <Icon icon={ArrowRightToLineIcon} size={14} />
-    <span>오른쪽에 열 추가</span>
-  </MenuItem>
-  <MenuItem
-    variant="danger"
-    on:click={() => {
-      close();
-      editor?.commands.deleteColumn();
-    }}
-  >
-    <Icon icon={Trash2Icon} size={14} />
-    <span>열 삭제</span>
-  </MenuItem>
+        _pressed: {
+          color: 'white',
+          backgroundColor: '[var(--prosemirror-color-selection)]',
+          borderWidth: '0',
+          _hover: {
+            backgroundColor: '[var(--prosemirror-color-selection)]',
+          },
+        },
+        width: '24px',
+        height: '18px',
+        color: 'neutral.50',
+        borderRadius: '4px',
+        backgroundColor: 'white',
+        borderWidth: '1px',
+        borderColor: 'neutral.30',
+        boxShadow: 'normal',
+      })}
+      aria-pressed={open}
+    >
+      <Icon icon={EllipsisIcon} size={14} />
+    </div>
+  {/snippet}
+  {#snippet children({ close })}
+    {#if i !== 0}
+      <Tooltip enabled={hasSpan} message="표에 병합된 셀이 없을 때만 이동할 수 있습니다.">
+        <MenuItem
+          disabled={hasSpan}
+          on:click={() => {
+            close();
+            swapColumns(i, i - 1);
+          }}
+        >
+          <Icon icon={MoveLeftIcon} size={14} />
+          <span>왼쪽으로 이동</span>
+        </MenuItem>
+      </Tooltip>
+    {/if}
+    {#if i !== map.width - 1}
+      <Tooltip enabled={hasSpan} message="표에 병합된 셀이 없을 때만 이동할 수 있습니다.">
+        <MenuItem
+          disabled={hasSpan}
+          on:click={() => {
+            close();
+            swapColumns(i, i + 1);
+          }}
+        >
+          <Icon icon={MoveRightIcon} size={14} />
+          <span>오른쪽으로 이동</span>
+        </MenuItem>
+      </Tooltip>
+    {/if}
+    <MenuItem
+      on:click={() => {
+        close();
+        editor?.commands.addColumnBefore();
+      }}
+    >
+      <Icon icon={ArrowLeftToLineIcon} size={14} />
+      <span>왼쪽에 열 추가</span>
+    </MenuItem>
+    <MenuItem
+      on:click={() => {
+        close();
+        editor?.commands.addColumnAfter();
+      }}
+    >
+      <Icon icon={ArrowRightToLineIcon} size={14} />
+      <span>오른쪽에 열 추가</span>
+    </MenuItem>
+    <MenuItem
+      variant="danger"
+      on:click={() => {
+        close();
+        editor?.commands.deleteColumn();
+      }}
+    >
+      <Icon icon={Trash2Icon} size={14} />
+      <span>열 삭제</span>
+    </MenuItem>
+  {/snippet}
 </Menu>

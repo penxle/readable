@@ -11,20 +11,25 @@
   import { HorizontalDivider, Icon } from '../../../components';
   import type { NodeViewProps } from '../../lib';
 
-  export let open = false;
+  type Props = {
+    open?: boolean;
+    node: NodeViewProps['node'];
+    updateAttributes: NodeViewProps['updateAttributes'];
+  };
 
-  export let node: NodeViewProps['node'];
-  export let updateAttributes: NodeViewProps['updateAttributes'];
+  let { open = $bindable(false), node, updateAttributes }: Props = $props();
 
-  let query = '';
-  let inputElem: HTMLInputElement | undefined;
-  let buttonEl: HTMLButtonElement | undefined;
-  let menuEl: HTMLUListElement | undefined;
-  let selectedIndex: number | null = null;
+  let query = $state('');
+  let inputElem = $state<HTMLInputElement>();
+  let buttonEl = $state<HTMLButtonElement>();
+  let menuEl = $state<HTMLUListElement>();
+  let selectedIndex = $state<number | null>(null);
 
-  $: if (open && inputElem) {
-    inputElem.focus();
-  }
+  $effect(() => {
+    if (open && inputElem) {
+      inputElem.focus();
+    }
+  });
 
   const close = () => {
     open = false;
@@ -43,11 +48,13 @@
     { id: 'text', name: 'Plain Text', aliases: [] },
   ].toSorted((a, b) => a.name.localeCompare(b.name));
 
-  $: currentLanguage = languages.find((language) => language.id === node.attrs.language)?.name ?? '?';
-  $: filteredLanguages = matchSorter(languages, query, {
-    keys: ['name', 'aliases'],
-    sorter: (items) => items,
-  });
+  let currentLanguage = $derived(languages.find((language) => language.id === node.attrs.language)?.name ?? '?');
+  let filteredLanguages = $derived(
+    matchSorter(languages, query, {
+      keys: ['name', 'aliases'],
+      sorter: (items) => items,
+    }),
+  );
 
   // FIXME: refactor
   const handleKeyDown = (e: KeyboardEvent) => {
@@ -121,8 +128,8 @@
       borderColor: 'border.secondary',
     },
   })}
+  onclick={() => (open = true)}
   type="button"
-  on:click={() => (open = true)}
   use:anchor
 >
   {currentLanguage}
@@ -134,7 +141,7 @@
   {/if}
 </button>
 
-<svelte:window on:keydown={handleKeyDown} />
+<svelte:window onkeydown={handleKeyDown} />
 
 {#if open}
   <div
@@ -197,13 +204,13 @@
                 },
               })}
               aria-pressed={node.attrs.language === language.id}
-              tabIndex={selectedIndex === index ? 0 : -1}
-              type="button"
-              on:click={() => {
+              onclick={() => {
                 updateAttributes({ language: language.id });
                 open = false;
               }}
-              on:pointerover={() => (selectedIndex = index)}
+              onpointerover={() => (selectedIndex = index)}
+              tabIndex={selectedIndex === index ? 0 : -1}
+              type="button"
             >
               {language.name}
 

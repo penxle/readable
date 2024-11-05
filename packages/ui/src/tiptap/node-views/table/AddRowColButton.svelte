@@ -7,11 +7,15 @@
   import type { Editor } from '@tiptap/core';
   import type { Node } from '@tiptap/pm/model';
 
-  export let editor: Editor | null = null;
-  export let tableNode: Node;
-  export let tablePos: number;
-  export let isLastRowHovered: boolean;
-  export let isLastColumnHovered: boolean;
+  type Props = {
+    editor?: Editor;
+    tableNode: Node;
+    tablePos: number;
+    isLastRowHovered: boolean;
+    isLastColumnHovered: boolean;
+  };
+
+  let { editor, tableNode, tablePos, isLastRowHovered, isLastColumnHovered }: Props = $props();
 
   function addRowAtEnd(tableNode: Node) {
     if (!editor) {
@@ -100,8 +104,8 @@
         backgroundColor: '[var(--prosemirror-color-selection)]',
       },
     })}
+    onclick={() => addRowAtEnd(tableNode)}
     type="button"
-    on:click={() => addRowAtEnd(tableNode)}
   >
     <Icon icon={PlusIcon} size={14} />
   </button>
@@ -147,10 +151,10 @@
         backgroundColor: '[var(--prosemirror-color-selection)]',
       },
     })}
-    type="button"
-    on:click={() => {
+    onclick={() => {
       addColumnAtEnd(tableNode);
     }}
+    type="button"
   >
     <Icon icon={PlusIcon} size={14} />
   </button>
@@ -196,11 +200,11 @@
         backgroundColor: '[var(--prosemirror-color-selection)]',
       },
     })}
-    type="button"
-    on:click={() => {
+    onclick={() => {
       addRowAtEnd(tableNode);
       addColumnAtEnd(tableNode);
     }}
+    type="button"
   >
     <Icon icon={PlusIcon} size={14} />
   </button>

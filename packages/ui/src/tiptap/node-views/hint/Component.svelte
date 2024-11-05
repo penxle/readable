@@ -9,15 +9,9 @@
   import { Icon } from '../../../components';
   import type { NodeViewProps } from '@readable/ui/tiptap';
 
-  type $$Props = NodeViewProps;
-  $$restProps;
+  type Props = NodeViewProps;
 
-  export let node: NodeViewProps['node'];
-  export let editor: NodeViewProps['editor'] | undefined;
-  // export let selected: NodeViewProps['selected'];
-  // export let deleteNode: NodeViewProps['deleteNode'];
-  // export let getPos: NodeViewProps['getPos'];
-  export let updateAttributes: NodeViewProps['updateAttributes'];
+  let { node, editor, updateAttributes }: Props = $props();
 
   type HintType = keyof typeof HintMap;
   const HintTypes: HintType[] = ['info', 'success', 'warning', 'danger'];
@@ -28,8 +22,8 @@
     danger: { icon: TriangleAlertIcon, color: 'var(--prosemirror-color-red)' },
   };
 
-  $: icon = HintMap[node.attrs.type as HintType].icon;
-  $: color = HintMap[node.attrs.type as HintType].color;
+  const icon = $derived(HintMap[node.attrs.type as HintType].icon);
+  const color = $derived(HintMap[node.attrs.type as HintType].color);
 </script>
 
 <NodeView>
@@ -62,11 +56,11 @@
         !editor?.isEditable && { pointerEvents: 'none' },
       )}
       contenteditable={false}
-      role={editor?.isEditable ? 'button' : 'img'}
-      on:click={() => {
+      onclick={() => {
         const type = HintTypes[(HintTypes.indexOf(node.attrs.type) + 1) % HintTypes.length];
         updateAttributes({ type });
       }}
+      role={editor?.isEditable ? 'button' : 'img'}
       {...editor?.isEditable && {
         type: 'button',
       }}

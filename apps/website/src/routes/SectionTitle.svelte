@@ -1,9 +1,17 @@
 <script lang="ts">
   import { css } from '@readable/styled-system/css';
   import { flex } from '@readable/styled-system/patterns';
+
+  type Props = {
+    subtitle?: import('svelte').Snippet;
+    title?: import('svelte').Snippet;
+    description?: import('svelte').Snippet;
+  };
+
+  let { subtitle, title, description }: Props = $props();
 </script>
 
-<h2
+<div
   class={flex({
     flexDirection: 'column',
     gap: '16px',
@@ -21,7 +29,7 @@
       },
     })}
   >
-    <slot name="subtitle" />
+    {@render subtitle?.()}
   </div>
 
   <h1
@@ -35,10 +43,10 @@
       },
     })}
   >
-    <slot name="title" />
+    {@render title?.()}
   </h1>
 
-  <p
+  <div
     class={css({
       fontSize: '0',
       '& > * > span': {
@@ -59,6 +67,6 @@
       },
     })}
   >
-    <slot name="description" />
-  </p>
-</h2>
+    {@render description?.()}
+  </div>
+</div>

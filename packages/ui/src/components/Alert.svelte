@@ -5,24 +5,46 @@
   import Button from './Button.svelte';
   import Dialog from './dialog/Dialog.svelte';
   import type { SystemStyleObject } from '@readable/styled-system/types';
+  import type { Snippet } from 'svelte';
 
-  export let open: boolean;
-  export let containerStyle: SystemStyleObject | undefined = undefined;
-  export let actionStyle: SystemStyleObject | undefined = undefined;
-  export let onCancel: (() => void) | undefined = undefined;
-  export let onAction: () => void;
-  export let variant: 'primary' | 'danger' = 'danger';
+  type Props = {
+    open: boolean;
+    containerStyle?: SystemStyleObject;
+    actionStyle?: SystemStyleObject;
+    oncancel?: () => void;
+    onaction: () => void;
+    variant?: 'primary' | 'danger';
+    title?: Snippet;
+    content?: Snippet;
+    children?: Snippet;
+    cancel?: Snippet;
+    action?: Snippet;
+  };
+
+  let {
+    open = $bindable(),
+    containerStyle,
+    actionStyle,
+    oncancel,
+    onaction,
+    variant = 'danger',
+    title,
+    content,
+    children,
+    cancel,
+    action,
+  }: Props = $props();
 </script>
 
-<Dialog {open} on:close={() => (open = false)}>
+<Dialog onclose={() => (open = false)} {open}>
   <div
     class={css({ position: 'absolute', inset: '0', backgroundColor: 'gray.1000/24' })}
+    onclick={() => (open = false)}
+    onkeypress={null}
     role="button"
     tabindex="-1"
-    on:click={() => (open = false)}
-    on:keypress={null}
     transition:fade|global={{ duration: 150 }}
-  />
+  ></div>
 
   <div
     class={css({
@@ -68,7 +90,7 @@
             overflowWrap: 'break-word',
           })}
         >
-          <slot name="title" />
+          {@render title?.()}
         </h3>
       </header>
 
@@ -79,10 +101,10 @@
           color: 'text.secondary',
         })}
       >
-        <slot name="content" />
+        {@render content?.()}
       </div>
 
-      <slot />
+      {@render children?.()}
 
       <div
         class={css(
@@ -97,25 +119,25 @@
       >
         <Button
           style={css.raw({ minWidth: '95px' })}
-          size="lg"
-          variant="secondary"
-          on:click={() => {
-            if (onCancel) onCancel();
+          onclick={() => {
+            if (oncancel) oncancel();
             open = false;
           }}
+          size="lg"
+          variant="secondary"
         >
-          <slot name="cancel" />
+          {@render cancel?.()}
         </Button>
         <Button
           style={css.raw({ minWidth: '95px' })}
-          size="lg"
-          variant={variant === 'primary' ? 'primary' : 'danger-fill'}
-          on:click={() => {
-            onAction();
+          onclick={() => {
+            onaction();
             open = false;
           }}
+          size="lg"
+          variant={variant === 'primary' ? 'primary' : 'danger-fill'}
         >
-          <slot name="action" />
+          {@render action?.()}
         </Button>
       </div>
     </div>

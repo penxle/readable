@@ -10,41 +10,43 @@
   import UpdateBillingEmailModal from '../@modals/UpdateBillingEmailModal.svelte';
   import UpdateCardModal from '../@modals/UpdateCardModal.svelte';
 
-  $: query = graphql(`
-    query TeamSettingsBillingPage_Query($teamId: ID!) {
-      team(teamId: $teamId) {
-        id
-        name
-
-        plan {
+  let query = $derived(
+    graphql(`
+      query TeamSettingsBillingPage_Query($teamId: ID!) {
+        team(teamId: $teamId) {
           id
-          amount
-          billingCycle
-          billingEmail
-          enrolledAt
-          nextPaymentAt
+          name
 
           plan {
+            id
+            amount
+            billingCycle
+            billingEmail
+            enrolledAt
+            nextPaymentAt
+
+            plan {
+              id
+              name
+            }
+          }
+
+          paymentInvoices {
+            id
+            amount
+            state
+            createdAt
+            ...InvoiceDetailModal_paymentInvoice
+          }
+
+          paymentMethod {
             id
             name
           }
         }
-
-        paymentInvoices {
-          id
-          amount
-          state
-          createdAt
-          ...InvoiceDetailModal_paymentInvoice
-        }
-
-        paymentMethod {
-          id
-          name
-        }
       }
-    }
-  `);
+    `),
+  );
 
   const invoiceStateStyle = cva({
     base: {
@@ -77,11 +79,11 @@
     }
   };
 
-  let isUpdateCardModalOpen = false;
-  let isUpdateBillingEmailModalOpen = false;
-  let isInvoiceDetailModalOpen = false;
+  let isUpdateCardModalOpen = $state(false);
+  let isUpdateBillingEmailModalOpen = $state(false);
+  let isInvoiceDetailModalOpen = $state(false);
 
-  let paymentInvoice: (typeof $query.team.paymentInvoices)[number];
+  let paymentInvoice: (typeof $query.team.paymentInvoices)[number] = $state();
 </script>
 
 <Helmet title="결제 및 청구" trailing={$query.team.name} />
@@ -227,11 +229,11 @@
                     verticalAlign: 'middle',
                   },
                 })}
-                role="button"
-                on:click={() => {
+                onclick={() => {
                   paymentInvoice = invoice;
                   isInvoiceDetailModalOpen = true;
                 }}
+                role="button"
               >
                 <td class={css({ paddingY: '14px', paddingLeft: '16px', textStyle: '14r' })}>
                   {dayjs(invoice.createdAt).formatAsDate()}

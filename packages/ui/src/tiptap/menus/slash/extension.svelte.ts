@@ -4,6 +4,7 @@ import { Extension, posToDOMRect } from '@tiptap/core';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { disassemble } from 'es-hangul';
 import { matchSorter } from 'match-sorter';
+import { mount, unmount } from 'svelte';
 import Component from './Component.svelte';
 import { menuItems } from './items';
 import type { VirtualElement } from '@floating-ui/dom';
@@ -27,7 +28,7 @@ export const SlashMenu = Extension.create({
 
   addProseMirrorPlugins() {
     let dom: HTMLElement | null = null;
-    let component: Component | null = null;
+    let component: { handleKeyDown: (event: KeyboardEvent) => boolean } | null = null;
     let cleanup: (() => void) | null = null;
 
     return [
@@ -111,13 +112,28 @@ export const SlashMenu = Extension.create({
               }
 
               if (state.active) {
+                let items = $state(state.items);
+
                 if (!prev.active) {
                   dom = document.createElement('div');
-                  component = new Component({
+                  component = mount(Component, {
                     target: dom,
                     props: {
                       editor: this.editor,
-                      items: [],
+                      items,
+                      onexecute: (item) => {
+                        const state = pluginKey.getState(this.editor.state);
+                        if (!state?.active) {
+                          return;
+                        }
+
+                        item.command({ editor: this.editor, range: state.range });
+                      },
+                      onclose: () => {
+                        const { tr } = this.editor.state;
+                        tr.setMeta(pluginKey, { active: false });
+                        this.editor.view.dispatch(tr);
+                      },
                     },
                   });
 
@@ -129,21 +145,6 @@ export const SlashMenu = Extension.create({
                     visibility: 'hidden',
                   });
 
-                  component.$on('execute', (event) => {
-                    const state = pluginKey.getState(this.editor.state);
-                    if (!state?.active) {
-                      return;
-                    }
-
-                    event.detail.command({ editor: this.editor, range: state.range });
-                  });
-
-                  component.$on('close', () => {
-                    const { tr } = this.editor.state;
-                    tr.setMeta(pluginKey, { active: false });
-                    this.editor.view.dispatch(tr);
-                  });
-
                   document.body.append(dom);
                 }
 
@@ -151,9 +152,7 @@ export const SlashMenu = Extension.create({
                   return;
                 }
 
-                component.$set({
-                  items: state.items,
-                });
+                items = state.items;
 
                 const virtualEl: VirtualElement = {
                   getBoundingClientRect: () => posToDOMRect(view, state.range.from, state.range.to),
@@ -180,13 +179,17 @@ export const SlashMenu = Extension.create({
 
               if (!state.active && prev.active) {
                 cleanup?.();
-                component?.$destroy();
+                if (component) {
+                  unmount(component);
+                }
                 dom?.remove();
               }
             },
             destroy: () => {
               cleanup?.();
-              component?.$destroy();
+              if (component) {
+                unmount(component);
+              }
               dom?.remove();
             },
           };

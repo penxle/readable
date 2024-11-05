@@ -21,7 +21,7 @@
   },
   "devDependencies": {
     "@readable/lintconfig": "workspace:*",
-    "cspell": "^8.15.4",
+    "cspell": "^8.15.7",
     "eslint": "^8.57.1",
     "husky": "^9.1.6",
     "lint-staged": "^15.2.10",

@@ -6,8 +6,12 @@
   import PlusIcon from '~icons/lucide/plus';
   import type { Editor } from '@tiptap/core';
 
-  export let editor: Editor;
-  export let pos: number;
+  type Props = {
+    editor: Editor;
+    pos: number;
+  };
+
+  let { editor = $bindable(), pos }: Props = $props();
 
   const handlePlusClick = () => {
     const node = editor.state.doc.nodeAt(pos);
@@ -115,8 +119,8 @@
 <div class={flex({ align: 'center', pointerEvents: 'auto' })}>
   <button
     class={css({ borderRadius: '6px', padding: '2px', color: 'neutral.50', _hover: { backgroundColor: 'neutral.20' } })}
+    onclick={handlePlusClick}
     type="button"
-    on:click={handlePlusClick}
   >
     <Icon icon={PlusIcon} size={18} />
   </button>
@@ -124,9 +128,9 @@
   <button
     class={css({ borderRadius: '6px', padding: '2px', color: 'neutral.50', _hover: { backgroundColor: 'neutral.20' } })}
     draggable="true"
+    onclick={handleGripClick}
+    ondragstart={handleDragStart}
     type="button"
-    on:click={handleGripClick}
-    on:dragstart={handleDragStart}
   >
     <Icon icon={GripVerticalIcon} size={18} />
   </button>

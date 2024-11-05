@@ -5,42 +5,48 @@
   import type { SystemStyleObject } from '@readable/styled-system/types';
   import type { PagePage_Breadcrumb_query } from '$graphql';
 
-  export let _query: PagePage_Breadcrumb_query;
-  export let style: SystemStyleObject | undefined = undefined;
+  type Props = {
+    _query: PagePage_Breadcrumb_query;
+    style?: SystemStyleObject | undefined;
+  };
 
-  $: query = fragment(
-    _query,
-    graphql(`
-      fragment PagePage_Breadcrumb_query on Query {
-        page(pageId: $pageId) {
-          id
-          title
+  let { _query, style = undefined }: Props = $props();
 
-          category {
-            id
-            name
-          }
-
-          # NOTE: maxDepth = 2
-          parent {
+  let query = $derived(
+    fragment(
+      _query,
+      graphql(`
+        fragment PagePage_Breadcrumb_query on Query {
+          page(pageId: $pageId) {
             id
             title
-          }
 
-          site {
-            id
-
-            team {
+            category {
               id
+              name
+            }
+
+            # NOTE: maxDepth = 2
+            parent {
+              id
+              title
+            }
+
+            site {
+              id
+
+              team {
+                id
+              }
             }
           }
         }
-      }
-    `),
+      `),
+    ),
   );
 
   // NOTE: maxDepth = 2
-  $: breadcrumbs = [$query.page.parent, $query.page].filter(Boolean) as NonNullable<typeof $query.page>[];
+  let breadcrumbs = $derived([$query.page.parent, $query.page].filter(Boolean) as NonNullable<typeof $query.page>[]);
 </script>
 
 <nav class={css({ truncate: true }, style)} aria-label="Breadcrumb">

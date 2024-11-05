@@ -9,15 +9,9 @@
   import Emoji from './Emoji.svelte';
   import type { NodeViewProps } from '@readable/ui/tiptap';
 
-  type $$Props = NodeViewProps;
-  $$restProps;
+  type Props = NodeViewProps;
 
-  export let node: NodeViewProps['node'];
-  export let editor: NodeViewProps['editor'] | undefined;
-  // export let selected: NodeViewProps['selected'];
-  // export let deleteNode: NodeViewProps['deleteNode'];
-  // export let getPos: NodeViewProps['getPos'];
-  export let updateAttributes: NodeViewProps['updateAttributes'];
+  let { node, editor, updateAttributes }: Props = $props();
 
   const presetEmojiNames = ['exclamation', 'pushpin', 'bulb', 'loudspeaker', ''];
 
@@ -50,26 +44,13 @@
       return a.sort_order - b.sort_order;
     });
 
-  $: emoji = findEmoji(node.attrs.emoji);
-
   const findEmoji = (name: string) => {
     return emojis.find((e) => e.short_name === name || e.short_names.includes(name));
   };
 
-  let emojiPickerOpened = false;
-  let pickerEl: HTMLDivElement | undefined;
-  let searchKeyword = '';
-
-  $: filteredEmojis = matchSorter(emojis, searchKeyword, {
-    keys: ['name', 'short_name', 'short_names', 'text', 'texts'],
-    sorter: (items) => items,
-  });
-
-  $: if (pickerEl) {
-    pickerEl.querySelector('[aria-pressed="true"]')?.scrollIntoView({
-      block: 'center',
-    });
-  }
+  let emojiPickerOpened = $state(false);
+  let pickerEl = $state<HTMLDivElement>();
+  let searchKeyword = $state('');
 
   const { anchor, floating } = createFloatingActions({
     placement: 'bottom-end',
@@ -77,6 +58,22 @@
     onClickOutside: () => {
       emojiPickerOpened = false;
     },
+  });
+
+  const emoji = $derived(findEmoji(node.attrs.emoji));
+  const filteredEmojis = $derived(
+    matchSorter(emojis, searchKeyword, {
+      keys: ['name', 'short_name', 'short_names', 'text', 'texts'],
+      sorter: (items) => items,
+    }),
+  );
+
+  $effect(() => {
+    if (pickerEl) {
+      pickerEl.querySelector('[aria-pressed="true"]')?.scrollIntoView({
+        block: 'center',
+      });
+    }
   });
 </script>
 
@@ -113,12 +110,12 @@
         !editor?.isEditable && { pointerEvents: 'none' },
       )}
       contenteditable={false}
-      role={editor?.isEditable ? 'button' : 'img'}
-      on:click={() => {
+      onclick={() => {
         if (editor) {
           emojiPickerOpened = true;
         }
       }}
+      role={editor?.isEditable ? 'button' : 'img'}
       {...editor?.isEditable && {
         type: 'button',
         'aria-pressed': emojiPickerOpened,
@@ -171,12 +168,12 @@
               })}
               aria-label={emoji.name}
               aria-pressed={emoji.short_name === node.attrs.emoji}
-              title={emoji.name}
-              type="button"
-              on:click={() => {
+              onclick={() => {
                 updateAttributes({ emoji: emoji.short_name });
                 emojiPickerOpened = false;
               }}
+              title={emoji.name}
+              type="button"
             >
               <Emoji style={css.raw({ size: '20px' })} {emoji} />
             </button>

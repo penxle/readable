@@ -29,8 +29,8 @@
   import SegmentButtons from '../SegmentButtons.svelte';
   import type { ComponentType } from 'svelte';
 
-  let selectedPrice = 'yearly';
-  let darkSection: HTMLElement;
+  let selectedPrice = $state('yearly');
+  let darkSection: HTMLElement = $state();
 
   type Feature = {
     icon: ComponentType;
@@ -49,9 +49,7 @@
     addOns?: AddOn[];
   };
 
-  let plans: Plan[];
-
-  $: plans = [
+  let plans: Plan[] = $derived([
     {
       name: 'Starter',
       price: '무료',
@@ -121,9 +119,9 @@
         { icon: EllipsisIcon, feature: '그리고 무엇이든 요청하세요' },
       ],
     },
-  ];
+  ]);
 
-  $: darkSections = [darkSection].filter(Boolean);
+  let darkSections = $derived([darkSection].filter(Boolean));
 </script>
 
 <Helmet

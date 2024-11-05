@@ -2,6 +2,7 @@
   import { flex } from '@readable/styled-system/patterns';
   import mixpanel from 'mixpanel-browser';
   import { onDestroy } from 'svelte';
+  import { run } from 'svelte/legacy';
   import { PlanId } from '@/const';
   import { browser } from '$app/environment';
   import { graphql } from '$graphql';
@@ -17,22 +18,30 @@
   import EnrollPlanWithCardModal from './@modals/EnrollPlanWithCardModal.svelte';
   import PlanUpgradeModal from './@modals/PlanUpgradeModal.svelte';
 
-  $: query = graphql(`
-    query TeamLayout_Query($teamId: ID!) {
-      ...Header_query
+  type Props = {
+    children?: import('svelte').Snippet;
+  };
 
-      team(teamId: $teamId) {
-        id
-        plan {
+  let { children }: Props = $props();
+
+  let query = $derived(
+    graphql(`
+      query TeamLayout_Query($teamId: ID!) {
+        ...Header_query
+
+        team(teamId: $teamId) {
           id
           plan {
             id
-            name
+            plan {
+              id
+              name
+            }
           }
         }
       }
-    }
-  `);
+    `),
+  );
 
   const teamUpdateStream = graphql(`
     subscription TeamLayout_TeamUpdateStream_Subscription($teamId: ID!) {
@@ -65,22 +74,28 @@
     }
   `);
 
-  $: isLiteOrHigher.set($query.team.plan.plan.id !== PlanId.STARTER);
-  $: isPro.set($query.team.plan.plan.id === PlanId.PRO);
+  run(() => {
+    isLiteOrHigher.set($query.team.plan.plan.id !== PlanId.STARTER);
+  });
+  run(() => {
+    isPro.set($query.team.plan.plan.id === PlanId.PRO);
+  });
 
-  let unsubscribe: (() => void) | null = null;
+  let unsubscribe: (() => void) | null = $state(null);
 
-  $: if (browser) {
-    unsubscribe?.();
+  run(() => {
+    if (browser) {
+      unsubscribe?.();
 
-    unsubscribe = teamUpdateStream.subscribe({
-      teamId: $query.team.id,
-    });
+      unsubscribe = teamUpdateStream.subscribe({
+        teamId: $query.team.id,
+      });
 
-    mixpanel.register({
-      team_id: $query.team.id,
-    });
-  }
+      mixpanel.register({
+        team_id: $query.team.id,
+      });
+    }
+  });
 
   onDestroy(() => {
     mixpanel.unregister('team_id');
@@ -91,7 +106,7 @@
 <div class={flex({ flexDirection: 'column', height: 'screen' })}>
   <Header {$query} />
 
-  <slot />
+  {@render children?.()}
 </div>
 
 <PlanUpgradeModal

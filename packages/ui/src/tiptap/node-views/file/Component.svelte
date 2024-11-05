@@ -10,20 +10,17 @@
   import { Button, Icon, Menu, MenuItem, RingSpinner, VerticalDivider } from '../../../components';
   import type { NodeViewProps } from '@readable/ui/tiptap';
 
-  type $$Props = NodeViewProps;
-  $$restProps;
+  type Props = NodeViewProps;
 
-  export let node: NodeViewProps['node'];
-  export let editor: NodeViewProps['editor'] | undefined;
-  export let extension: NodeViewProps['extension'];
-  export let selected: NodeViewProps['selected'];
-  export let updateAttributes: NodeViewProps['updateAttributes'];
-  export let deleteNode: NodeViewProps['deleteNode'];
+  let { node, editor, extension, selected, updateAttributes, deleteNode }: Props = $props();
 
-  let inflight = false;
-  let pickerOpened = false;
-  let file: File | undefined = undefined;
-  $: pickerOpened = selected;
+  let inflight = $state(false);
+  let pickerOpened = $state(false);
+  let file = $state<File>();
+
+  $effect(() => {
+    pickerOpened = selected;
+  });
 
   const { anchor, floating } = createFloatingActions({
     placement: 'bottom',
@@ -134,23 +131,23 @@
 
     {#if editor?.isEditable}
       <Menu>
-        <div
-          slot="button"
-          class={css(
-            {
-              display: 'none',
-              marginRight: '12px',
-              borderRadius: '4px',
-              padding: '2px',
-              color: 'text.tertiary',
-              _hover: { backgroundColor: 'neutral.30' },
-            },
-            open && { display: 'flex' },
-          )}
-          let:open
-        >
-          <Icon icon={EllipsisIcon} size={20} />
-        </div>
+        {#snippet button({ open })}
+          <div
+            class={css(
+              {
+                display: 'none',
+                marginRight: '12px',
+                borderRadius: '4px',
+                padding: '2px',
+                color: 'text.tertiary',
+                _hover: { backgroundColor: 'neutral.30' },
+              },
+              open && { display: 'flex' },
+            )}
+          >
+            <Icon icon={EllipsisIcon} size={20} />
+          </div>
+        {/snippet}
 
         <MenuItem variant="danger" on:click={() => deleteNode()}>
           <Icon icon={Trash2Icon} size={12} />
@@ -193,7 +190,7 @@
     use:floating
   >
     <span class={css({ textStyle: '13r', color: 'text.tertiary' })}>아래 버튼을 클릭해 파일을 선택하세요</span>
-    <Button style={css.raw({ marginTop: '12px', width: 'full' })} size="sm" variant="secondary" on:click={handleUpload}>
+    <Button style={css.raw({ marginTop: '12px', width: 'full' })} onclick={handleUpload} size="sm" variant="secondary">
       파일 선택
     </Button>
   </div>

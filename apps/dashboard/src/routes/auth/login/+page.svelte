@@ -18,7 +18,7 @@
     }
   `);
 
-  $: email = $page.url.searchParams.get('email');
+  let email = $derived($page.url.searchParams.get('email'));
 </script>
 
 <div

@@ -5,8 +5,14 @@
   import XIcon from '~icons/lucide/x';
   import type { SystemStyleObject } from '@readable/styled-system/types';
 
-  export let open = false;
-  export let style: SystemStyleObject | undefined = undefined;
+  type Props = {
+    open?: boolean;
+    style?: SystemStyleObject | undefined;
+    title?: import('svelte').Snippet;
+    children?: import('svelte').Snippet;
+  };
+
+  let { open = $bindable(false), style = undefined, title, children }: Props = $props();
 </script>
 
 <Modal style={css.raw({ width: '600px' }, style)} close={() => (open = false)} bind:open>
@@ -25,14 +31,14 @@
     })}
   >
     <h2 class={css({ textStyle: '16sb' })}>
-      <slot name="title" />
+      {@render title?.()}
     </h2>
-    <button type="button" on:click={() => (open = false)}>
+    <button onclick={() => (open = false)} type="button">
       <Icon icon={XIcon} size={20} />
     </button>
   </div>
 
   <div class={css({ paddingX: '32px', paddingY: '24px' })}>
-    <slot />
+    {@render children?.()}
   </div>
 </Modal>

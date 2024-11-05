@@ -6,19 +6,23 @@
   import MessageSquareMoreIcon from '~icons/lucide/message-square-more';
   import MessageSquarePlusIcon from '~icons/lucide/message-square-plus';
 
-  export let pos: number;
-  export let commentCount = 0;
+  type Props = {
+    pos: number;
+    commentCount?: number;
+  };
+
+  let { pos, commentCount = 0 }: Props = $props();
 
   const dispatch = createEventDispatcher<{ click: { pos: number; anchor: HTMLElement } }>();
-  let buttonEl: HTMLButtonElement;
+  let buttonEl: HTMLButtonElement = $state();
 </script>
 
 <div class={flex({ position: 'relative', align: 'center', pointerEvents: 'auto' })}>
   <button
     bind:this={buttonEl}
     class={css({ borderRadius: '6px', padding: '2px', color: 'neutral.50', _hover: { backgroundColor: 'neutral.20' } })}
+    onclick={() => dispatch('click', { pos, anchor: buttonEl })}
     type="button"
-    on:click={() => dispatch('click', { pos, anchor: buttonEl })}
   >
     <Icon icon={commentCount > 0 ? MessageSquareMoreIcon : MessageSquarePlusIcon} size={18} />
   </button>

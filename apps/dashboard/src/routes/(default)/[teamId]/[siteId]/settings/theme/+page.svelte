@@ -5,41 +5,44 @@
   import { createMutationForm } from '@readable/ui/forms';
   import { toast } from '@readable/ui/notification';
   import mixpanel from 'mixpanel-browser';
+  import { run } from 'svelte/legacy';
   import { z } from 'zod';
   import { dataSchemas } from '@/schemas';
   import { graphql } from '$graphql';
   import { LiteBadge } from '$lib/components';
 
-  $: query = graphql(`
-    query SiteSettingsThemePage_Query($siteId: ID!) {
-      site(siteId: $siteId) {
-        id
-        name
-        slug
-        themeColor
-
-        logo {
+  let query = $derived(
+    graphql(`
+      query SiteSettingsThemePage_Query($siteId: ID!) {
+        site(siteId: $siteId) {
           id
-        }
+          name
+          slug
+          themeColor
 
-        team {
-          id
+          logo {
+            id
+          }
 
-          plan {
+          team {
             id
 
             plan {
               id
 
-              rules {
-                themeColor
+              plan {
+                id
+
+                rules {
+                  themeColor
+                }
               }
             }
           }
         }
       }
-    }
-  `);
+    `),
+  );
 
   const updateSite = graphql(`
     mutation SiteSettingsThemePage_UpdateSite_Mutation($input: UpdateSiteInput!) {
@@ -81,12 +84,14 @@
     },
   });
 
-  $: setInitialValues({
-    siteId: $query.site.id,
-    name: $query.site.name,
-    slug: $query.site.slug,
-    themeColor: $query.site.themeColor,
-    logoId: $query.site.logo?.id,
+  run(() => {
+    setInitialValues({
+      siteId: $query.site.id,
+      name: $query.site.name,
+      slug: $query.site.slug,
+      themeColor: $query.site.themeColor,
+      logoId: $query.site.logo?.id,
+    });
   });
 </script>
 
@@ -109,6 +114,7 @@
   {form}
 >
   <FormField name="themeColor" label="테마 색상">
+    <!-- @migration-task: migrate this slot by hand, `label-suffix` is an invalid identifier -->
     <LiteBadge slot="label-suffix" via="site-theme-color:lite-badge" />
     <TextInput
       disabled={!$query.site.team.plan.plan.rules.themeColor}
@@ -118,11 +124,12 @@
         }
       }}
     >
+      <!-- @migration-task: migrate this slot by hand, `left-item` is an invalid identifier -->
       <div
         slot="left-item"
         style:background={$data.themeColor}
         class={css({ borderWidth: '1px', borderColor: 'border.image', borderRadius: 'full', size: '20px' })}
-      />
+      ></div>
     </TextInput>
   </FormField>
 

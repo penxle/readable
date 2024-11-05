@@ -6,45 +6,48 @@
   import { toast } from '@readable/ui/notification';
   import mixpanel from 'mixpanel-browser';
   import { onMount } from 'svelte';
+  import { run } from 'svelte/legacy';
   import { z } from 'zod';
   import { dataSchemas } from '@/schemas';
   import { graphql } from '$graphql';
   import { LiteBadge } from '$lib/components';
   import { invokeAlert } from '$lib/components/invoke-alert';
 
-  let useSiteHeaderLink = false;
+  let useSiteHeaderLink = $state(false);
 
-  $: query = graphql(`
-    query SiteSettingsLinkPage_Query($siteId: ID!) {
-      site(siteId: $siteId) {
-        id
-        name
-
-        headerLink {
+  let query = $derived(
+    graphql(`
+      query SiteSettingsLinkPage_Query($siteId: ID!) {
+        site(siteId: $siteId) {
           id
-          label
-          url
-          state
-        }
+          name
 
-        team {
-          id
+          headerLink {
+            id
+            label
+            url
+            state
+          }
 
-          plan {
+          team {
             id
 
             plan {
               id
 
-              rules {
-                headerLink
+              plan {
+                id
+
+                rules {
+                  headerLink
+                }
               }
             }
           }
         }
       }
-    }
-  `);
+    `),
+  );
 
   onMount(() => {
     useSiteHeaderLink = $query.site.headerLink?.state === 'ACTIVE';
@@ -80,10 +83,12 @@
     },
   });
 
-  $: setInitialValues({
-    siteId: $query.site.id,
-    label: $query.site.headerLink?.label ?? '',
-    url: $query.site.headerLink?.url ?? '',
+  run(() => {
+    setInitialValues({
+      siteId: $query.site.id,
+      label: $query.site.headerLink?.label ?? '',
+      url: $query.site.headerLink?.url ?? '',
+    });
   });
 </script>
 

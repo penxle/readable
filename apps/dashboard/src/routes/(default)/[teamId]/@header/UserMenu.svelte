@@ -3,6 +3,7 @@
   import { flex } from '@readable/styled-system/patterns';
   import { HorizontalDivider, Icon, Menu, MenuItem } from '@readable/ui/components';
   import mixpanel from 'mixpanel-browser';
+  import { run } from 'svelte/legacy';
   // import BookMinusIcon from '~icons/lucide/book-minus';
   import Building2Icon from '~icons/lucide/building-2';
   import CircleUserRoundIcon from '~icons/lucide/circle-user-round';
@@ -15,34 +16,39 @@
   import UserSettingModal from './UserSettingModal.svelte';
   import type { UserMenu_query } from '$graphql';
 
-  let _query: UserMenu_query;
-  export { _query as $query };
-  export let teamId: string | undefined = undefined;
+  type Props = {
+    $query: UserMenu_query;
+    teamId?: string | undefined;
+  };
 
-  let openUserSettingModal = false;
+  let { $query: _query, teamId = undefined }: Props = $props();
 
-  $: {
+  let openUserSettingModal = $state(false);
+
+  run(() => {
     const tab = $page.url.searchParams.get('tab');
     openUserSettingModal = !!tab && (tab === 'settings/personal' || tab.startsWith('settings/team'));
-  }
+  });
 
-  $: query = fragment(
-    _query,
-    graphql(`
-      fragment UserMenu_query on Query {
-        me @required {
-          id
-          name
-          email
-          ...UserSettingModal_user
-
-          avatar {
+  let query = $derived(
+    fragment(
+      _query,
+      graphql(`
+        fragment UserMenu_query on Query {
+          me @required {
             id
-            ...Img_image
+            name
+            email
+            ...UserSettingModal_user
+
+            avatar {
+              id
+              ...Img_image
+            }
           }
         }
-      }
-    `),
+      `),
+    ),
   );
 
   const logout = graphql(`
@@ -53,19 +59,21 @@
 </script>
 
 <Menu style={css.raw({ height: 'fit' })} listStyle={css.raw({ width: '[180px!]' })} placement="top">
-  <div slot="button">
-    <Img
-      style={css.raw({
-        borderWidth: '1px',
-        borderColor: 'border.image',
-        borderRadius: 'full',
-        size: '32px',
-      })}
-      $image={$query.me.avatar}
-      alt={`${$query.me.name}의 아바타`}
-      size={32}
-    />
-  </div>
+  {#snippet button()}
+    <div>
+      <Img
+        style={css.raw({
+          borderWidth: '1px',
+          borderColor: 'border.image',
+          borderRadius: 'full',
+          size: '32px',
+        })}
+        $image={$query.me.avatar}
+        alt={`${$query.me.name}의 아바타`}
+        size={32}
+      />
+    </div>
+  {/snippet}
 
   <li class={css({ paddingX: '6px' })}>
     <div

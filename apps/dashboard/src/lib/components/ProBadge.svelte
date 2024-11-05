@@ -7,8 +7,12 @@
   import { isPlanUpgradeModalOpen, isPro, selectedPlan } from '$lib/svelte/stores/ui';
   import type { SystemStyleObject } from '@readable/styled-system/types';
 
-  export let via: string;
-  export let style: SystemStyleObject | undefined = undefined;
+  type Props = {
+    via: string;
+    style?: SystemStyleObject | undefined;
+  };
+
+  let { via, style = undefined }: Props = $props();
 </script>
 
 {#if !$isPro}
@@ -29,12 +33,12 @@
       },
       style,
     )}
-    type="button"
-    on:click={() => {
+    onclick={() => {
       mixpanel.track('plan:upgrade:show', { via });
       isPlanUpgradeModalOpen.set(true);
       selectedPlan.set(ProPlan);
     }}
+    type="button"
   >
     <span>PRO</span>
     <Icon icon={ArrowUpRightIcon} size={12} />

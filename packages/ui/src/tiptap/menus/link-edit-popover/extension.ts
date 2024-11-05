@@ -1,5 +1,6 @@
 import { Extension, posToDOMRect } from '@tiptap/core';
 import { NodeSelection, TextSelection } from '@tiptap/pm/state';
+import { mount, unmount } from 'svelte';
 import { addHttpScheme, isValidLinkStructure } from '../../../utils/url';
 import Component from './Component.svelte';
 import type { VirtualElement } from '@floating-ui/dom';
@@ -114,7 +115,7 @@ export const LinkEditPopover = Extension.create<Options>({
           };
 
           const modalDom = document.createElement('div');
-          const modalComponent = new Component({
+          const modalComponent = mount(Component, {
             target: modalDom,
             props: {
               editor: this.editor,
@@ -124,8 +125,8 @@ export const LinkEditPopover = Extension.create<Options>({
               referenceElement: element,
               currentLink,
               defaultLink,
-              onClose: () => {
-                modalComponent.$destroy();
+              onclose: () => {
+                unmount(modalComponent);
                 modalDom.remove();
                 this.storage.opened = false;
                 this.editor.view.focus();

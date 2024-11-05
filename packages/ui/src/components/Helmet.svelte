@@ -1,18 +1,22 @@
 <script lang="ts">
   import { page } from '$app/stores';
 
-  export let type = 'website';
-  export let title: string;
-  export let trailing: string | null = 'readable';
-  export let description: string | undefined = undefined;
-  export let image: string | { src: string; size: 'small' | 'large' } | undefined = undefined;
-  export let struct: Record<string, unknown> | undefined = undefined;
+  type Props = {
+    type?: string;
+    title: string;
+    trailing?: string;
+    description?: string;
+    image?: string | { src: string; size: 'small' | 'large' };
+    struct?: Record<string, unknown>;
+  };
 
-  $: ({
+  let { type = 'website', title, trailing = 'readable', description, image, struct }: Props = $props();
+
+  const {
     url: { href },
-  } = $page);
+  } = $page;
 
-  $: effectiveTitle = trailing ? `${title}${trailing ? ` · ${trailing}` : ''}` : title;
+  let effectiveTitle = $derived(trailing ? `${title}${trailing ? ` · ${trailing}` : ''}` : title);
 </script>
 
 <svelte:head>

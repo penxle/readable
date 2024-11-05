@@ -2,7 +2,11 @@
   import { css } from '@readable/styled-system/css';
   import type { SystemStyleObject } from '@readable/styled-system/types';
 
-  export let style: SystemStyleObject | undefined = undefined;
+  type Props = {
+    style?: SystemStyleObject;
+  };
+
+  let { style }: Props = $props();
 </script>
 
 <svg class={css(style)} viewBox="25 25 50 50">

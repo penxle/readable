@@ -3,9 +3,9 @@ import type { Writable } from 'svelte/store';
 
 type Parameter = Writable<boolean>;
 
-export const hover: Action<HTMLElement, Parameter> = (element, store) => {
-  const mouseenter = () => store.set(true);
-  const mouseleave = () => store.set(false);
+export const hover: Action<HTMLElement, Parameter> = (element, value: Parameter) => {
+  const mouseenter = () => value.set(true);
+  const mouseleave = () => value.set(false);
 
   element.addEventListener('mouseenter', mouseenter);
   element.addEventListener('mouseleave', mouseleave);

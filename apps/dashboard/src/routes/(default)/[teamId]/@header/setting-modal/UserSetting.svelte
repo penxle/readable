@@ -5,6 +5,7 @@
   import { createMutationForm } from '@readable/ui/forms';
   import { toast } from '@readable/ui/notification';
   import mixpanel from 'mixpanel-browser';
+  import { run } from 'svelte/legacy';
   import { z } from 'zod';
   import { dataSchemas } from '@/schemas';
   import TriangleAlertIcon from '~icons/lucide/triangle-alert';
@@ -14,28 +15,33 @@
   import { accessToken } from '$lib/graphql';
   import type { UserSetting_user } from '$graphql';
 
-  let _user: UserSetting_user;
-  export { _user as $user };
+  type Props = {
+    $user: UserSetting_user;
+  };
 
-  let deactivateOpen = false;
+  let { $user: _user }: Props = $props();
 
-  $: user = fragment(
-    _user,
-    graphql(`
-      fragment UserSetting_user on User {
-        id
-        name
-        email
+  let deactivateOpen = $state(false);
 
-        avatar {
+  let user = $derived(
+    fragment(
+      _user,
+      graphql(`
+        fragment UserSetting_user on User {
           id
-        }
+          name
+          email
 
-        teams {
-          id
+          avatar {
+            id
+          }
+
+          teams {
+            id
+          }
         }
-      }
-    `),
+      `),
+    ),
   );
 
   const { form, data, setInitialValues, isDirty, setIsDirty, context } = createMutationForm({
@@ -88,9 +94,11 @@
     },
   });
 
-  $: if ($user) {
-    setInitialValues({ avatarId: $user.avatar.id, name: $user.name });
-  }
+  run(() => {
+    if ($user) {
+      setInitialValues({ avatarId: $user.avatar.id, name: $user.name });
+    }
+  });
 </script>
 
 <h1 class={css({ textStyle: '28eb' })}>개인 설정</h1>
@@ -149,7 +157,9 @@
 </div>
 
 <TitledModal bind:open={deactivateOpen}>
-  <svelte:fragment slot="title">계정 삭제</svelte:fragment>
+  {#snippet title()}
+    계정 삭제
+  {/snippet}
 
   <p class={css({ marginBottom: '10px', textStyle: '13r', color: 'text.tertiary' })}>
     탈퇴 시 모든 정보가 영구적으로 제거되며, 되돌릴 수 없습니다.

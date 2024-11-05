@@ -7,9 +7,13 @@
   import { isLiteOrHigher, isPlanUpgradeModalOpen, selectedPlan } from '$lib/svelte/stores/ui';
   import type { SystemStyleObject } from '@readable/styled-system/types';
 
-  export let via: string;
-  export let style: SystemStyleObject | undefined = undefined;
-  export let disabled: boolean | undefined = undefined;
+  type Props = {
+    via: string;
+    style?: SystemStyleObject | undefined;
+    disabled?: boolean | undefined;
+  };
+
+  let { via, style = undefined, disabled = undefined }: Props = $props();
 </script>
 
 {#if disabled === undefined ? !$isLiteOrHigher : disabled}
@@ -30,12 +34,12 @@
       },
       style,
     )}
-    type="button"
-    on:click={() => {
+    onclick={() => {
       mixpanel.track('plan:upgrade:show', { via });
       selectedPlan.set(LitePlan);
       isPlanUpgradeModalOpen.set(true);
     }}
+    type="button"
   >
     <span>Lite</span>
     <Icon icon={ArrowUpRightIcon} size={12} />

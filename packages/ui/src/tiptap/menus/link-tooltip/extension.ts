@@ -2,6 +2,7 @@ import { autoUpdate, computePosition } from '@floating-ui/dom';
 import { center } from '@readable/styled-system/patterns';
 import { Extension, posToDOMRect } from '@tiptap/core';
 import { Plugin, PluginKey, TextSelection } from '@tiptap/pm/state';
+import { mount, unmount } from 'svelte';
 import Component from './Component.svelte';
 import type { VirtualElement } from '@floating-ui/dom';
 import type { Node } from '@tiptap/pm/model';
@@ -121,7 +122,7 @@ export const LinkTooltip = Extension.create<Options>({
               };
 
               if (!tooltipComponent) {
-                tooltipComponent = new Component({
+                tooltipComponent = mount(Component, {
                   target: dom,
                   props: {
                     hide: hideTooltip,
@@ -159,7 +160,9 @@ export const LinkTooltip = Extension.create<Options>({
             },
             destroy: () => {
               hideTooltip();
-              tooltipComponent?.$destroy();
+              if (tooltipComponent) {
+                unmount(tooltipComponent);
+              }
               dom.remove();
             },
           };

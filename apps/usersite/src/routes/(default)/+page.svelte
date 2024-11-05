@@ -1,16 +1,19 @@
 <script lang="ts">
+  import { run } from 'svelte/legacy';
   import { graphql } from '$graphql';
 
-  $: graphql(`
-    query IndexPage_Query {
-      publicSite {
-        id
-
-        firstPage {
+  run(() => {
+    graphql(`
+      query IndexPage_Query {
+        publicSite {
           id
-          ...PageUrl_publicPage
+
+          firstPage {
+            id
+            ...PageUrl_publicPage
+          }
         }
       }
-    }
-  `);
+    `);
+  });
 </script>

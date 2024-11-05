@@ -4,40 +4,49 @@
   import { Icon } from '@readable/ui/components';
   import mixpanel from 'mixpanel-browser';
   import { onDestroy, setContext } from 'svelte';
+  import { run } from 'svelte/legacy';
   import MousePointerClickIcon from '~icons/lucide/mouse-pointer-click';
   import { browser } from '$app/environment';
   import { page } from '$app/stores';
   import { graphql } from '$graphql';
   import { Tabs } from '$lib/components';
 
-  $: query = graphql(`
-    query SiteLayout_Query($siteId: ID!) {
-      me @required {
-        id
-      }
+  type Props = {
+    children?: import('svelte').Snippet;
+  };
 
-      site(siteId: $siteId) {
-        id
-        name
-        url
-        themeColor
+  let { children }: Props = $props();
 
-        team {
+  let query = $derived(
+    graphql(`
+      query SiteLayout_Query($siteId: ID!) {
+        me @required {
           id
+        }
 
-          meAsMember {
+        site(siteId: $siteId) {
+          id
+          name
+          url
+          themeColor
+
+          team {
             id
-            role
+
+            meAsMember {
+              id
+              role
+            }
+          }
+
+          logo {
+            id
+            ...Img_image
           }
         }
-
-        logo {
-          id
-          ...Img_image
-        }
       }
-    }
-  `);
+    `),
+  );
 
   const siteUpdateStream = graphql(`
     subscription SiteLayout_SiteUpdateStream_Subscription($siteId: ID!) {
@@ -57,26 +66,30 @@
     }
   `);
 
-  let unsubscribe: (() => void) | null = null;
+  let unsubscribe: (() => void) | null = $state(null);
 
-  $: if (browser) {
-    unsubscribe?.();
+  run(() => {
+    if (browser) {
+      unsubscribe?.();
 
-    unsubscribe = siteUpdateStream.subscribe({
-      siteId: $query.site.id,
-    });
+      unsubscribe = siteUpdateStream.subscribe({
+        siteId: $query.site.id,
+      });
 
-    mixpanel.register({
-      site_id: $query.site.id,
-    });
-  }
+      mixpanel.register({
+        site_id: $query.site.id,
+      });
+    }
+  });
 
   onDestroy(() => {
     mixpanel.unregister('site_id');
     unsubscribe?.();
   });
 
-  $: setContext('site', $query.site);
+  run(() => {
+    setContext('site', $query.site);
+  });
 </script>
 
 <div style:--usersite-theme-color={$query.site.themeColor} class={css({ display: 'contents' })}>
@@ -139,6 +152,6 @@
       overflow: 'auto',
     })}
   >
-    <slot />
+    {@render children?.()}
   </div>
 </div>

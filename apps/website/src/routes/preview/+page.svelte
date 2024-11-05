@@ -10,7 +10,7 @@
   import { supabase } from '$lib/supabase';
   import Header from '../Header.svelte';
 
-  let darkSection: HTMLElement;
+  let darkSection: HTMLElement = $state();
 
   const { form, context } = createMutationForm({
     schema: z.object({
@@ -34,7 +34,7 @@
     },
   });
 
-  $: darkSections = [darkSection].filter(Boolean);
+  let darkSections = $derived([darkSection].filter(Boolean));
 </script>
 
 <Helmet

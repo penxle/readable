@@ -3,12 +3,16 @@
   import { Icon } from '@readable/ui/components';
   import type { ComponentType } from 'svelte';
 
-  export let setting: {
-    icon: ComponentType;
-    name: string;
-    href: string;
-    selected: boolean;
+  type Props = {
+    setting: {
+      icon: ComponentType;
+      name: string;
+      href: string;
+      selected: boolean;
+    };
   };
+
+  let { setting }: Props = $props();
 </script>
 
 <a

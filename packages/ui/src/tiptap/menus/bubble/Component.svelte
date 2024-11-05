@@ -4,6 +4,7 @@
   import { Icon, Tooltip, VerticalDivider } from '@readable/ui/components';
   import { CellSelection } from '@tiptap/pm/tables';
   import { onMount } from 'svelte';
+  import { run } from 'svelte/legacy';
   import BoldIcon from '~icons/lucide/bold';
   import CheckIcon from '~icons/lucide/check';
   import ChevronDownIcon from '~icons/lucide/chevron-down';
@@ -23,11 +24,15 @@
   import type { Editor } from '@tiptap/core';
   import type { Node } from '@tiptap/pm/model';
 
-  export let editor: Editor;
-  export let openLinkEditPopover: () => void;
+  type Props = {
+    editor: Editor;
+    openLinkEditPopover: () => void;
+  };
 
-  let topLevelNodeTypePickerOpened = false;
-  let colorPickerOpened = false;
+  let { editor, openLinkEditPopover }: Props = $props();
+
+  let topLevelNodeTypePickerOpened = $state(false);
+  let colorPickerOpened = $state(false);
 
   const { anchor, floating } = createFloatingActions({
     placement: 'bottom-start',
@@ -71,28 +76,31 @@
     { name: 'blue', label: '파란색' },
   ];
 
-  let activeMarks: string[] = [];
-  let activeNode: Node | null = null;
-  let activeColor: string | null = null;
-  let selectedBlocks: Node[] = [];
-  let isInlineContentSelected = false;
-  let activeNodeTypeId: string | null | undefined = null;
-  let cellSelection: CellSelection | null = null;
+  let activeMarks = $state<string[]>([]);
+  let activeNode = $state<Node | null>(null);
+  let activeColor = $state<string | null>(null);
+  let selectedBlocks = $state<Node[]>([]);
+  let isInlineContentSelected = $state(false);
+  let activeNodeTypeId = $state<string | null | undefined>(null);
+  let cellSelection = $state<CellSelection | null>(null);
 
-  $: showCellSplitButton =
+  let showCellSplitButton = $derived(
     cellSelection?.ranges &&
-    cellSelection.ranges.length === 1 &&
-    selectedBlocks.find(
-      (block) => (block.type.name === 'tableCell' && (block.attrs.colspan ?? 1) > 1) || (block.attrs.rowspan ?? 1) > 1,
-    );
-  $: showCellMergeButton = cellSelection?.ranges && cellSelection.ranges.length > 1;
+      cellSelection.ranges.length === 1 &&
+      selectedBlocks.find(
+        (block) =>
+          (block.type.name === 'tableCell' && (block.attrs.colspan ?? 1) > 1) || (block.attrs.rowspan ?? 1) > 1,
+      ),
+  );
+  let showCellMergeButton = $derived(cellSelection?.ranges && cellSelection.ranges.length > 1);
 
-  $: showCellButtons = showCellSplitButton || showCellMergeButton;
-  $: showBlockSwitchButton =
-    selectedBlocks.length === 1 && activeNodeTypeId && topLevelNodeTypes.some((node) => node.id === activeNodeTypeId);
-  $: showMarksMenu = isInlineContentSelected;
-  $: isInCodeblock = activeNode?.type.name === 'codeBlock';
-  $: showBubbleMenu = !isInCodeblock && (showCellButtons || showBlockSwitchButton || showMarksMenu);
+  let showCellButtons = $derived(showCellSplitButton || showCellMergeButton);
+  let showBlockSwitchButton = $derived(
+    selectedBlocks.length === 1 && activeNodeTypeId && topLevelNodeTypes.some((node) => node.id === activeNodeTypeId),
+  );
+  let showMarksMenu = $derived(isInlineContentSelected);
+  let isInCodeblock = $derived(activeNode?.type.name === 'codeBlock');
+  let showBubbleMenu = $derived(!isInCodeblock && (showCellButtons || showBlockSwitchButton || showMarksMenu));
 
   const bubbleMenuButtonStyle = flex({
     alignItems: 'center',
@@ -154,10 +162,12 @@
     selectedBlocks = selectedBlocks;
   };
 
-  $: activeNodeTypeId =
-    activeNode?.type.name === 'heading'
-      ? `${activeNode?.type.name}-${activeNode?.attrs?.level}`
-      : activeNode?.type.name;
+  run(() => {
+    activeNodeTypeId =
+      activeNode?.type.name === 'heading'
+        ? `${activeNode?.type.name}-${activeNode?.attrs?.level}`
+        : activeNode?.type.name;
+  });
 
   onMount(() => {
     editor.on('update', updateSelectedNodeAndMarks);
@@ -190,10 +200,10 @@
       <Tooltip message="셀 병합" placement="top">
         <button
           class={bubbleMenuButtonStyle}
-          type="button"
-          on:click={() => {
+          onclick={() => {
             editor.chain().focus().mergeCells().run();
           }}
+          type="button"
         >
           <Icon icon={TableCellsMergeIcon} size={16} />
         </button>
@@ -203,10 +213,10 @@
       <Tooltip message="셀 분할" placement="top">
         <button
           class={bubbleMenuButtonStyle}
-          type="button"
-          on:click={() => {
+          onclick={() => {
             editor.chain().focus().splitCell().run();
           }}
+          type="button"
         >
           <Icon icon={TableCellsSplitIcon} size={16} />
         </button>
@@ -238,10 +248,10 @@
         },
       })}
       aria-pressed={topLevelNodeTypePickerOpened}
-      type="button"
-      on:click={() => {
+      onclick={() => {
         topLevelNodeTypePickerOpened = true;
       }}
+      type="button"
       use:anchor
     >
       <div class={css({ textStyle: '15m' })}>
@@ -283,8 +293,7 @@
               },
             })}
             aria-pressed={activeNodeTypeId === nodeType.id}
-            type="button"
-            on:click={() => {
+            onclick={() => {
               if (nodeType.id.includes('heading')) {
                 const level = Number(nodeType.id.split('-')[1]);
                 editor.chain().focus().setNode('heading', { level }).run();
@@ -294,6 +303,7 @@
 
               topLevelNodeTypePickerOpened = false;
             }}
+            type="button"
           >
             <div
               class={css({
@@ -324,20 +334,20 @@
       <button
         class={bubbleMenuButtonStyle}
         aria-pressed={activeMarks.includes(name)}
-        type="button"
-        on:click={() => {
+        onclick={() => {
           editor.chain().focus().toggleMark(name).run();
         }}
+        type="button"
       >
         <Icon {icon} size={16} />
       </button>
     {/each}
     <button
       class={bubbleMenuButtonStyle}
-      type="button"
-      on:click={() => {
+      onclick={() => {
         openLinkEditPopover();
       }}
+      type="button"
     >
       <Icon icon={LinkIcon} size={16} />
     </button>
@@ -358,10 +368,10 @@
         },
       })}
       aria-pressed={colorPickerOpened}
-      type="button"
-      on:click={() => {
+      onclick={() => {
         colorPickerOpened = true;
       }}
+      type="button"
       use:colorPickerAnchor
     >
       <div
@@ -371,7 +381,7 @@
           backgroundColor: 'text.primary',
           size: '16px',
         })}
-      />
+      ></div>
       <Icon style={css.raw({ color: 'neutral.50' })} icon={ChevronDownIcon} />
     </button>
   {/if}
@@ -408,8 +418,7 @@
             },
           })}
           aria-pressed={activeColor === name || (!activeColor && name === 'black')}
-          type="button"
-          on:click={() => {
+          onclick={() => {
             if (name === 'black') {
               editor.chain().focus().unsetColor().run();
             } else {
@@ -417,6 +426,7 @@
             }
             colorPickerOpened = false;
           }}
+          type="button"
         >
           <div
             style:color={name && `var(--prosemirror-color-${name})`}

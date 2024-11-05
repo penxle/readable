@@ -3,45 +3,54 @@
   import { center } from '@readable/styled-system/patterns';
   import { getFormContext } from '../forms';
   import RingSpinner from './RingSpinner.svelte';
-  import type { RecipeVariant, RecipeVariantProps } from '@readable/styled-system/css';
+  import type { RecipeVariantProps } from '@readable/styled-system/css';
   import type { SystemStyleObject } from '@readable/styled-system/types';
+  import type { Snippet } from 'svelte';
   import type { HTMLAnchorAttributes, HTMLButtonAttributes } from 'svelte/elements';
 
-  type $$Props = RecipeVariantProps<typeof recipe> & {
-    type?: T;
+  type BaseProps = {
     loading?: boolean;
     style?: SystemStyleObject;
     disabled?: boolean;
     glossy?: boolean;
-  } & Omit<
-      T extends 'link'
-        ? HTMLAnchorAttributes & { external?: boolean }
-        : Omit<HTMLButtonAttributes, 'type' | 'disabled'>,
-      'class' | 'style'
-    >;
+    children: Snippet;
+  };
 
-  type $$Events = T extends 'link' ? unknown : { click: MouseEvent };
+  type RecipeProps = RecipeVariantProps<typeof recipe>;
 
-  export let type: 'button' | 'reset' | 'submit' | 'link' = 'button';
+  type ButtonProps = {
+    type?: 'button' | 'reset' | 'submit';
+    onclick?: (event: MouseEvent) => void;
+  } & Omit<HTMLButtonAttributes, 'class' | 'style' | 'type' | 'disabled'>;
 
-  export let style: SystemStyleObject | undefined = undefined;
+  type LinkProps = {
+    type: 'link';
+    external?: boolean;
+  } & Omit<HTMLAnchorAttributes, 'class' | 'style'>;
 
-  export let disabled = false;
-  export let loading = false;
-  export let variant: Variants['variant'] = 'primary';
-  export let size: Variants['size'] = 'md';
-  export let glossy = false;
+  type Props = BaseProps & RecipeProps & ([T] extends ['link'] ? LinkProps : ButtonProps);
 
-  export let external = false;
+  let {
+    type = 'button',
+    style,
+    disabled = false,
+    loading = false,
+    variant = 'primary',
+    size = 'md',
+    glossy = false,
+    children,
+    ...rest
+  }: Props = $props();
 
-  $: element = type === 'link' ? 'a' : 'button';
+  const element = $derived(type === 'link' ? 'a' : 'button');
 
   const { isSubmitting } = getFormContext().form ?? {};
 
-  $: showSpinner = !!(loading || (type === 'submit' && $isSubmitting));
-  $: props = type === 'link' ? ({ 'aria-disabled': disabled ? 'true' : 'false' } as const) : { type, disabled };
+  const showSpinner = $derived(!!(loading || (type === 'submit' && $isSubmitting)));
+  const properties = $derived(
+    type === 'link' ? ({ 'aria-disabled': disabled ? 'true' : 'false' } as const) : { type, disabled },
+  );
 
-  type Variants = RecipeVariant<typeof recipe>;
   const recipe = cva({
     base: {
       display: 'flex',
@@ -154,13 +163,14 @@
   aria-busy={showSpinner}
   role="button"
   tabindex="0"
-  on:click
-  {...$$restProps}
-  {...props}
-  {...external && {
-    target: '_blank',
-    rel: 'noopener noreferrer',
-  }}
+  {...rest}
+  {...properties}
+  {...type === 'link' &&
+    'external' in rest &&
+    rest.external && {
+      target: '_blank',
+      rel: 'noopener noreferrer',
+    }}
 >
   {#if showSpinner}
     <div class={center({ position: 'absolute', inset: '0', padding: '[inherit]' })}>
@@ -168,7 +178,7 @@
     </div>
   {/if}
   <div class={css({ display: 'contents' }, showSpinner && { visibility: 'hidden' })}>
-    <slot />
+    {@render children()}
   </div>
   {#if glossy && !disabled}
     <div
@@ -191,6 +201,6 @@
           },
         },
       })({ size })}
-    />
+    ></div>
   {/if}
 </svelte:element>

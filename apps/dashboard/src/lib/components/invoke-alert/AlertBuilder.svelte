@@ -1,22 +1,28 @@
 <script lang="ts">
   import { Alert } from '@readable/ui/components';
+  import type { Snippet } from 'svelte';
 
-  export let open = false;
-  export let cancel: (() => void) | undefined = undefined;
-  export let action: () => void;
-  export let title: string;
-  export let content: string;
-  export let actionText = '확인';
-  export let cancelText = '취소';
-  export let variant: 'primary' | 'danger' = 'danger';
+  type Props = {
+    open?: boolean;
+    oncancel?: () => void;
+    onaction: () => void;
+    title: Snippet;
+    content: Snippet;
+    action?: Snippet;
+    cancel?: Snippet;
+    variant?: 'primary' | 'danger';
+  };
+
+  let {
+    open = $bindable(false),
+    oncancel,
+    onaction,
+    title,
+    content,
+    action,
+    cancel,
+    variant = 'danger',
+  }: Props = $props();
 </script>
 
-<Alert onAction={action} onCancel={cancel} {variant} bind:open>
-  <svelte:fragment slot="title">{title}</svelte:fragment>
-  <svelte:fragment slot="content">
-    {content}
-  </svelte:fragment>
-
-  <svelte:fragment slot="action">{actionText}</svelte:fragment>
-  <svelte:fragment slot="cancel">{cancelText}</svelte:fragment>
-</Alert>
+<Alert {action} {cancel} {content} {onaction} {oncancel} {title} {variant} bind:open />

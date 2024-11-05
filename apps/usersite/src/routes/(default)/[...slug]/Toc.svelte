@@ -3,16 +3,21 @@
   import { flex } from '@readable/styled-system/patterns';
   import { createAnchorId } from '@readable/ui/utils';
   import { onMount } from 'svelte';
+  import { run } from 'svelte/legacy';
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
 
-  export let headings: { level: number; text: string; scrollTop: number }[] = [];
+  type Props = {
+    headings?: { level: number; text: string; scrollTop: number }[];
+  };
+
+  let { headings = [] }: Props = $props();
 
   let scrollMarginTop = 101; /* 헤더 높이 + 37px */
   let boundary = scrollMarginTop;
   let boundaryLock = false;
 
-  let activeHeadingIndex = 0;
+  let activeHeadingIndex = $state(0);
   let prevScrollY: number | null = null;
   const handleScroll = () => {
     if (prevScrollY) {
@@ -98,21 +103,23 @@
   };
 
   const defaultIndent = 12;
-  let indents: number[] = [];
-  $: if (headings.length > 1) {
-    let currentIndent = defaultIndent;
-    let prevLevel = headings[0]?.level;
+  let indents: number[] = $state([]);
+  run(() => {
+    if (headings.length > 1) {
+      let currentIndent = defaultIndent;
+      let prevLevel = headings[0]?.level;
 
-    indents = [];
-    for (const item of headings) {
-      const indent = Math.max(defaultIndent, currentIndent + (item.level - prevLevel) * 20);
-      indents.push(indent);
-      currentIndent = indent;
-      prevLevel = item.level;
+      indents = [];
+      for (const item of headings) {
+        const indent = Math.max(defaultIndent, currentIndent + (item.level - prevLevel) * 20);
+        indents.push(indent);
+        currentIndent = indent;
+        prevLevel = item.level;
+      }
+
+      indents = indents;
     }
-
-    indents = indents;
-  }
+  });
 
   onMount(() => {
     // FIXME: 마운트 시점에 처음 들어오는 scrollTop 값이 이상해서 임시로 setTimeout 사용
@@ -130,7 +137,7 @@
   });
 </script>
 
-<svelte:window on:scroll={handleScroll} />
+<svelte:window onscroll={handleScroll} />
 
 <div
   class={flex({
@@ -177,7 +184,7 @@
             )}
             aria-current={$page.url.hash === `#${createAnchorId(item.text)}` ? 'location' : undefined}
             href={`#${createAnchorId(item.text)}`}
-            on:click={(e) => handleClick(e, item)}
+            onclick={(e) => handleClick(e, item)}
           >
             {item.text}
           </a>

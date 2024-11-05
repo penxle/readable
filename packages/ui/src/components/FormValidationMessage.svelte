@@ -1,10 +1,15 @@
 <script lang="ts">
   import { getFormContext } from '../forms';
+  import type { Snippet } from 'svelte';
   import type { Writable } from 'svelte/store';
 
-  let errorFor: string;
-  export { errorFor as for };
-  export let type: 'error' | 'warning' = 'error';
+  type Props = {
+    for: string;
+    type?: 'error' | 'warning';
+    children: Snippet<[{ message: string }]>;
+  };
+
+  let { for: errorFor, type = 'error', children }: Props = $props();
 
   const { form } = getFormContext();
 
@@ -14,16 +19,18 @@
 
   const isSubmitting: Writable<boolean> = form.isSubmitting;
 
-  let isSubmitted = false;
+  let isSubmitted = $state(false);
 
-  $: if ($isSubmitting && !isSubmitted) {
-    isSubmitted = true;
-  }
+  $effect(() => {
+    if ($isSubmitting && !isSubmitted) {
+      isSubmitted = true;
+    }
+  });
 
-  $: store = type === 'error' ? form.errors : form.warnings;
-  $: message = $store[errorFor]?.[0];
+  const store = $derived(type === 'error' ? form.errors : form.warnings);
+  const message = $derived($store[errorFor]?.[0]);
 </script>
 
 {#if message}
-  <slot {message} />
+  {@render children({ message })}
 {/if}

@@ -1,19 +1,18 @@
 <script lang="ts">
   import type { FormAction } from '@felte/core';
+  import type { Snippet } from 'svelte';
   import type { HTMLFormAttributes } from 'svelte/elements';
 
-  export let form: FormAction;
-  export let context: () => void;
-
-  type $$Props = {
+  type Props = {
     form: FormAction;
     context: () => void;
+    children: Snippet;
   } & HTMLFormAttributes;
 
-  $: ({ form, context, ...rest } = $$props as $$Props);
+  let { form, context, children, ...rest }: Props = $props();
   context();
 </script>
 
 <form use:form {...rest}>
-  <slot />
+  {@render children()}
 </form>

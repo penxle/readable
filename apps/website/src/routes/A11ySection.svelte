@@ -45,21 +45,27 @@
     })}
   >
     <SectionTitle>
-      <span slot="subtitle" class={css({ color: '[#175DE5]' })}>접근성</span>
-      <span slot="title">
-        모두가
-        <br />
-        이용 가능한
-      </span>
-      <span slot="description">
-        <span>리더블로 만들어진 사이트는</span>
-        <em>&nbsp;다양한 사용자들이 문제 없이&nbsp;</em>
-        <span>콘텐츠에 접근할 수 있도록 설계되었습니다.</span>
-        <br />
+      {#snippet subtitle()}
+        <span class={css({ color: '[#175DE5]' })}>접근성</span>
+      {/snippet}
+      {#snippet title()}
         <span>
-          어떤 기기를 사용하든지, 나이나 신체적 특성 등에 관계없이 원하는 내용을 손쉽게 찾아 읽을 수 있습니다.
+          모두가
+          <br />
+          이용 가능한
         </span>
-      </span>
+      {/snippet}
+      {#snippet description()}
+        <span>
+          <span>리더블로 만들어진 사이트는</span>
+          <em>&nbsp;다양한 사용자들이 문제 없이&nbsp;</em>
+          <span>콘텐츠에 접근할 수 있도록 설계되었습니다.</span>
+          <br />
+          <span>
+            어떤 기기를 사용하든지, 나이나 신체적 특성 등에 관계없이 원하는 내용을 손쉽게 찾아 읽을 수 있습니다.
+          </span>
+        </span>
+      {/snippet}
     </SectionTitle>
 
     <div
@@ -98,7 +104,7 @@
           </div>
 
           <div class={center({ width: '403px', height: '177px', lgDown: { width: 'full' } })}>
-            <svelte:component this={card.image} />
+            <card.image />
           </div>
         </div>
       {/each}

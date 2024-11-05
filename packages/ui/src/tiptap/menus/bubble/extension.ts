@@ -2,6 +2,7 @@ import { autoUpdate, computePosition, hide, inline, offset, shift } from '@float
 import { center } from '@readable/styled-system/patterns';
 import { Extension, posToDOMRect } from '@tiptap/core';
 import { NodeSelection, Plugin, PluginKey, TextSelection } from '@tiptap/pm/state';
+import { mount, unmount } from 'svelte';
 import { BlockSelection } from '../../extensions/block-selection';
 import Component from './Component.svelte';
 import type { VirtualElement } from '@floating-ui/dom';
@@ -82,7 +83,7 @@ export const BubbleMenu = Extension.create({
               };
 
               if (!bubbleComponent) {
-                bubbleComponent = new Component({
+                bubbleComponent = mount(Component, {
                   target: dom,
                   props: {
                     editor: this.editor,
@@ -125,7 +126,9 @@ export const BubbleMenu = Extension.create({
             },
             destroy: () => {
               hideBubble();
-              bubbleComponent?.$destroy();
+              if (bubbleComponent) {
+                unmount(bubbleComponent);
+              }
               dom.remove();
             },
           };

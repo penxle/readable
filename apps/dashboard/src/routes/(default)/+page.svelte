@@ -1,15 +1,18 @@
 <script lang="ts">
+  import { run } from 'svelte/legacy';
   import { graphql } from '$graphql';
 
-  $: graphql(`
-    query IndexPage_Query {
-      me {
-        id
-
-        teams {
+  run(() => {
+    graphql(`
+      query IndexPage_Query {
+        me {
           id
+
+          teams {
+            id
+          }
         }
       }
-    }
-  `);
+    `);
+  });
 </script>

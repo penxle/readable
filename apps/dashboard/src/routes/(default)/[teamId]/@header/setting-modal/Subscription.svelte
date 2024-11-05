@@ -8,9 +8,9 @@
   import CheckIcon from '~icons/lucide/check';
   // import CreditCardIcon from '~icons/lucide/credit-card';
 
-  let plansModal = false;
-  let cardModal = false;
-  let cardType: 'corporate' | 'personal' = 'corporate';
+  let plansModal = $state(false);
+  let cardModal = $state(false);
+  let cardType: 'corporate' | 'personal' = $state('corporate');
 
   const plans = [
     {
@@ -96,8 +96,8 @@
     { name: 'NICEPAY 전자금융거래 기본약관', url: 'https://www.nicepay.co.kr/cs/terms/policy1.do' },
   ];
 
-  let agreementChecks = agreements.map(() => false);
-  $: allChecked = agreementChecks.every(Boolean);
+  let agreementChecks = $state(agreements.map(() => false));
+  let allChecked = $derived(agreementChecks.every(Boolean));
   function handleAllCheck() {
     agreementChecks = agreementChecks.map(() => !allChecked);
   }
@@ -410,7 +410,7 @@
 
         <div class={flex({ flexDirection: 'column', gap: '12px' })}>
           <label class={flex({ alignItems: 'center', gap: '8px' })}>
-            <input checked={allChecked} type="checkbox" on:change={handleAllCheck} />
+            <input checked={allChecked} onchange={handleAllCheck} type="checkbox" />
             <span class={css({ textStyle: '16sb', color: 'text.primary' })}>모두 확인하고 동의합니다.</span>
           </label>
 
@@ -505,7 +505,7 @@
 
         <div class={flex({ flexDirection: 'column', gap: '12px' })}>
           <label class={flex({ alignItems: 'center', gap: '8px' })}>
-            <input checked={allChecked} type="checkbox" on:change={handleAllCheck} />
+            <input checked={allChecked} onchange={handleAllCheck} type="checkbox" />
             <span class={css({ textStyle: '16sb', color: 'text.primary' })}>모두 확인하고 동의합니다.</span>
           </label>
 

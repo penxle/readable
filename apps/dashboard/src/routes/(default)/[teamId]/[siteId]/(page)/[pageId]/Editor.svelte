@@ -6,6 +6,7 @@
   import ky from 'ky';
   import { base64 } from 'rfc4648';
   import { createEventDispatcher, onMount } from 'svelte';
+  import { run } from 'svelte/legacy';
   import { IndexeddbPersistence } from 'y-indexeddb';
   import * as YAwareness from 'y-protocols/awareness';
   import * as Y from 'yjs';
@@ -18,45 +19,11 @@
   import type { Writable } from 'svelte/store';
   import type { PagePage_Editor_query } from '$graphql';
 
-  export let _query: PagePage_Editor_query;
+  type Props = {
+    _query: PagePage_Editor_query;
+  };
 
-  $: query = fragment(
-    _query,
-    graphql(`
-      fragment PagePage_Editor_query on Query {
-        me @required {
-          id
-          name
-        }
-
-        page(pageId: $pageId) {
-          id
-
-          site {
-            id
-
-            team {
-              id
-            }
-          }
-
-          content {
-            id
-            update
-          }
-
-          comments {
-            id
-            nodeId
-            content
-          }
-        }
-
-        ...PagePage_Breadcrumb_query
-        ...Editor_MenuHandler_query
-      }
-    `),
-  );
+  let { _query }: Props = $props();
 
   const syncPageContent = graphql(`
     mutation PagePage_SyncPageContent_Mutation($input: SyncPageContentInput!) {
@@ -155,9 +122,9 @@
 
   const dispatch = createEventDispatcher<{ connectionStateChange: { state: 'connected' | 'disconnected' } }>();
 
-  let editor: Editor | undefined;
+  let editor: Editor | undefined = $state();
 
-  let titleEl: HTMLElement;
+  let titleEl: HTMLElement = $state();
 
   const createStore = (name: 'title' | 'subtitle'): Writable<string> => {
     const text = doc.getText(name);
@@ -189,12 +156,6 @@
       },
     };
   };
-
-  $: {
-    if (titleEl) adjustTextareaHeight(titleEl);
-
-    $title;
-  }
 
   const adjustTextareaHeight = (el: HTMLElement) => {
     el.style.height = 'auto';
@@ -344,6 +305,50 @@
       doc.destroy();
     };
   });
+  let query = $derived(
+    fragment(
+      _query,
+      graphql(`
+        fragment PagePage_Editor_query on Query {
+          me @required {
+            id
+            name
+          }
+
+          page(pageId: $pageId) {
+            id
+
+            site {
+              id
+
+              team {
+                id
+              }
+            }
+
+            content {
+              id
+              update
+            }
+
+            comments {
+              id
+              nodeId
+              content
+            }
+          }
+
+          ...PagePage_Breadcrumb_query
+          ...Editor_MenuHandler_query
+        }
+      `),
+    ),
+  );
+  run(() => {
+    if (titleEl) adjustTextareaHeight(titleEl);
+
+    $title;
+  });
 </script>
 
 <div class={css({ flex: '1', overflowY: 'auto' })}>
@@ -373,15 +378,15 @@
           overflowY: 'hidden',
           resize: 'none',
         })}
-        placeholder="제목을 입력하세요"
-        rows="1"
-        on:keydown={(e) => {
+        onkeydown={(e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
           }
         }}
+        placeholder="제목을 입력하세요"
+        rows="1"
         bind:value={$title}
-      />
+      ></textarea>
     </div>
 
     <!-- {#if editor}

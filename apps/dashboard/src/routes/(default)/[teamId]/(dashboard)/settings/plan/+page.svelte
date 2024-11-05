@@ -11,24 +11,26 @@
   import { graphql } from '$graphql';
   import { isPlanUpgradeModalOpen, selectedPlan, selectedPlanCycle } from '$lib/svelte/stores/ui';
 
-  $: query = graphql(`
-    query TeamSettingsPlanPage_Query($teamId: ID!) {
-      team(teamId: $teamId) {
-        id
-        name
-
-        plan {
+  let query = $derived(
+    graphql(`
+      query TeamSettingsPlanPage_Query($teamId: ID!) {
+        team(teamId: $teamId) {
           id
+          name
 
           plan {
             id
-            name
-            order
+
+            plan {
+              id
+              name
+              order
+            }
           }
         }
       }
-    }
-  `);
+    `),
+  );
 
   const onSelect = (value: CustomEvent<string>) => {
     selectedPlanCycle.set(value.detail as 'MONTHLY' | 'YEARLY');
@@ -138,7 +140,7 @@
     },
   ];
 
-  $: addOns = [
+  let addOns = $derived([
     {
       title: '화이트 라벨링',
       starter: '',
@@ -146,7 +148,7 @@
       pro: `${$selectedPlanCycle === 'YEARLY' ? '15,400' : '22,000'}원/사이트/월`,
       enterprise: CheckIcon,
     },
-  ];
+  ]);
 </script>
 
 <Helmet title="플랜" trailing={$query.team.name} />
@@ -168,8 +170,8 @@
     <table class={css({ width: 'full', borderSpacing: '0' })}>
       <thead>
         <tr>
-          <th class={css({ width: '128px' })} />
-          <th />
+          <th class={css({ width: '128px' })}></th>
+          <th></th>
           <th>
             <div class={css({ position: 'relative', marginBottom: '10px' })}>
               <SegmentButtons
@@ -198,10 +200,10 @@
               </div>
             </div>
           </th>
-          <th />
+          <th></th>
         </tr>
         <tr class={css({ '& > th': { paddingX: '12px', paddingY: '20px', textAlign: 'left' } })}>
-          <th />
+          <th></th>
           <th class={css({ width: '160px' })}>
             <p class={css({ marginBottom: '4px', textStyle: '13m' })}>Starter</p>
             <span class={css({ textStyle: '20b' })}>무료</span>
@@ -326,10 +328,10 @@
       >
         <tr class={css({ '& > td': { borderBottomWidth: '1px' } })}>
           <td class={css({ textStyle: '13sb' })}>Usage</td>
-          <td />
-          <td />
-          <td class={css({ backgroundColor: 'neutral.10' })} />
-          <td />
+          <td></td>
+          <td></td>
+          <td class={css({ backgroundColor: 'neutral.10' })}></td>
+          <td></td>
         </tr>
         {#each usages as usage (usage.title)}
           <tr class={css({ '& > td': { borderBottomWidth: '1px', textStyle: '13r' } })}>
@@ -349,17 +351,17 @@
         {/each}
         <tr>
           <td>&nbsp;</td>
-          <td />
-          <td />
-          <td class={css({ backgroundColor: 'neutral.10' })} />
-          <td />
+          <td></td>
+          <td></td>
+          <td class={css({ backgroundColor: 'neutral.10' })}></td>
+          <td></td>
         </tr>
         <tr class={css({ '& > td': { borderBottomWidth: '1px' } })}>
           <td class={css({ textStyle: '13sb' })}>Premium</td>
-          <td />
-          <td />
-          <td class={css({ backgroundColor: 'neutral.10' })} />
-          <td />
+          <td></td>
+          <td></td>
+          <td class={css({ backgroundColor: 'neutral.10' })}></td>
+          <td></td>
         </tr>
         {#each premiums as premium (premium.title)}
           <tr class={css({ '& > td': { borderBottomWidth: '1px', textStyle: '13r' } })}>
@@ -390,17 +392,17 @@
         {/each}
         <tr>
           <td>&nbsp;</td>
-          <td />
-          <td />
-          <td class={css({ backgroundColor: 'neutral.10' })} />
-          <td />
+          <td></td>
+          <td></td>
+          <td class={css({ backgroundColor: 'neutral.10' })}></td>
+          <td></td>
         </tr>
         <tr class={css({ '& > td': { borderBottomWidth: '1px' } })}>
           <td class={css({ textStyle: '13sb' })}>Add-on</td>
-          <td />
-          <td />
-          <td class={css({ backgroundColor: 'neutral.10' })} />
-          <td />
+          <td></td>
+          <td></td>
+          <td class={css({ backgroundColor: 'neutral.10' })}></td>
+          <td></td>
         </tr>
         {#each addOns as addOn (addOn.title)}
           <tr class={css({ '& > td': { borderBottomWidth: '1px', textStyle: '13r' } })}>

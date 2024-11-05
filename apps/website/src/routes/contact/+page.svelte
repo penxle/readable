@@ -10,7 +10,7 @@
   import { supabase } from '$lib/supabase';
   import Header from '../Header.svelte';
 
-  let darkSection: HTMLElement;
+  let darkSection = $state<HTMLElement>();
 
   const { form, context } = createMutationForm({
     schema: z.object({
@@ -40,7 +40,7 @@
     },
   });
 
-  $: darkSections = [darkSection].filter(Boolean);
+  const darkSections = $derived([darkSection].filter((section) => !!section));
 </script>
 
 <Helmet
@@ -150,7 +150,7 @@
             })}
             placeholder="자유롭게 문의사항을 작성해주세요"
             rows="3"
-          />
+          ></textarea>
         </label>
       </FormField>
 

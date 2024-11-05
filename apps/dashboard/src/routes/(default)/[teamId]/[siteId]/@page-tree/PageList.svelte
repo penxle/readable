@@ -3,6 +3,7 @@
   import { flex } from '@readable/styled-system/patterns';
   import { token } from '@readable/styled-system/tokens';
   import { Icon, VerticalDivider } from '@readable/ui/components';
+  import { run } from 'svelte/legacy';
   import FolderPlusIcon from '~icons/lucide/folder-plus';
   import PlusIcon from '~icons/lucide/plus';
   import { maxDepth } from './const';
@@ -25,46 +26,62 @@
     targetElem: HTMLElement | null;
   };
 
-  export let depth = 0;
-  export let items: (CategoryData | PageData)[] = [];
-  export let openState: Record<string, boolean> = {};
-  export let parent: PageData | CategoryData | null = null;
-  export let onDrop: (target: {
-    pageId: string;
-    categoryId: string;
-    parentId: string | null;
-    previousOrder?: string;
-    nextOrder?: string;
-  }) => Promise<boolean>;
-  export let onDropCategory: (target: {
-    categoryId: string;
-    previousOrder?: string;
-    nextOrder?: string;
-  }) => Promise<void>;
-  export let onCancel: ((item: CategoryData | PageData) => void) | undefined = undefined;
-  export let onCreate: (parent: CategoryData | PageData) => Promise<void>;
-  export let onCreateCategory: (() => Promise<void>) | undefined;
-  export let getPageUrl: (page: PageData) => string;
-  export let indicatorElem: HTMLElement | null = null;
-  export let nodeMap = new Map<HTMLElement, (CategoryData | PageData | VirtualRootPageData) & { depth: number }>();
-  export let registerNode = (
-    node: HTMLElement | undefined,
-    item: (CategoryData | PageData | VirtualRootPageData) & { depth: number },
-  ) => {
-    if (!node) {
-      return;
-    }
-    nodeMap.set(node, item);
+  type Props = {
+    depth?: number;
+    items?: (CategoryData | PageData)[];
+    openState?: Record<string, boolean>;
+    parent?: PageData | CategoryData | null;
+    onDrop: (target: {
+      pageId: string;
+      categoryId: string;
+      parentId: string | null;
+      previousOrder?: string;
+      nextOrder?: string;
+    }) => Promise<boolean>;
+    onDropCategory: (target: { categoryId: string; previousOrder?: string; nextOrder?: string }) => Promise<void>;
+    onCancel?: ((item: CategoryData | PageData) => void) | undefined;
+    onCreate: (parent: CategoryData | PageData) => Promise<void>;
+    onCreateCategory: (() => Promise<void>) | undefined;
+    getPageUrl: (page: PageData) => string;
+    indicatorElem?: HTMLElement | null;
+    nodeMap?: any;
+    registerNode?: any;
   };
-  let listElem: HTMLElement;
+
+  let {
+    depth = 0,
+    items = [],
+    openState = $bindable({}),
+    parent = null,
+    onDrop,
+    onDropCategory,
+    onCancel = undefined,
+    onCreate,
+    onCreateCategory,
+    getPageUrl,
+    indicatorElem = $bindable(null),
+    nodeMap = new Map<HTMLElement, (CategoryData | PageData | VirtualRootPageData) & { depth: number }>(),
+    registerNode = (
+      node: HTMLElement | undefined,
+      item: (CategoryData | PageData | VirtualRootPageData) & { depth: number },
+    ) => {
+      if (!node) {
+        return;
+      }
+      nodeMap.set(node, item);
+    },
+  }: Props = $props();
+  let listElem: HTMLElement = $state();
   let dragging: DraggingState | null = null;
   let dropTarget: DropTarget | null = null;
 
-  $: if (parent) {
-    registerNode(listElem, { ...parent, depth });
-  } else {
-    registerNode(listElem, { __typename: 'VirtualRootPage', id: null, categories: items as CategoryData[], depth });
-  }
+  run(() => {
+    if (parent) {
+      registerNode(listElem, { ...parent, depth });
+    } else {
+      registerNode(listElem, { __typename: 'VirtualRootPage', id: null, categories: items as CategoryData[], depth });
+    }
+  });
 
   function createGhost(draggingItem: HTMLElement) {
     const clone = draggingItem.cloneNode(true) as HTMLElement;
@@ -432,7 +449,7 @@
     }
   }
 
-  $: itemCommonProps = {
+  let itemCommonProps = $derived({
     depth,
     getPageUrl,
     indicatorElem,
@@ -445,18 +462,18 @@
     onPointerDown,
     openState,
     registerNode,
-  };
+  });
 </script>
 
 <svelte:window
-  on:keydown={(event) => {
+  oncontextmenu={() => cancelDragging()}
+  onkeydown={(event) => {
     if (event.key === 'Escape') {
       cancelDragging();
     }
   }}
-  on:contextmenu={() => cancelDragging()}
-  on:pointerup={(event) => onPointerUp(event)}
-  on:pointermove={(event) => onPointerMove(event)}
+  onpointermove={(event) => onPointerMove(event)}
+  onpointerup={(event) => onPointerUp(event)}
 />
 
 <ul
@@ -494,7 +511,7 @@
           pointerEvents: 'none',
         }),
       )}
-    />
+    ></div>
   {/if}
   {#if items && items.length > 0}
     {#each items as item (item.id)}
@@ -520,9 +537,9 @@
         },
       })}
       aria-selected="false"
+      onclick={() => onCreateCategory?.()}
       role="treeitem"
       type="button"
-      on:click={() => onCreateCategory?.()}
     >
       <div class={css({ padding: '4px', color: 'neutral.50' })}>
         <Icon icon={FolderPlusIcon} size={14} />
@@ -553,9 +570,9 @@
           : { marginTop: '1px', paddingLeft: '4px' },
       )}
       aria-selected="false"
+      onclick={() => onCreate(parent)}
       role="treeitem"
       type="button"
-      on:click={() => onCreate(parent)}
     >
       {#if depth === maxDepth}
         <VerticalDivider

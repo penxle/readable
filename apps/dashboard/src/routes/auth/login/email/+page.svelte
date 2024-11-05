@@ -4,6 +4,7 @@
   import { Button, FormField, FormProvider, Icon, TextInput } from '@readable/ui/components';
   import { createMutationForm } from '@readable/ui/forms';
   import mixpanel from 'mixpanel-browser';
+  import { run } from 'svelte/legacy';
   import { z } from 'zod';
   import { dataSchemas } from '@/schemas';
   import MailIcon from '~icons/lucide/mail';
@@ -33,11 +34,13 @@
     },
   });
 
-  $: setInitialValues({
-    email: $page.url.searchParams.get('email') ?? '',
+  run(() => {
+    setInitialValues({
+      email: $page.url.searchParams.get('email') ?? '',
+    });
   });
 
-  let sent = false;
+  let sent = $state(false);
 </script>
 
 <div
@@ -62,8 +65,8 @@
     </p>
     <button
       class={css({ textStyle: '14r', color: 'neutral.70', marginTop: '16px' })}
+      onclick={() => (sent = false)}
       type="button"
-      on:click={() => (sent = false)}
     >
       돌아가기
     </button>

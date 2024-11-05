@@ -1,15 +1,31 @@
+import { createRawSnippet, mount } from 'svelte';
 import Alert from './AlertBuilder.svelte';
-import type { ComponentProps } from 'svelte';
 
-export function invokeAlert(options: ComponentProps<Alert>) {
-  const alert = new Alert({
+type AlertOptions = {
+  oncancel?: () => void;
+  onaction: () => void;
+  title: string;
+  content: string;
+  action?: string;
+  cancel?: string;
+  variant?: 'primary' | 'danger';
+};
+
+export function invokeAlert(options: AlertOptions) {
+  return mount(Alert, {
     target: document.body,
     intro: true,
     props: {
       open: true,
-      ...options,
+      oncancel: options.oncancel,
+      onaction: options.onaction,
+      title: toSnippet(options.title),
+      content: toSnippet(options.content),
+      action: options.action ? toSnippet(options.action) : undefined,
+      cancel: options.cancel ? toSnippet(options.cancel) : undefined,
+      variant: options.variant,
     },
   });
-
-  return alert;
 }
+
+const toSnippet = (value: string) => createRawSnippet(() => ({ render: () => value }));

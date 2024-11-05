@@ -3,21 +3,16 @@
   import { center, flex } from '@readable/styled-system/patterns';
   import { NodeView, NodeViewContentEditable } from '@readable/ui/tiptap';
   import { tick } from 'svelte';
+  import { stopPropagation } from 'svelte/legacy';
   import PlusIcon from '~icons/lucide/plus';
   import XIcon from '~icons/lucide/x';
   import { Icon } from '../../../components';
   import { getSelectedTabIdx } from './index';
   import type { NodeViewProps } from '@readable/ui/tiptap';
 
-  type $$Props = NodeViewProps;
-  $$restProps;
+  type Props = NodeViewProps;
 
-  export let node: NodeViewProps['node'];
-  export let editor: NodeViewProps['editor'] | undefined;
-  // export let selected: NodeViewProps['selected'];
-  // export let deleteNode: NodeViewProps['deleteNode'];
-  export let getPos: NodeViewProps['getPos'];
-  // export let updateAttributes: NodeViewProps['updateAttributes'];
+  let { node, editor, getPos }: Props = $props();
 
   const getTabs = (editor: NodeViewProps['editor'] | undefined, node: NodeViewProps['node']) => {
     const tabs: { title: string; selected: boolean }[] = [];
@@ -29,11 +24,11 @@
     return tabs;
   };
 
-  $: tabs = getTabs(editor, node);
+  const tabs = $derived(getTabs(editor, node));
 
-  let renamingTabIdx: number | null = null;
-  let renamingTabTitle = '';
-  let renamingTabInput: HTMLInputElement | undefined;
+  let renamingTabIdx = $state<number | null>(null);
+  let renamingTabTitle = $state('');
+  let renamingTabInput = $state<HTMLInputElement>();
 
   const handleRenameTab = () => {
     if (renamingTabIdx === null) {
@@ -98,10 +93,7 @@
             tab.selected ? { backgroundColor: 'neutral.0' } : { borderBottomWidth: '1px', color: 'text.secondary' },
             !editor?.isEditable && { _last: { borderRightWidth: '0' } },
           )}
-          role="tab"
-          tabindex={0}
-          on:keydown={null}
-          on:click={() => {
+          onclick={() => {
             if (tab.selected) {
               if (editor?.isEditable) {
                 renamingTabIdx = i;
@@ -118,18 +110,21 @@
                 .run();
             }
           }}
+          onkeydown={null}
+          role="tab"
+          tabindex={0}
         >
           {#if renamingTabIdx === i}
             <input
               bind:this={renamingTabInput}
-              type="text"
-              bind:value={renamingTabTitle}
-              on:blur={handleRenameTab}
-              on:keydown={(e) => {
+              onblur={handleRenameTab}
+              onkeydown={(e) => {
                 if (e.key === 'Enter') {
                   handleRenameTab();
                 }
               }}
+              type="text"
+              bind:value={renamingTabTitle}
             />
           {:else}
             <span>
@@ -151,14 +146,14 @@
                 color: 'neutral.50',
                 _hover: { backgroundColor: 'neutral.30/40' },
               })}
-              type="button"
-              on:click|stopPropagation={() => {
+              onclick={stopPropagation(() => {
                 editor
                   ?.chain()
                   .setTextSelection(getPos() + 1)
                   .deleteTab(i)
                   .run();
-              }}
+              })}
+              type="button"
             >
               <Icon icon={XIcon} />
             </button>
@@ -195,14 +190,14 @@
             color: 'neutral.50',
             _hover: { backgroundColor: 'neutral.30/40' },
           })}
-          type="button"
-          on:click={() => {
+          onclick={() => {
             editor
               ?.chain()
               .setTextSelection(getPos() + 1)
               .addTab()
               .run();
           }}
+          type="button"
         >
           <Icon icon={PlusIcon} size={16} />
         </button>

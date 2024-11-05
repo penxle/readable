@@ -19,56 +19,64 @@
   import SearchBar from './SearchBar.svelte';
   import type { SwipeCustomEvent } from 'svelte-gestures';
 
-  $: query = graphql(`
-    query DefaultLayout_Query($searchQuery: String!) {
-      publicSite {
-        id
-        name
-        url
-        themeColor
-        aiSearchEnabled
+  type Props = {
+    children?: import('svelte').Snippet;
+  };
 
-        headerLink {
+  let { children }: Props = $props();
+
+  let query = $derived(
+    graphql(`
+      query DefaultLayout_Query($searchQuery: String!) {
+        publicSite {
           id
-          label
+          name
           url
-        }
+          themeColor
+          aiSearchEnabled
 
-        logo {
-          id
-          url
-          ...Img_image
-        }
-
-        firstPage {
-          id
-        }
-
-        ...Navigation_publicSite
-        ...SearchBar_publicSite
-      }
-
-      searchPublicPage(query: $searchQuery) {
-        estimatedTotalHits
-
-        hits {
-          highlight {
-            title
-            subtitle
-            text
-          }
-
-          page {
+          headerLink {
             id
-            slug
-            title
+            label
+            url
+          }
 
-            ...PageUrl_publicPage
+          logo {
+            id
+            url
+            ...Img_image
+          }
+
+          firstPage {
+            id
+          }
+
+          ...Navigation_publicSite
+          ...SearchBar_publicSite
+        }
+
+        searchPublicPage(query: $searchQuery) {
+          estimatedTotalHits
+
+          hits {
+            highlight {
+              title
+              subtitle
+              text
+            }
+
+            page {
+              id
+              slug
+              title
+
+              ...PageUrl_publicPage
+            }
           }
         }
       }
-    }
-  `);
+    `),
+  );
 
   const blurEffectThreshold = 100;
   const blurEffect = writable(browser ? window.scrollY < blurEffectThreshold : true);
@@ -98,12 +106,12 @@
   {/if}
 </svelte:head>
 
-<svelte:window on:scroll={() => ($blurEffect = window.scrollY < blurEffectThreshold)} />
+<svelte:window onscroll={() => ($blurEffect = window.scrollY < blurEffectThreshold)} />
 
 <div
   style:--usersite-theme-color={$query.publicSite.themeColor}
   class={flex({ direction: 'column', minHeight: 'screen' })}
-  on:swipe={swipeHandler}
+  onswipe={swipeHandler}
   use:swipe={{
     touchAction: 'pan-y',
     minSwipeDistance: 60, // default
@@ -162,7 +170,7 @@
         backdropBlur: '8px',
       })}
       aria-hidden="true"
-    />
+    ></div>
     <div
       class={flex({
         position: 'relative',
@@ -222,8 +230,8 @@
             hideBelow: 'md',
           })}
           aria-label="검색"
+          onclick={openSearchBar}
           type="button"
-          on:click={openSearchBar}
         >
           <div class={flex({ alignItems: 'center', gap: '8px' })}>
             <Icon icon={SearchIcon} size={16} />
@@ -259,8 +267,8 @@
         <button
           class={flex({ hideFrom: 'md', marginLeft: 'auto', color: 'neutral.60' })}
           aria-label="검색"
+          onclick={openSearchBar}
           type="button"
-          on:click={openSearchBar}
         >
           <Icon icon={SearchIcon} size={24} />
         </button>
@@ -308,12 +316,14 @@
       </div>
 
       <MobileSidebar siteId={$query.publicSite.id} siteUrl={$query.publicSite.url}>
-        <Navigation slot="navigation" $publicSite={$query.publicSite} />
+        {#snippet navigation()}
+          <Navigation $publicSite={$query.publicSite} />
+        {/snippet}
       </MobileSidebar>
     {/if}
 
     <main id="main-content" class={flex({ flex: '1', width: 'full', alignItems: 'flex-start' })} tabindex="-1">
-      <slot />
+      {@render children?.()}
     </main>
   </div>
 </div>

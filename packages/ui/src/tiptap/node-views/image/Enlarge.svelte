@@ -2,7 +2,7 @@
   import { css } from '@readable/styled-system/css';
   import { center } from '@readable/styled-system/patterns';
   import { portal, scrollLock } from '@readable/ui/actions';
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { onMount } from 'svelte';
   import { cubicOut } from 'svelte/easing';
   import { tweened } from 'svelte/motion';
   import { derived, readable } from 'svelte/store';
@@ -13,19 +13,26 @@
 
   type Rect = { top: number; left: number; width: number; height: number };
 
-  const dispatch = createEventDispatcher<{ close: undefined }>();
+  type Props = {
+    node: NodeViewProps['node'];
+    referenceEl: HTMLDivElement;
+    onclose: () => void;
+  };
 
-  export let node: NodeViewProps['node'];
-  export let referenceEl: HTMLDivElement;
+  let { node, referenceEl, onclose }: Props = $props();
 
-  let containerEl: HTMLDivElement;
-  let targetEl: HTMLDivElement;
+  let containerEl = $state<HTMLDivElement>();
+  let targetEl = $state<HTMLDivElement>();
 
   const progress = tweened(0, { duration: 300, easing: cubicOut });
   const opacity = derived(progress, ($progress) => $progress);
   let rect: Readable<Rect | null> = readable(null);
 
   onMount(async () => {
+    if (!referenceEl || !targetEl) {
+      return;
+    }
+
     const referenceRect = referenceEl.getBoundingClientRect();
     const targetRect = targetEl.getBoundingClientRect();
 
@@ -41,15 +48,15 @@
 
   const handleClose = async () => {
     await progress.set(0);
-    dispatch('close');
+    onclose();
   };
 </script>
 
-<svelte:window on:click|capture={handleClose} on:keydown={(e) => e.key === 'Escape' && handleClose()} />
+<svelte:window onclickcapture={handleClose} onkeydown={(e) => e.key === 'Escape' && handleClose()} />
 
 <div class={css({ position: 'fixed', inset: '0', size: 'full', zIndex: '50' })} use:portal use:scrollLock>
   <div class={css({ position: 'fixed', inset: '0', size: 'full', paddingX: '[5vw]', paddingY: '[5vh]' })}>
-    <div bind:this={targetEl} class={css({ size: 'full' })} />
+    <div bind:this={targetEl} class={css({ size: 'full' })}></div>
   </div>
 
   <div style:opacity={$opacity} class={css({ position: 'fixed', inset: '0', size: 'full', backgroundColor: 'white' })}>
@@ -71,8 +78,8 @@
           },
         })}
         aria-label="닫기"
+        onclick={handleClose}
         type="button"
-        on:click={handleClose}
       >
         <Icon icon={XIcon} />
       </button>

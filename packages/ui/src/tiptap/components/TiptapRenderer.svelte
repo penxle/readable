@@ -1,7 +1,7 @@
 <script lang="ts">
   import { css, cx } from '@readable/styled-system/css';
   import { Editor } from '@tiptap/core';
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { onMount } from 'svelte';
   import { TableOfContents } from '../extensions/table-of-contents';
   import { renderHTML } from '../lib/html';
   import { Embed } from '../node-views/embed';
@@ -12,18 +12,19 @@
   import type { SystemStyleObject } from '@readable/styled-system/types';
   import type { JSONContent } from '@tiptap/core';
 
-  export let style: SystemStyleObject | undefined = undefined;
-  export let content: JSONContent;
-  export let editor: Editor | undefined = undefined;
+  type Props = {
+    style?: SystemStyleObject;
+    content: JSONContent;
+    editor?: Editor;
+    ontocupdate?: (headings: { level: number; text: string; scrollTop: number }[]) => void;
+  };
 
-  let element: HTMLElement;
-  let loaded = false;
+  let { style, content, editor = $bindable(), ontocupdate }: Props = $props();
 
-  const dispatch = createEventDispatcher<{
-    tocUpdate: { headings: { level: number; text: string; scrollTop: number }[] };
-  }>();
+  let element = $state<HTMLElement>();
+  let loaded = $state(false);
 
-  $: html = renderHTML(content, [...basicExtensions, Embed, Image, InlineImage, File]);
+  const html = $derived(renderHTML(content, [...basicExtensions, Embed, Image, InlineImage, File]));
 
   onMount(() => {
     editor = new Editor({
@@ -38,7 +39,7 @@
         File,
         TableOfContents.configure({
           onUpdate: (headings) => {
-            dispatch('tocUpdate', { headings });
+            ontocupdate?.(headings);
           },
         }),
       ],

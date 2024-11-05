@@ -2,7 +2,11 @@
   import { css } from '@readable/styled-system/css';
   import { token } from '@readable/styled-system/tokens';
 
-  export let variant: 'gradient' | 'gray' = 'gradient';
+  type Props = {
+    variant?: 'gradient' | 'gray';
+  };
+
+  let { variant = 'gradient' }: Props = $props();
 
   let color = variant === 'gradient' ? 'var(--usersite-theme-color)' : token('colors.neutral.50');
 </script>

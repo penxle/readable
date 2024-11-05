@@ -34,60 +34,62 @@
   import TitledModal from '$lib/components/TitledModal.svelte';
   import { isLiteOrHigher, isPro } from '$lib/svelte/stores/ui';
 
-  let isInviteModalOpen = false;
+  let isInviteModalOpen = $state(false);
 
-  $: query = graphql(`
-    query TeamMembersPage_Query($teamId: ID!) {
-      team(teamId: $teamId) {
-        id
-        name
-
-        avatar {
+  let query = $derived(
+    graphql(`
+      query TeamMembersPage_Query($teamId: ID!) {
+        team(teamId: $teamId) {
           id
-          ...Img_image
-        }
+          name
 
-        meAsMember {
-          id
-          role
-        }
-
-        members {
-          id
-          role
-          isSoleAdmin
-
-          user {
+          avatar {
             id
-            email
-            name
+            ...Img_image
+          }
 
-            avatar {
+          meAsMember {
+            id
+            role
+          }
+
+          members {
+            id
+            role
+            isSoleAdmin
+
+            user {
               id
-              ...Img_image
+              email
+              name
+
+              avatar {
+                id
+                ...Img_image
+              }
             }
           }
-        }
 
-        invitations {
-          id
-          email
-        }
-
-        plan {
-          id
+          invitations {
+            id
+            email
+          }
 
           plan {
             id
 
-            rules {
-              memberLimit
+            plan {
+              id
+
+              rules {
+                memberLimit
+              }
             }
           }
         }
       }
-    }
-  `);
+    `),
+  );
 
   const { form, reset, setErrors, context } = createMutationForm({
     mutation: graphql(`
@@ -254,19 +256,20 @@
 
         <div class={flex({ width: '60px', justifyContent: 'center', alignItems: 'center' })}>
           <Menu listStyle={css.raw({ gap: '1px' })} offset={2} placement="bottom-start">
-            <div
-              slot="button"
-              class={css({
-                borderRadius: '6px',
-                padding: '4px',
-                color: 'text.secondary',
-                _hover: {
-                  backgroundColor: 'neutral.20',
-                },
-              })}
-            >
-              <Icon icon={EllipsisIcon} size={20} />
-            </div>
+            {#snippet button()}
+              <div
+                class={css({
+                  borderRadius: '6px',
+                  padding: '4px',
+                  color: 'text.secondary',
+                  _hover: {
+                    backgroundColor: 'neutral.20',
+                  },
+                })}
+              >
+                <Icon icon={EllipsisIcon} size={20} />
+              </div>
+            {/snippet}
 
             <MenuItem
               on:click={async () => {
@@ -329,25 +332,26 @@
               offset={6}
               placement="bottom-start"
             >
-              <div
-                slot="button"
-                class={flex({
-                  width: '86px',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  paddingX: '8px',
-                  paddingY: '4px',
-                  textStyle: '16m',
-                  color: 'text.secondary',
-                  borderRadius: '6px',
-                  _hover: {
-                    backgroundColor: 'neutral.20',
-                  },
-                })}
-              >
-                <span>{member.role === 'ADMIN' ? '관리자' : '편집자'}</span>
-                <Icon style={css.raw({ color: 'neutral.60' })} icon={ChevronDownIcon} size={16} />
-              </div>
+              {#snippet button()}
+                <div
+                  class={flex({
+                    width: '86px',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    paddingX: '8px',
+                    paddingY: '4px',
+                    textStyle: '16m',
+                    color: 'text.secondary',
+                    borderRadius: '6px',
+                    _hover: {
+                      backgroundColor: 'neutral.20',
+                    },
+                  })}
+                >
+                  <span>{member.role === 'ADMIN' ? '관리자' : '편집자'}</span>
+                  <Icon style={css.raw({ color: 'neutral.60' })} icon={ChevronDownIcon} size={16} />
+                </div>
+              {/snippet}
 
               <MenuItem
                 style={css.raw({ gap: '20px', borderRadius: '10px', paddingY: '10px' })}
@@ -439,19 +443,20 @@
         <div class={flex({ width: '60px', justifyContent: 'center', alignItems: 'center' })}>
           {#if member.id === $query.team.meAsMember?.id && !member.isSoleAdmin}
             <Menu offset={2} placement="bottom-start">
-              <div
-                slot="button"
-                class={flex({
-                  borderRadius: '6px',
-                  padding: '4px',
-                  color: 'text.secondary',
-                  _hover: {
-                    backgroundColor: 'neutral.20',
-                  },
-                })}
-              >
-                <Icon icon={EllipsisIcon} size={20} />
-              </div>
+              {#snippet button()}
+                <div
+                  class={flex({
+                    borderRadius: '6px',
+                    padding: '4px',
+                    color: 'text.secondary',
+                    _hover: {
+                      backgroundColor: 'neutral.20',
+                    },
+                  })}
+                >
+                  <Icon icon={EllipsisIcon} size={20} />
+                </div>
+              {/snippet}
               <MenuItem
                 variant="danger"
                 on:click={async () => {
@@ -472,25 +477,28 @@
                   });
                 }}
               >
-                <Icon slot="prefix" icon={UserRoundMinusIcon} size={14} />
+                {#snippet prefix()}
+                  <Icon icon={UserRoundMinusIcon} size={14} />
+                {/snippet}
                 <span>팀에서 떠나기</span>
               </MenuItem>
             </Menu>
           {:else if $query.team.meAsMember?.role === 'ADMIN' && !(member.id === $query.team.meAsMember?.id && member.isSoleAdmin)}
             <Menu offset={2} placement="bottom-start">
-              <div
-                slot="button"
-                class={flex({
-                  borderRadius: '6px',
-                  padding: '4px',
-                  color: 'text.secondary',
-                  _hover: {
-                    backgroundColor: 'neutral.20',
-                  },
-                })}
-              >
-                <Icon icon={EllipsisIcon} size={20} />
-              </div>
+              {#snippet button()}
+                <div
+                  class={flex({
+                    borderRadius: '6px',
+                    padding: '4px',
+                    color: 'text.secondary',
+                    _hover: {
+                      backgroundColor: 'neutral.20',
+                    },
+                  })}
+                >
+                  <Icon icon={EllipsisIcon} size={20} />
+                </div>
+              {/snippet}
               <MenuItem
                 variant="danger"
                 on:click={async () => {
@@ -508,7 +516,9 @@
                   });
                 }}
               >
-                <Icon slot="prefix" icon={UserRoundMinusIcon} size={14} />
+                {#snippet prefix()}
+                  <Icon icon={UserRoundMinusIcon} size={14} />
+                {/snippet}
                 <span>팀에서 제거</span>
               </MenuItem>
             </Menu>
@@ -520,7 +530,7 @@
 </div>
 
 <TitledModal bind:open={isInviteModalOpen}>
-  <svelte:fragment slot="title">
+  {#snippet title()}
     <div class={flex({ alignItems: 'center', gap: '10px' })}>
       <Img
         style={css.raw({
@@ -535,7 +545,7 @@
       />
       팀에 초대하기
     </div>
-  </svelte:fragment>
+  {/snippet}
 
   <FormProvider class={flex({ flexDirection: 'column', gap: '16px' })} {context} {form}>
     <input name="teamId" type="hidden" value={$query.team.id} />

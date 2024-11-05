@@ -47,31 +47,37 @@
     })}
   >
     <SectionTitle>
-      <span slot="subtitle" class={css({ color: '[#13AC60]' })}>SEO</span>
-      <span slot="title">
-        누구나
-        <br />
-        찾아올 수 있는
-      </span>
-      <span slot="description">
-        <span>별도의 설정 없이도&nbsp;</span>
-        <em>접근성이 고려된 설계</em>
+      {#snippet subtitle()}
+        <span class={css({ color: '[#13AC60]' })}>SEO</span>
+      {/snippet}
+      {#snippet title()}
         <span>
-          와 잘 만들어져 있는
-          <br class={css({ hideBelow: 'md' })} />
-          메타데이터 덕분에 검색 엔진에 잘 인덱싱될 수 있습니다
+          누구나
+          <br />
+          찾아올 수 있는
         </span>
-        <div
-          class={css({
-            marginTop: '13px',
-            fontSize: { base: '13px', lg: '14px' },
-            fontWeight: '[500]',
-            color: 'text.tertiary',
-          })}
-        >
-          *라이트하우스 스코어
-        </div>
-      </span>
+      {/snippet}
+      {#snippet description()}
+        <span>
+          <span>별도의 설정 없이도&nbsp;</span>
+          <em>접근성이 고려된 설계</em>
+          <span>
+            와 잘 만들어져 있는
+            <br class={css({ hideBelow: 'md' })} />
+            메타데이터 덕분에 검색 엔진에 잘 인덱싱될 수 있습니다
+          </span>
+          <div
+            class={css({
+              marginTop: '13px',
+              fontSize: { base: '13px', lg: '14px' },
+              fontWeight: '[500]',
+              color: 'text.tertiary',
+            })}
+          >
+            *라이트하우스 스코어
+          </div>
+        </span>
+      {/snippet}
     </SectionTitle>
 
     <div

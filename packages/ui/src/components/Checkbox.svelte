@@ -4,22 +4,27 @@
   import { getFormContext } from '../forms';
   import FormValidationMessage from './FormValidationMessage.svelte';
   import Icon from './Icon.svelte';
-  import type { RecipeVariant } from '@readable/styled-system/css';
   import type { RecipeVariantProps, SystemStyleObject } from '@readable/styled-system/types';
+  import type { Snippet } from 'svelte';
   import type { HTMLInputAttributes } from 'svelte/elements';
 
-  export let name: string | null | undefined = undefined;
-  export let checked: boolean | null | undefined = false;
-  export let style: SystemStyleObject | undefined = undefined;
-  export let variant: Variants['variant'] = 'gray';
-  export let size: Variants['size'] = 'lg';
-
-  type $$Props = Omit<HTMLInputAttributes, 'style' | 'variant' | 'size'> & {
+  type Props = {
+    name?: string;
+    checked?: boolean;
     style?: SystemStyleObject;
-  } & RecipeVariantProps<typeof recipe>;
-  type $$Events = {
-    change: Parameters<NonNullable<HTMLInputAttributes['on:change']>>[0];
-  };
+    children?: Snippet;
+  } & RecipeVariantProps<typeof recipe> &
+    Omit<HTMLInputAttributes, 'style' | 'variant' | 'size'>;
+
+  let {
+    name = $bindable(),
+    checked = $bindable(false),
+    style,
+    variant = 'gray',
+    size = 'lg',
+    children,
+    ...rest
+  }: Props = $props();
 
   const { field } = getFormContext();
 
@@ -27,7 +32,6 @@
     name = field.name;
   }
 
-  type Variants = RecipeVariant<typeof recipe>;
   const recipe = sva({
     slots: ['wrapper', 'item', 'text'],
     base: {
@@ -87,21 +91,13 @@
     },
   });
 
-  $: classes = recipe.raw({ variant, size });
+  let classes = $derived(recipe.raw({ variant, size }));
 </script>
 
 <div>
   <label class={css({ display: 'flex', alignItems: 'center', gap: '8px' }, style)}>
     <div class={css(classes.wrapper)}>
-      <input
-        id={name}
-        {name}
-        class={cx(css(classes.item), 'peer')}
-        type="checkbox"
-        on:change
-        bind:checked
-        {...$$restProps}
-      />
+      <input id={name} {name} class={cx(css(classes.item), 'peer')} type="checkbox" bind:checked {...rest} />
       <Icon
         style={css.raw({
           display: 'none',
@@ -121,7 +117,7 @@
     </div>
 
     <span class={css(classes.text)}>
-      <slot />
+      {@render children?.()}
     </span>
   </label>
   {#if name}
@@ -135,8 +131,10 @@
         minHeight: '18px',
       })}
     >
-      <FormValidationMessage for={name} let:message>
-        * {message}
+      <FormValidationMessage for={name}>
+        {#snippet children({ message })}
+          * {message}
+        {/snippet}
       </FormValidationMessage>
     </div>
   {/if}

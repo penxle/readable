@@ -11,14 +11,20 @@
   import { store } from './store';
   import type { Toast } from './store';
 
-  export let toast: Toast;
+  type Props = {
+    toast: Toast;
+  };
+
+  let { toast }: Props = $props();
 
   const dismiss = () => store.update((v) => v.filter((t) => t.id !== toast.id));
   const progress = tweened(100, { duration: toast.duration, easing: linear });
 
-  $: if ($progress === 0) {
-    dismiss();
-  }
+  $effect(() => {
+    if ($progress === 0) {
+      dismiss();
+    }
+  });
 </script>
 
 <div
@@ -71,7 +77,7 @@
   >
     <div
       class={css({ display: 'flex' })}
-      on:introend={() => ($progress = 0)}
+      onintroend={() => ($progress = 0)}
       in:fly={{ x: '-0.125rem', duration: 200, delay: 800, easing: sineInOut }}
       out:fly={{ x: '-0.125rem', duration: 200, easing: sineInOut }}
     >
@@ -92,7 +98,7 @@
           color: 'text.secondary',
         })}
       >
-        <button type="button" on:click={dismiss}>
+        <button onclick={dismiss} type="button">
           <Icon icon={XIcon} size={18} />
         </button>
       </div>

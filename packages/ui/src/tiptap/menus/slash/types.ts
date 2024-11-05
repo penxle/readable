@@ -1,5 +1,5 @@
 import type { Editor, Range } from '@tiptap/core';
-import type { ComponentType } from 'svelte';
+import type { Component } from 'svelte';
 
 type CommandParams = {
   editor: Editor;
@@ -12,7 +12,7 @@ export type MenuItem = {
   name: string;
   group: MenuItemGroup;
   keywords: string[];
-  icon: ComponentType;
+  icon: Component;
   visible?: boolean;
   command: (params: CommandParams) => void;
 };
