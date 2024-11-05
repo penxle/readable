@@ -1,9 +1,8 @@
 <script lang="ts">
   import { flex } from '@readable/styled-system/patterns';
   import mixpanel from 'mixpanel-browser';
-  import { onDestroy } from 'svelte';
+  import { onDestroy, untrack } from 'svelte';
   import { PlanId } from '@/const';
-  import { browser } from '$app/environment';
   import { graphql } from '$graphql';
   import {
     isEnrollPlanWithCardModalOpen,
@@ -17,7 +16,9 @@
   import EnrollPlanWithCardModal from './@modals/EnrollPlanWithCardModal.svelte';
   import PlanUpgradeModal from './@modals/PlanUpgradeModal.svelte';
 
-  $: query = graphql(`
+  let { children } = $props();
+
+  const query = graphql(`
     query TeamLayout_Query($teamId: ID!) {
       ...Header_query
 
@@ -65,13 +66,17 @@
     }
   `);
 
-  $: isLiteOrHigher.set($query.team.plan.plan.id !== PlanId.STARTER);
-  $: isPro.set($query.team.plan.plan.id === PlanId.PRO);
+  $effect(() => {
+    isLiteOrHigher.set($query.team.plan.plan.id !== PlanId.STARTER);
+    isPro.set($query.team.plan.plan.id === PlanId.PRO);
+  });
 
-  let unsubscribe: (() => void) | null = null;
+  let unsubscribe: (() => void) | null = $state(null);
 
-  $: if (browser) {
-    unsubscribe?.();
+  $effect(() => {
+    untrack(() => {
+      unsubscribe?.();
+    });
 
     unsubscribe = teamUpdateStream.subscribe({
       teamId: $query.team.id,
@@ -80,7 +85,7 @@
     mixpanel.register({
       team_id: $query.team.id,
     });
-  }
+  });
 
   onDestroy(() => {
     mixpanel.unregister('team_id');
@@ -91,7 +96,7 @@
 <div class={flex({ flexDirection: 'column', height: 'screen' })}>
   <Header {$query} />
 
-  <slot />
+  {@render children()}
 </div>
 
 <PlanUpgradeModal

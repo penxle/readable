@@ -1,1 +1,1 @@
-export { LinkTooltip } from './extension';
+export { LinkTooltip } from './extension.svelte';

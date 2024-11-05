@@ -15,14 +15,14 @@
     "fast-json-stable-stringify": "^2.1.0"
   },
   "devDependencies": {
-    "@iconify-json/lucide": "^1.2.10",
+    "@iconify-json/lucide": "^1.2.11",
     "@pandacss/dev": "^0.47.0",
     "@pulumi/aws": "^6.57.0",
     "@pulumi/pulumi": "^3.137.0",
     "@readable/tsconfig": "workspace:*",
-    "@sveltejs/vite-plugin-svelte": "^3.1.2",
-    "@types/bun": "^1.1.12",
-    "svelte": "^4.2.19",
+    "@sveltejs/vite-plugin-svelte": "^4.0.0",
+    "@types/bun": "^1.1.13",
+    "svelte": "^5.1.9",
     "svelte-check": "^4.0.5",
     "svelte-preprocess": "^6.0.3",
     "tsx": "^4.19.2",

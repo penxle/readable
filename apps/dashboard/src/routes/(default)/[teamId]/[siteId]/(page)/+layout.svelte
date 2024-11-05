@@ -2,7 +2,9 @@
   import { graphql } from '$graphql';
   import LeftSideBar from '../LeftSideBar.svelte';
 
-  $: query = graphql(`
+  let { children } = $props();
+
+  const query = graphql(`
     query SitePageLayout_Query($siteId: ID!) {
       site(siteId: $siteId) {
         id
@@ -14,4 +16,4 @@
 
 <LeftSideBar $site={$query.site} />
 
-<slot />
+{@render children()}

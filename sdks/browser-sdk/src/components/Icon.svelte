@@ -1,14 +1,18 @@
 <script lang="ts">
   import { css, cva } from '$styled-system/css';
-  import type { ComponentType } from 'svelte';
+  import type { Component } from 'svelte';
   import type { RecipeVariant, SystemStyleObject } from '$styled-system/types';
 
   type Variants = RecipeVariant<typeof recipe>;
 
-  export let icon: ComponentType;
-  export let style: SystemStyleObject | undefined = undefined;
-  export let size: Variants['size'] = 16;
-  export let ariaHidden = false;
+  type Props = {
+    icon: Component;
+    style?: SystemStyleObject | undefined;
+    size?: Variants['size'];
+    ariaHidden?: boolean;
+  };
+
+  let { icon, style = undefined, size = 16, ariaHidden = false }: Props = $props();
 
   const recipe = cva({
     base: {
@@ -32,7 +36,9 @@
     },
   });
 
-  $: baseStyle = recipe.raw({ size });
+  const baseStyle = $derived(recipe.raw({ size }));
+
+  const SvelteComponent = $derived(icon);
 </script>
 
-<svelte:component this={icon} class={css(baseStyle, style)} aria-hidden={ariaHidden ? 'true' : undefined} />
+<SvelteComponent class={css(baseStyle, style)} aria-hidden={ariaHidden ? 'true' : undefined} />

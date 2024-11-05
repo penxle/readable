@@ -4,7 +4,9 @@
   import { graphql } from '$graphql';
   import { Tabs } from '$lib/components';
 
-  $: query = graphql(`
+  let { children } = $props();
+
+  const query = graphql(`
     query TeamDashboardLayout_Query($teamId: ID!) {
       team(teamId: $teamId) {
         id
@@ -63,5 +65,5 @@
     overflow: 'auto',
   })}
 >
-  <slot />
+  {@render children()}
 </div>

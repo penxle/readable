@@ -1,2 +1,2 @@
 export { default as Dialog } from './Dialog.svelte';
-export * from './store';
+export * from './state.svelte';

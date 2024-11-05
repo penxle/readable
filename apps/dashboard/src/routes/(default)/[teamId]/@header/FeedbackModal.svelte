@@ -9,8 +9,12 @@
   import { graphql } from '$graphql';
   import { TitledModal } from '$lib/components';
 
-  export let open = false;
-  export let teamId: string;
+  type Props = {
+    open?: boolean;
+    teamId: string;
+  };
+
+  let { open = $bindable(false), teamId }: Props = $props();
 
   const createFeedbackMutation = graphql(`
     mutation CreateFeedback($input: CreateFeedbackInput!) {
@@ -35,7 +39,9 @@
 </script>
 
 <TitledModal bind:open>
-  <svelte:fragment slot="title">리더블 팀에 피드백 보내기</svelte:fragment>
+  {#snippet title()}
+    리더블 팀에 피드백 보내기
+  {/snippet}
 
   <FormProvider {context} {form}>
     <input name="teamId" type="hidden" value={teamId} />
@@ -70,7 +76,7 @@
           })}
           placeholder="기능 요청, 버그 제보, 개선 제안 등 하고 싶으신 말씀을 자유롭게 적어주세요"
           rows="4"
-        />
+        ></textarea>
       </label>
     </FormField>
     <Button style={css.raw({ width: 'full', marginTop: '20px' })} disabled={!isValid} glossy size="lg" type="submit">

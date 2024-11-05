@@ -28,9 +28,9 @@
   import { graphql } from '$graphql';
   import { Img, TitledModal } from '$lib/components';
 
-  let createSiteOpen = false;
+  let createSiteOpen = $state(false);
 
-  $: query = graphql(`
+  const query = graphql(`
     query TeamPage_Query($teamId: ID!) {
       team(teamId: $teamId) {
         id
@@ -112,7 +112,7 @@
         <span class={css({ color: 'text.tertiary' })}>{$query.team.sites.length}</span>
       </h1>
       {#if typeof $query.team.plan.plan.rules.siteLimit !== 'number' || $query.team.plan.plan.rules.siteLimit > $query.team.sites.length}
-        <Button style={css.raw({ gap: '6px' })} size="sm" type="button" on:click={() => (createSiteOpen = true)}>
+        <Button style={css.raw({ gap: '6px' })} onclick={() => (createSiteOpen = true)} size="sm" type="button">
           <span>만들기</span>
           <Icon icon={PlusIcon} size={16} />
         </Button>
@@ -167,7 +167,7 @@
                   borderRadius: '6px',
                   size: '32px',
                 })}
-              />
+              ></div>
             {/if}
             <div class={css({ truncate: true })}>
               <p class={css({ marginBottom: '1px', textStyle: '15sb', truncate: true })}>{site.name}</p>
@@ -187,17 +187,18 @@
             </div>
           </a>
           <Menu style={css.raw({ position: 'absolute', right: '16px', top: '16px' })} placement="bottom-start">
-            <div
-              slot="button"
-              class={css({
-                borderRadius: '6px',
-                padding: '4px',
-                color: 'neutral.50',
-                _hover: { backgroundColor: 'neutral.20' },
-              })}
-            >
-              <Icon icon={EllipsisIcon} size={16} />
-            </div>
+            {#snippet button()}
+              <div
+                class={css({
+                  borderRadius: '6px',
+                  padding: '4px',
+                  color: 'neutral.50',
+                  _hover: { backgroundColor: 'neutral.20' },
+                })}
+              >
+                <Icon icon={EllipsisIcon} size={16} />
+              </div>
+            {/snippet}
             <MenuItem href={`/${$query.team.id}/${site.id}`} type="link">
               <Icon icon={AppWindowIcon} size={14} />
               <span>대시보드 이동</span>
@@ -233,12 +234,14 @@
         도움센터, 업데이트 노트, 개발자 문서 등 다양한 사이트를 제작해보세요
       </p>
     </div>
-    <Button size="lg" on:click={() => (createSiteOpen = true)}>사이트 만들기</Button>
+    <Button onclick={() => (createSiteOpen = true)} size="lg">사이트 만들기</Button>
   </div>
 {/if}
 
 <TitledModal bind:open={createSiteOpen}>
-  <svelte:fragment slot="title">새 사이트 만들기</svelte:fragment>
+  {#snippet title()}
+    새 사이트 만들기
+  {/snippet}
 
   <FormProvider {context} {form}>
     <input name="teamId" type="hidden" value={$query.team.id} />

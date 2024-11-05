@@ -34,9 +34,9 @@
   import TitledModal from '$lib/components/TitledModal.svelte';
   import { isLiteOrHigher, isPro } from '$lib/svelte/stores/ui';
 
-  let isInviteModalOpen = false;
+  let isInviteModalOpen = $state(false);
 
-  $: query = graphql(`
+  const query = graphql(`
     query TeamMembersPage_Query($teamId: ID!) {
       team(teamId: $teamId) {
         id
@@ -190,7 +190,7 @@
             </Button>
           </Tooltip>
         {:else}
-          <Button style={css.raw({ gap: '6px' })} size="sm" type="button" on:click={() => (isInviteModalOpen = true)}>
+          <Button style={css.raw({ gap: '6px' })} onclick={() => (isInviteModalOpen = true)} size="sm" type="button">
             <span>초대하기</span>
             <Icon icon={PlusIcon} size={16} />
           </Button>
@@ -254,22 +254,23 @@
 
         <div class={flex({ width: '60px', justifyContent: 'center', alignItems: 'center' })}>
           <Menu listStyle={css.raw({ gap: '1px' })} offset={2} placement="bottom-start">
-            <div
-              slot="button"
-              class={css({
-                borderRadius: '6px',
-                padding: '4px',
-                color: 'text.secondary',
-                _hover: {
-                  backgroundColor: 'neutral.20',
-                },
-              })}
-            >
-              <Icon icon={EllipsisIcon} size={20} />
-            </div>
+            {#snippet button()}
+              <div
+                class={css({
+                  borderRadius: '6px',
+                  padding: '4px',
+                  color: 'text.secondary',
+                  _hover: {
+                    backgroundColor: 'neutral.20',
+                  },
+                })}
+              >
+                <Icon icon={EllipsisIcon} size={20} />
+              </div>
+            {/snippet}
 
             <MenuItem
-              on:click={async () => {
+              onclick={async () => {
                 await resendInvitationEmail({ invitationId: invitation.id });
                 toast.success('초대 이메일이 재발송되었습니다');
 
@@ -280,19 +281,19 @@
               <span>이메일 재발송</span>
             </MenuItem>
             <MenuItem
-              variant="danger"
-              on:click={async () => {
+              onclick={async () => {
                 invokeAlert({
                   title: '초대를 취소하시겠어요?',
                   content: '발송된 초대 이메일에 포함된 링크는 더 이상 작동하지 않습니다',
-                  actionText: '발송 취소',
-                  action: async () => {
+                  action: '발송 취소',
+                  onaction: async () => {
                     await revokeInvitation({ invitationId: invitation.id });
 
                     mixpanel.track('team:member:invitation:revoke');
                   },
                 });
               }}
+              variant="danger"
             >
               <Icon icon={UserXIcon} size={14} />
               <span>초대 취소</span>
@@ -329,30 +330,31 @@
               offset={6}
               placement="bottom-start"
             >
-              <div
-                slot="button"
-                class={flex({
-                  width: '86px',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  paddingX: '8px',
-                  paddingY: '4px',
-                  textStyle: '16m',
-                  color: 'text.secondary',
-                  borderRadius: '6px',
-                  _hover: {
-                    backgroundColor: 'neutral.20',
-                  },
-                })}
-              >
-                <span>{member.role === 'ADMIN' ? '관리자' : '편집자'}</span>
-                <Icon style={css.raw({ color: 'neutral.60' })} icon={ChevronDownIcon} size={16} />
-              </div>
+              {#snippet button()}
+                <div
+                  class={flex({
+                    width: '86px',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    paddingX: '8px',
+                    paddingY: '4px',
+                    textStyle: '16m',
+                    color: 'text.secondary',
+                    borderRadius: '6px',
+                    _hover: {
+                      backgroundColor: 'neutral.20',
+                    },
+                  })}
+                >
+                  <span>{member.role === 'ADMIN' ? '관리자' : '편집자'}</span>
+                  <Icon style={css.raw({ color: 'neutral.60' })} icon={ChevronDownIcon} size={16} />
+                </div>
+              {/snippet}
 
               <MenuItem
                 style={css.raw({ gap: '20px', borderRadius: '10px', paddingY: '10px' })}
                 aria-checked={member.role === 'ADMIN'}
-                on:click={async () => {
+                onclick={async () => {
                   await updateTeamMemberRole({
                     role: 'ADMIN',
                     userId: member.user.id,
@@ -393,13 +395,13 @@
                 })}
                 aria-checked={member.role === 'MEMBER'}
                 disabled={(member.role === 'ADMIN' && member.isSoleAdmin) || !$isPro}
-                on:click={async () => {
+                onclick={async () => {
                   if (member.id === $query.team.meAsMember?.id) {
                     invokeAlert({
                       title: '스스로의 역할을 편집자로 변경하시겠어요?',
                       content: '이 작업은 되돌릴 수 없으며, 더 이상 설정을 변경할 수 없게 됩니다',
-                      actionText: '변경',
-                      action: async () => {
+                      action: '변경',
+                      onaction: async () => {
                         setRoleToMember(member.user.id, $query.team.id);
                       },
                     });
@@ -439,27 +441,27 @@
         <div class={flex({ width: '60px', justifyContent: 'center', alignItems: 'center' })}>
           {#if member.id === $query.team.meAsMember?.id && !member.isSoleAdmin}
             <Menu offset={2} placement="bottom-start">
-              <div
-                slot="button"
-                class={flex({
-                  borderRadius: '6px',
-                  padding: '4px',
-                  color: 'text.secondary',
-                  _hover: {
-                    backgroundColor: 'neutral.20',
-                  },
-                })}
-              >
-                <Icon icon={EllipsisIcon} size={20} />
-              </div>
+              {#snippet button()}
+                <div
+                  class={flex({
+                    borderRadius: '6px',
+                    padding: '4px',
+                    color: 'text.secondary',
+                    _hover: {
+                      backgroundColor: 'neutral.20',
+                    },
+                  })}
+                >
+                  <Icon icon={EllipsisIcon} size={20} />
+                </div>
+              {/snippet}
               <MenuItem
-                variant="danger"
-                on:click={async () => {
+                onclick={async () => {
                   invokeAlert({
                     title: '팀에서 떠나시겠어요?',
                     content: '더 이상 팀 대시보드에 접근할 수 없습니다',
-                    actionText: '떠나기',
-                    action: async () => {
+                    action: '떠나기',
+                    onaction: async () => {
                       await removeTeamMember({ userId: member.user.id, teamId: $query.team.id });
 
                       mixpanel.track('team:member:remove:self');
@@ -471,34 +473,37 @@
                     },
                   });
                 }}
+                variant="danger"
               >
-                <Icon slot="prefix" icon={UserRoundMinusIcon} size={14} />
+                {#snippet prefix()}
+                  <Icon icon={UserRoundMinusIcon} size={14} />
+                {/snippet}
                 <span>팀에서 떠나기</span>
               </MenuItem>
             </Menu>
           {:else if $query.team.meAsMember?.role === 'ADMIN' && !(member.id === $query.team.meAsMember?.id && member.isSoleAdmin)}
             <Menu offset={2} placement="bottom-start">
-              <div
-                slot="button"
-                class={flex({
-                  borderRadius: '6px',
-                  padding: '4px',
-                  color: 'text.secondary',
-                  _hover: {
-                    backgroundColor: 'neutral.20',
-                  },
-                })}
-              >
-                <Icon icon={EllipsisIcon} size={20} />
-              </div>
+              {#snippet button()}
+                <div
+                  class={flex({
+                    borderRadius: '6px',
+                    padding: '4px',
+                    color: 'text.secondary',
+                    _hover: {
+                      backgroundColor: 'neutral.20',
+                    },
+                  })}
+                >
+                  <Icon icon={EllipsisIcon} size={20} />
+                </div>
+              {/snippet}
               <MenuItem
-                variant="danger"
-                on:click={async () => {
+                onclick={async () => {
                   invokeAlert({
                     title: `"${member.user.name}"님을 팀에서 제거하시겠어요?`,
                     content: '제거된 멤버는 더 이상 팀 대시보드에 접근할 수 없습니다',
-                    actionText: '제거',
-                    action: async () => {
+                    action: '제거',
+                    onaction: async () => {
                       await removeTeamMember({ userId: member.user.id, teamId: $query.team.id });
 
                       toast.success(`${member.user.name}님을 팀에서 제거했습니다`);
@@ -507,8 +512,11 @@
                     },
                   });
                 }}
+                variant="danger"
               >
-                <Icon slot="prefix" icon={UserRoundMinusIcon} size={14} />
+                {#snippet prefix()}
+                  <Icon icon={UserRoundMinusIcon} size={14} />
+                {/snippet}
                 <span>팀에서 제거</span>
               </MenuItem>
             </Menu>
@@ -520,7 +528,7 @@
 </div>
 
 <TitledModal bind:open={isInviteModalOpen}>
-  <svelte:fragment slot="title">
+  {#snippet title()}
     <div class={flex({ alignItems: 'center', gap: '10px' })}>
       <Img
         style={css.raw({
@@ -535,7 +543,7 @@
       />
       팀에 초대하기
     </div>
-  </svelte:fragment>
+  {/snippet}
 
   <FormProvider class={flex({ flexDirection: 'column', gap: '16px' })} {context} {form}>
     <input name="teamId" type="hidden" value={$query.team.id} />

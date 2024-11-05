@@ -22,46 +22,39 @@
   import type { ComponentProps } from 'svelte';
   import type { CategoryData, PageData } from './types';
 
-  type $$Props = {
+  type Props = {
     depth: number;
     item: PageData | CategoryData;
     openState: Record<string, boolean>;
-    onPointerDown: (e: PointerEvent, item: PageData | CategoryData) => void;
+    onpointerdown: (e: PointerEvent, item: PageData | CategoryData) => void;
     registerNode: (node: HTMLElement, item: (PageData | CategoryData) & { depth: number }) => void;
-  } & Omit<ComponentProps<PageList>, 'depth' | 'items' | 'openState' | 'parent'>;
+    getPageUrl: (page: PageData) => string;
+  } & Omit<ComponentProps<typeof PageList>, 'depth' | 'items' | 'openState' | 'parent'>;
 
-  export let depth: number;
-  export let item: PageData | CategoryData;
-  export let openState: Record<string, boolean>;
-  export let onPointerDown: (e: PointerEvent, item: PageData | CategoryData) => void;
-  export let registerNode: (node: HTMLElement, item: (PageData | CategoryData) & { depth: number }) => void;
-  export let getPageUrl: (page: PageData) => string;
+  let { depth, item, openState = $bindable(), onpointerdown, registerNode, getPageUrl, ...rest }: Props = $props();
 
-  let deleteCategoryOpen = false;
-  let deletePageOpen = false;
-  let modifyUrlOpen = false;
-  let elem: HTMLElement;
+  let deleteCategoryOpen = $state(false);
+  let deletePageOpen = $state(false);
+  let modifyUrlOpen = $state(false);
+  let elem = $state<HTMLElement>();
 
-  $: editing = item.id === $editingCategoryId;
-  let inputEl: HTMLInputElement;
+  let editing = $derived(item.id === $editingCategoryId);
+  let inputEl = $state<HTMLInputElement>();
 
-  $: registerNode(elem, {
-    ...item,
-    depth,
+  $effect(() => {
+    registerNode(elem, {
+      ...item,
+      depth,
+    });
   });
 
-  let childrenListProps: ComponentProps<PageList>;
-  $: {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { item, onPointerDown, ...rest } = $$props as $$Props;
-
-    childrenListProps = {
-      ...rest,
-      depth: depth + 1,
-      items: item.__typename === 'Category' ? item.pages : (item.children ?? []),
-      parent: item,
-    };
-  }
+  const childrenListProps = $derived({
+    ...rest,
+    depth: depth + 1,
+    items: item.__typename === 'Category' ? item.pages : (item.children ?? []),
+    parent: item,
+    getPageUrl,
+  });
 
   const updateCategory = graphql(`
     mutation PageTree_UpdateCategory_Mutation($input: UpdateCategoryInput!) {
@@ -96,10 +89,12 @@
     }
   `);
 
-  $: if (editing && inputEl) {
-    if (item.__typename !== 'Page') inputEl.value = item.name;
-    inputEl.select();
-  }
+  $effect(() => {
+    if (editing && inputEl) {
+      if (item.__typename !== 'Page') inputEl.value = item.name;
+      inputEl.select();
+    }
+  });
 
   const completeCategoryEdit = async () => {
     if (inputEl && editing) {
@@ -117,8 +112,8 @@
   class="dnd-item"
   aria-expanded={openState[item.id] || item.__typename === 'Category' ? 'true' : 'false'}
   aria-selected={item.id === $page.params.pageId ? 'true' : 'false'}
+  onpointerdown={(e) => onpointerdown(e, item)}
   role="treeitem"
-  on:pointerdown={(e) => onPointerDown(e, item)}
 >
   <div
     class={cx(
@@ -169,10 +164,10 @@
             },
           })}
           aria-expanded={openState[item.id] ? 'true' : 'false'}
-          type="button"
-          on:click={() => {
+          onclick={() => {
             openState[item.id] = !openState[item.id];
           }}
+          type="button"
         >
           <Icon icon={openState[item.id] ? ChevronDownIcon : ChevronRightIcon} size={14} />
         </button>
@@ -225,29 +220,29 @@
           {item.title}
         </span>
         <Menu disableAutoUpdate offset={2} placement="bottom-start">
-          <div
-            slot="button"
-            class={css(
-              {
-                display: 'none',
-                _groupHover: {
-                  display: 'block',
+          {#snippet button({ open })}
+            <div
+              class={css(
+                {
+                  display: 'none',
+                  _groupHover: {
+                    display: 'block',
+                  },
+                  borderRadius: '4px',
+                  padding: '3px',
+                  color: 'neutral.60',
+                  _hover: {
+                    backgroundColor: 'neutral.30',
+                  },
                 },
-                borderRadius: '4px',
-                padding: '3px',
-                color: 'neutral.60',
-                _hover: {
-                  backgroundColor: 'neutral.30',
-                },
-              },
-              open && { display: 'block' },
-            )}
-            let:open
-          >
-            <Icon icon={EllipsisIcon} size={14} />
-          </div>
+                open && { display: 'block' },
+              )}
+            >
+              <Icon icon={EllipsisIcon} size={14} />
+            </div>
+          {/snippet}
           <MenuItem
-            on:click={async () => {
+            onclick={async () => {
               await duplicatePage({ pageId: item.id });
               mixpanel.track('page:duplicate', {
                 via: 'sidebar',
@@ -257,11 +252,11 @@
             <Icon icon={CopyIcon} size={14} />
             <span>복제</span>
           </MenuItem>
-          <MenuItem on:click={() => (modifyUrlOpen = true)}>
+          <MenuItem onclick={() => (modifyUrlOpen = true)}>
             <Icon icon={LinkIcon} size={14} />
             <span>URL 변경</span>
           </MenuItem>
-          <MenuItem variant="danger" on:click={() => (deletePageOpen = true)}>
+          <MenuItem onclick={() => (deletePageOpen = true)} variant="danger">
             <Icon icon={Trash2Icon} size={14} />
             <span>삭제</span>
           </MenuItem>
@@ -273,16 +268,16 @@
         <input
           bind:this={inputEl}
           class={css({ paddingX: '8px', paddingY: '4px', textStyle: '14b', color: 'text.secondary', width: 'full' })}
-          type="text"
-          on:blur={completeCategoryEdit}
-          on:keydown={(e) => {
+          onblur={completeCategoryEdit}
+          onkeydown={(e) => {
             if (e.key === 'Escape') {
               editingCategoryId.set(null);
             }
             if (e.key === 'Enter' && !e.isComposing) {
-              inputEl.blur();
+              inputEl?.blur();
             }
           }}
+          type="text"
         />
       {:else}
         <div
@@ -309,37 +304,38 @@
           })}
         >
           <Menu disableAutoUpdate placement="bottom-start">
-            <button
-              slot="button"
-              class={css({
-                display: 'none',
-                _groupHover: {
-                  display: 'block',
-                },
-                borderRadius: '4px',
-                padding: '3px',
-                color: 'neutral.60',
-                _hover: {
-                  backgroundColor: 'neutral.30',
-                },
-              })}
-              type="button"
-            >
-              <Icon icon={EllipsisIcon} size={14} />
-            </button>
+            {#snippet button()}
+              <button
+                class={css({
+                  display: 'none',
+                  _groupHover: {
+                    display: 'block',
+                  },
+                  borderRadius: '4px',
+                  padding: '3px',
+                  color: 'neutral.60',
+                  _hover: {
+                    backgroundColor: 'neutral.30',
+                  },
+                })}
+                type="button"
+              >
+                <Icon icon={EllipsisIcon} size={14} />
+              </button>
+            {/snippet}
             <MenuItem
-              on:click={() => {
+              onclick={() => {
                 editingCategoryId.set(item.id);
               }}
             >
               <Icon icon={PencilIcon} size={14} />
               <span>이름 변경</span>
             </MenuItem>
-            <MenuItem on:click={() => (modifyUrlOpen = true)}>
+            <MenuItem onclick={() => (modifyUrlOpen = true)}>
               <Icon icon={LinkIcon} size={14} />
               <span>URL 변경</span>
             </MenuItem>
-            <MenuItem variant="danger" on:click={() => (deleteCategoryOpen = true)}>
+            <MenuItem onclick={() => (deleteCategoryOpen = true)} variant="danger">
               <Icon icon={Trash2Icon} size={14} />
               <span>삭제</span>
             </MenuItem>
@@ -356,7 +352,7 @@
 
 {#if item.__typename !== 'Category'}
   <Alert
-    onAction={async () => {
+    onaction={async () => {
       await deletePage({ pageId: item.id });
       toast.success('페이지가 삭제되었습니다');
       mixpanel.track('page:delete', {
@@ -371,10 +367,12 @@
     }}
     bind:open={deletePageOpen}
   >
-    <svelte:fragment slot="title">
+    {#snippet title()}
       "{item.title}" 페이지를 삭제하시겠어요?
-    </svelte:fragment>
-    <svelte:fragment slot="content">삭제된 페이지는 복구할 수 없습니다</svelte:fragment>
+    {/snippet}
+    {#snippet content()}
+      삭제된 페이지는 복구할 수 없습니다
+    {/snippet}
 
     {#if item.recursiveChildCount > 0}
       <div
@@ -395,24 +393,30 @@
       </div>
     {/if}
 
-    <svelte:fragment slot="action">삭제</svelte:fragment>
-    <svelte:fragment slot="cancel">취소</svelte:fragment>
+    {#snippet action()}
+      삭제
+    {/snippet}
+    {#snippet cancel()}
+      취소
+    {/snippet}
   </Alert>
 {/if}
 
 {#if item.__typename === 'Category'}
   <Alert
-    onAction={async () => {
+    onaction={async () => {
       await deleteCategory({ categoryId: item.id });
       toast.success('카테고리가 삭제되었습니다');
       mixpanel.track('category:delete');
     }}
     bind:open={deleteCategoryOpen}
   >
-    <svelte:fragment slot="title">
+    {#snippet title()}
       "{item.name}" 카테고리를 삭제하시겠어요?
-    </svelte:fragment>
-    <svelte:fragment slot="content">삭제된 카테고리와 페이지는 복구할 수 없습니다</svelte:fragment>
+    {/snippet}
+    {#snippet content()}
+      삭제된 카테고리와 페이지는 복구할 수 없습니다
+    {/snippet}
 
     {#if item.recursivePageCount > 0}
       <div
@@ -433,8 +437,12 @@
       </div>
     {/if}
 
-    <svelte:fragment slot="action">삭제</svelte:fragment>
-    <svelte:fragment slot="cancel">취소</svelte:fragment>
+    {#snippet action()}
+      삭제
+    {/snippet}
+    {#snippet cancel()}
+      취소
+    {/snippet}
   </Alert>
 {/if}
 

@@ -1,1 +1,1 @@
-export { SlashMenu } from './extension';
+export { SlashMenu } from './extension.svelte';

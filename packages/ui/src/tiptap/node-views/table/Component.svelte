@@ -9,46 +9,42 @@
   import AddRowColButton from './AddRowColButton.svelte';
   import ColHandle from './ColHandle.svelte';
   import RowHandle from './RowHandle.svelte';
+  import type { NodeViewProps } from '@readable/ui/tiptap';
   import type { Node } from '@tiptap/pm/model';
-  import type { NodeViewProps } from '../../lib';
 
-  type $$Props = NodeViewProps;
-  $$restProps;
+  type Props = NodeViewProps;
 
-  let colgroupRendered = false;
+  let colgroupRendered = $state(false);
 
   tick().then(() => {
     colgroupRendered = true;
   });
 
-  export let node: NodeViewProps['node'];
-  export let HTMLAttributes: NodeViewProps['HTMLAttributes'];
-  export let extension: NodeViewProps['extension'];
-  export let editor: NodeViewProps['editor'] | undefined;
-  // export let selected: NodeViewProps['selected'];
-  // export let deleteNode: NodeViewProps['deleteNode'];
-  export let getPos: NodeViewProps['getPos'];
-  // export let updateAttributes: NodeViewProps['updateAttributes'];
+  let { node, HTMLAttributes, extension, editor, getPos }: Props = $props();
 
-  $: ({ colgroup, tableWidth, tableMinWidth } = createColGroup(node, extension.options.cellMinWidth));
+  const { colgroup, tableWidth, tableMinWidth } = $derived(createColGroup(node, extension.options.cellMinWidth));
 
-  let cols: ['col', Record<string, string>][] = [];
-  $: cols = (colgroup?.slice(2) as ['col', Record<string, string>][]) ?? [];
+  let cols = $state<['col', Record<string, string>][]>([]);
 
-  let _colElems: HTMLElement[] = [];
-  $: colElems = _colElems.filter(Boolean); // 열 삭제에 대응
+  $effect(() => {
+    cols = (colgroup?.slice(2) as ['col', Record<string, string>][]) ?? [];
+  });
 
-  let hasSpan = false;
-  $: {
+  let _colElems = $state<HTMLElement[]>([]);
+  const colElems = $derived(_colElems.filter(Boolean)); // 열 삭제에 대응
+
+  let hasSpan = $state(false);
+
+  $effect(() => {
     hasSpan = false;
     node.descendants((node) => {
       if (node.type.name === 'tableCell' && (node.attrs.colspan > 1 || node.attrs.rowspan > 1)) {
         hasSpan = true;
       }
     });
-  }
+  });
 
-  let rowElems: HTMLElement[] = [];
+  let rowElems = $state<HTMLElement[]>([]);
 
   async function getRows(tableNode: Node) {
     if (!editor || !tableNode) {
@@ -77,12 +73,15 @@
     }
   }
 
-  $: getRows(node);
+  $effect(() => {
+    getRows(node);
+  });
 
-  let hoveredRowIndex: number | null = null;
-  let hoveredColumnIndex: number | null = null;
-  $: isLastRowHovered = hoveredRowIndex === rowElems.length - 1;
-  $: isLastColumnHovered = hoveredColumnIndex === cols.length - 1;
+  let hoveredRowIndex = $state<number | null>(null);
+  let hoveredColumnIndex = $state<number | null>(null);
+  const isLastRowHovered = $derived(hoveredRowIndex === rowElems.length - 1);
+  const isLastColumnHovered = $derived(hoveredColumnIndex === cols.length - 1);
+
   function handlePointerover(event: PointerEvent) {
     const target = event.target as HTMLElement;
 
@@ -136,11 +135,11 @@
     )}
   >
     <table
-      on:pointerover={handlePointerover}
-      on:pointerleave={() => {
+      onpointerleave={() => {
         hoveredRowIndex = null;
         hoveredColumnIndex = null;
       }}
+      onpointerover={handlePointerover}
       {...mergeAttributes(extension.options.HTMLAttributes, HTMLAttributes, {
         class: css({
           position: 'relative',
@@ -160,6 +159,7 @@
         {/each}
       </colgroup>
       {#if editor?.isEditable}
+        <!-- svelte-ignore node_invalid_placement_ssr -->
         <div
           class={css({
             position: 'absolute',
@@ -192,6 +192,7 @@
         </div>
         {#if colgroupRendered}
           {#each colElems as col, i (i)}
+            <!-- svelte-ignore node_invalid_placement_ssr -->
             <div
               style:left={`${col.offsetLeft}px`}
               style:width={`${col.clientWidth}px`}

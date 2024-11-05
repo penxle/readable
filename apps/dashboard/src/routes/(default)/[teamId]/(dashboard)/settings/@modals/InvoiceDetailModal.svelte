@@ -9,12 +9,14 @@
   import { TitledModal } from '$lib/components';
   import type { InvoiceDetailModal_paymentInvoice } from '$graphql';
 
-  let _paymentInvoice: InvoiceDetailModal_paymentInvoice;
-  export { _paymentInvoice as $paymentInvoice };
+  type Props = {
+    $paymentInvoice: InvoiceDetailModal_paymentInvoice;
+    open?: boolean;
+  };
 
-  export let open = false;
+  let { $paymentInvoice: _paymentInvoice, open = $bindable(false) }: Props = $props();
 
-  $: paymentInvoice = fragment(
+  let paymentInvoice = fragment(
     _paymentInvoice,
     graphql(`
       fragment InvoiceDetailModal_paymentInvoice on PaymentInvoice {
@@ -49,7 +51,9 @@
 </script>
 
 <TitledModal bind:open>
-  <svelte:fragment slot="title">청구서</svelte:fragment>
+  {#snippet title()}
+    청구서
+  {/snippet}
 
   <div class={flex({ direction: 'column', gap: '24px' })}>
     <div class={css({ borderRadius: '8px', padding: '12px', textStyle: '14m', backgroundColor: 'neutral.10' })}>

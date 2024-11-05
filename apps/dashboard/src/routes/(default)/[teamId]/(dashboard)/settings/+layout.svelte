@@ -9,7 +9,9 @@
   import { graphql } from '$graphql';
   import { SettingTabItem } from '$lib/components';
 
-  $: query = graphql(`
+  let { children } = $props();
+
+  const query = graphql(`
     query TeamSettingsLayout_Query($teamId: ID!) {
       team(teamId: $teamId) {
         id
@@ -22,7 +24,7 @@
     }
   `);
 
-  $: settings = [
+  const settings = $derived([
     {
       name: '일반',
       href: `/${$page.params.teamId}/settings`,
@@ -45,12 +47,12 @@
           },
         ]
       : []),
-  ];
+  ]);
 
-  let container: HTMLDivElement;
+  let container = $state<HTMLDivElement>();
 
   afterNavigate(() => {
-    container.scrollTo({ top: 0, behavior: 'auto' });
+    container?.scrollTo({ top: 0, behavior: 'auto' });
   });
 </script>
 
@@ -91,6 +93,6 @@
       height: 'fit',
     })}
   >
-    <slot />
+    {@render children()}
   </div>
 </div>

@@ -1,14 +1,15 @@
 import { mergeAttributes, Node } from '@tiptap/core';
+import { render } from 'svelte/server';
 import { browser } from '$app/environment';
-import { SvelteNodeViewRenderer } from './renderer';
+import { SvelteNodeViewRenderer } from './renderer.svelte';
 import type { NodeConfig } from '@tiptap/core';
-import type { NodeViewComponentType } from './renderer';
+import type { NodeViewComponent } from './renderer.svelte';
 
 type CreateNodeViewOptions<Options, Storage> = NodeConfig<Options, Storage>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const createNodeView = <Options = any, Storage = any>(
-  component: NodeViewComponentType,
+  component: NodeViewComponent,
   options: CreateNodeViewOptions<Options, Storage>,
 ) => {
   return extendNodeToNodeView(Node.create<Options, Storage>(), component, options);
@@ -17,7 +18,7 @@ export const createNodeView = <Options = any, Storage = any>(
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const extendNodeToNodeView = <Options = any, Storage = any>(
   node: Node,
-  component: NodeViewComponentType,
+  component: NodeViewComponent,
   options?: Partial<CreateNodeViewOptions<Options, Storage>>,
 ) => {
   return node.extend({
@@ -38,16 +39,18 @@ export const extendNodeToNodeView = <Options = any, Storage = any>(
 
         return node.isLeaf ? ['node-view', attributes] : ['node-view', attributes, 0];
       } else {
-        // @ts-expect-error svelte internal
-        const { html } = component.render({
-          node,
-          extension: this,
-          selected: false,
+        const { body } = render(component, {
+          props: {
+            node,
+            // @ts-expect-error Type mismatch -- fix this
+            extension: this,
+            selected: false,
+          },
         });
 
         return node.isLeaf
-          ? ['node-view', { 'data-html': html }]
-          : ['node-view', { 'data-html': html }, ['node-view-content-editable', 0]];
+          ? ['node-view', { 'data-html': body }]
+          : ['node-view', { 'data-html': body }, ['node-view-content-editable', 0]];
       }
     },
 

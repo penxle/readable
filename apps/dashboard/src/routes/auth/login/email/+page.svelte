@@ -33,11 +33,13 @@
     },
   });
 
-  $: setInitialValues({
-    email: $page.url.searchParams.get('email') ?? '',
+  $effect(() => {
+    setInitialValues({
+      email: $page.url.searchParams.get('email') ?? '',
+    });
   });
 
-  let sent = false;
+  let sent = $state(false);
 </script>
 
 <div
@@ -62,8 +64,8 @@
     </p>
     <button
       class={css({ textStyle: '14r', color: 'neutral.70', marginTop: '16px' })}
+      onclick={() => (sent = false)}
       type="button"
-      on:click={() => (sent = false)}
     >
       돌아가기
     </button>

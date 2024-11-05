@@ -2,7 +2,10 @@
   import '../app.css';
 
   import { ToastProvider } from '@readable/ui/notification';
+
+  let { children } = $props();
 </script>
 
-<slot />
+{@render children()}
+
 <ToastProvider />

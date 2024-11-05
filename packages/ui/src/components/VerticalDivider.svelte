@@ -2,8 +2,12 @@
   import { css, cva, cx } from '@readable/styled-system/css';
   import type { SystemStyleObject } from '@readable/styled-system/types';
 
-  export let color: 'primary' | 'secondary' = 'primary';
-  export let style: SystemStyleObject | undefined = undefined;
+  type Props = {
+    color?: 'primary' | 'secondary';
+    style?: SystemStyleObject;
+  };
+
+  let { color = 'primary', style }: Props = $props();
 </script>
 
 <hr

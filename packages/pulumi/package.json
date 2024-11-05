@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@pulumi/aws": "^6.57.0",
-    "@pulumi/kubernetes": "^4.18.2",
+    "@pulumi/kubernetes": "^4.18.3",
     "@pulumi/pulumi": "^3.137.0",
     "ts-pattern": "^5.5.0"
   },

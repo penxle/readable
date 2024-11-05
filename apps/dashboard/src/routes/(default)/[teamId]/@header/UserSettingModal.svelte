@@ -12,14 +12,16 @@
   import UserSetting from './setting-modal/UserSetting.svelte';
   import type { UserSettingModal_user } from '$graphql';
 
-  let _user: UserSettingModal_user;
-  export { _user as $user };
+  type Props = {
+    $user: UserSettingModal_user;
+    open?: boolean;
+  };
 
-  export let open = false;
+  let { $user: _user, open = false }: Props = $props();
 
-  $: selectedTab = $page.url.searchParams.get('tab');
+  const selectedTab = $derived($page.url.searchParams.get('tab'));
 
-  $: user = fragment(
+  const user = fragment(
     _user,
     graphql(`
       fragment UserSettingModal_user on User {
@@ -36,14 +38,14 @@
     `),
   );
 
-  $: personalSettings = [
+  const personalSettings = $derived([
     {
       icon: CircleUserIcon,
       name: '개인 설정',
       href: '?tab=settings/personal',
       selected: selectedTab === 'settings/personal',
     },
-  ];
+  ]);
 
   const closeModal = () => {
     const currentPath = $page.url.pathname;
@@ -51,7 +53,7 @@
   };
 </script>
 
-<Dialog {open} on:close={closeModal}>
+<Dialog onclose={closeModal} {open}>
   <div
     class={flex({
       position: 'fixed',
@@ -71,7 +73,7 @@
         backgroundColor: 'surface.secondary',
       })}
       aria-hidden="true"
-    />
+    ></div>
 
     <div
       class={flex({
@@ -164,8 +166,8 @@
             },
           })}
           aria-label="닫기"
+          onclick={closeModal}
           type="button"
-          on:click={closeModal}
         >
           <Icon icon={XIcon} />
         </button>

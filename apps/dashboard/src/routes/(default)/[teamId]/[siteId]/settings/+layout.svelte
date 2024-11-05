@@ -9,9 +9,9 @@
   import { page } from '$app/stores';
   import { SettingTabItem } from '$lib/components';
 
-  export let data;
+  let { data, children } = $props();
 
-  $: settings = [
+  const settings = $derived([
     {
       name: '일반',
       href: `/${data.props.teamId}/${data.props.siteId}/settings`,
@@ -36,12 +36,12 @@
       icon: IconExternalLink,
       selected: $page.url.pathname === `/${data.props.teamId}/${data.props.siteId}/settings/link`,
     },
-  ];
+  ]);
 
-  let container: HTMLDivElement;
+  let container = $state<HTMLDivElement>();
 
   afterNavigate(() => {
-    container.scrollTo({ top: 0, behavior: 'auto' });
+    container?.scrollTo({ top: 0, behavior: 'auto' });
   });
 </script>
 
@@ -83,6 +83,6 @@
       height: 'fit',
     })}
   >
-    <slot />
+    {@render children()}
   </div>
 </div>

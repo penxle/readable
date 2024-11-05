@@ -1,15 +1,17 @@
 <script lang="ts">
   import { css, cx } from '@readable/styled-system/css';
   import { Icon } from '@readable/ui/components';
-  import { createEventDispatcher } from 'svelte';
   import UploadIcon from '~icons/lucide/upload';
   import { uploadBlobAsImage } from '$lib/utils/blob.svelte';
   import LoadableImg from './LoadableImg.svelte';
 
-  const dispatch = createEventDispatcher<{ change: undefined }>();
+  type Props = {
+    id: string;
+    editable?: boolean;
+    onchange?: (id: string) => void;
+  };
 
-  export let id: string;
-  export let editable = true;
+  let { id = $bindable(), editable = true, onchange }: Props = $props();
 </script>
 
 <svelte:element
@@ -64,8 +66,7 @@
     <input
       accept="image/*"
       hidden
-      type="file"
-      on:change={async (event) => {
+      onchange={async (event) => {
         const file = event.currentTarget.files?.[0];
         event.currentTarget.value = '';
         if (!file) {
@@ -79,8 +80,9 @@
         });
 
         id = resp.id;
-        dispatch('change');
+        onchange?.(resp.id);
       }}
+      type="file"
     />
   {/if}
 </svelte:element>

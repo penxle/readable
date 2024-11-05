@@ -1,4 +1,4 @@
-<script context="module" lang="ts">
+<script lang="ts" module>
   import ky from 'ky';
   import { graphql } from '$graphql';
 

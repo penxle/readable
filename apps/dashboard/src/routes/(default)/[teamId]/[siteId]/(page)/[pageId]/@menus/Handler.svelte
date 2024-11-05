@@ -8,11 +8,14 @@
   import VirtualElement from './VirtualElement.svelte';
   import type { Editor_CommentPopover_pageContentComment, Editor_MenuHandler_query } from '$graphql';
 
-  export let editor: Editor;
-  let _query: Editor_MenuHandler_query;
-  export { _query as $query };
+  type Props = {
+    editor: Editor;
+    $query: Editor_MenuHandler_query;
+  };
 
-  $: query = fragment(
+  let { editor, $query: _query }: Props = $props();
+
+  const query = fragment(
     _query,
     graphql(`
       fragment Editor_MenuHandler_query on Query {
@@ -29,11 +32,11 @@
     `),
   );
 
-  let pos: number | null = null;
-  let commentOpen: { pos: number; anchor: HTMLElement } | null = null;
+  let pos = $state<number | null>(null);
+  let commentOpen = $state<{ pos: number; anchor: HTMLElement } | null>(null);
 
-  $: commentNodeIds = new Set($query.page.comments.map((c) => c.nodeId));
-  let commentsByPos = new Map<number, Editor_CommentPopover_pageContentComment[]>();
+  const commentNodeIds = $derived(new Set($query.page.comments.map((c) => c.nodeId)));
+  let commentsByPos = $state(new Map<number, Editor_CommentPopover_pageContentComment[]>());
 
   const handlePointerMove = (event: PointerEvent) => {
     if (commentOpen !== null) {
@@ -70,36 +73,40 @@
     commentsByPos = map;
   };
 
-  $: {
+  $effect(() => {
     $query.page.comments;
     updateCommentsByPos();
-  }
+  });
 
   onMount(() => {
     editor.on('update', updateCommentsByPos);
 
     return () => {
-      editor.off('update', updateCommentsByPos);
+      editor?.off('update', updateCommentsByPos);
     };
   });
 </script>
 
-<svelte:window on:pointermove={handlePointerMove} />
+<svelte:window onpointermove={handlePointerMove} />
 
 {#if pos !== null}
   <VirtualElement {editor} {pos} transition>
-    <Floating slot="left" {editor} {pos} />
-    <svelte:fragment slot="right">
+    {#snippet port({ pos })}
+      <Floating {editor} {pos} />
+    {/snippet}
+    {#snippet starboard({ pos })}
       {#if !commentsByPos.has(pos)}
-        <Comment {pos} on:click={(e) => (commentOpen = e.detail)} />
+        <Comment onclick={(e) => (commentOpen = e)} {pos} />
       {/if}
-    </svelte:fragment>
+    {/snippet}
   </VirtualElement>
 {/if}
 
 {#each commentsByPos.entries() as [pos, comments], index (index)}
   <VirtualElement {editor} {pos}>
-    <Comment slot="right" commentCount={comments.length} {pos} on:click={(e) => (commentOpen = e.detail)} />
+    {#snippet starboard()}
+      <Comment commentCount={comments.length} onclick={(e) => (commentOpen = e)} {pos} />
+    {/snippet}
   </VirtualElement>
 {/each}
 
@@ -109,6 +116,6 @@
     pageId={$query.page.id}
     {...commentOpen}
     $comments={commentsByPos.get(commentOpen.pos) ?? []}
-    on:close={() => (commentOpen = null)}
+    onclose={() => (commentOpen = null)}
   />
 {/if}

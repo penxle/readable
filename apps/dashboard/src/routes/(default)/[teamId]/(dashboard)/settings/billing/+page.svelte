@@ -10,7 +10,7 @@
   import UpdateBillingEmailModal from '../@modals/UpdateBillingEmailModal.svelte';
   import UpdateCardModal from '../@modals/UpdateCardModal.svelte';
 
-  $: query = graphql(`
+  const query = graphql(`
     query TeamSettingsBillingPage_Query($teamId: ID!) {
       team(teamId: $teamId) {
         id
@@ -77,11 +77,11 @@
     }
   };
 
-  let isUpdateCardModalOpen = false;
-  let isUpdateBillingEmailModalOpen = false;
-  let isInvoiceDetailModalOpen = false;
+  let isUpdateCardModalOpen = $state(false);
+  let isUpdateBillingEmailModalOpen = $state(false);
+  let isInvoiceDetailModalOpen = $state(false);
 
-  let paymentInvoice: (typeof $query.team.paymentInvoices)[number];
+  let paymentInvoice = $state<(typeof $query.team.paymentInvoices)[number]>();
 </script>
 
 <Helmet title="결제 및 청구" trailing={$query.team.name} />
@@ -105,9 +105,9 @@
           {$query.team.plan.plan.name}
         </div>
         <Button
+          onclick={() => goto(`/${$query.team.id}/settings/plan`)}
           size="md"
           variant={$query.team.plan.plan.name === 'Basic' ? 'primary' : 'secondary'}
-          on:click={() => goto(`/${$query.team.id}/settings/plan`)}
         >
           플랜 변경
         </Button>
@@ -165,7 +165,7 @@
           <div class={css({ textStyle: '14sb', color: 'text.secondary' })}>결제 정보</div>
           <div class={flex({ justifyContent: 'space-between', alignItems: 'center' })}>
             <div class={css({ textStyle: '16m' })}>{$query.team.paymentMethod.name}</div>
-            <Button size="md" variant="secondary" on:click={() => (isUpdateCardModalOpen = true)}>카드 변경</Button>
+            <Button onclick={() => (isUpdateCardModalOpen = true)} size="md" variant="secondary">카드 변경</Button>
           </div>
         </div>
         <HorizontalDivider />
@@ -173,7 +173,7 @@
           <div class={css({ textStyle: '14sb', color: 'text.secondary', marginBottom: '4px' })}>청구서 수신 이메일</div>
           <div class={flex({ justifyContent: 'space-between', alignItems: 'center' })}>
             <div class={css({ textStyle: '16m' })}>{$query.team.plan.billingEmail}</div>
-            <Button size="md" variant="secondary" on:click={() => (isUpdateBillingEmailModalOpen = true)}>
+            <Button onclick={() => (isUpdateBillingEmailModalOpen = true)} size="md" variant="secondary">
               이메일 변경
             </Button>
           </div>
@@ -227,11 +227,11 @@
                     verticalAlign: 'middle',
                   },
                 })}
-                role="button"
-                on:click={() => {
+                onclick={() => {
                   paymentInvoice = invoice;
                   isInvoiceDetailModalOpen = true;
                 }}
+                role="button"
               >
                 <td class={css({ paddingY: '14px', paddingLeft: '16px', textStyle: '14r' })}>
                   {dayjs(invoice.createdAt).formatAsDate()}

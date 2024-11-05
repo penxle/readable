@@ -1,20 +1,23 @@
 <script lang="ts">
-  import { browser } from '$app/environment';
   import { graphql } from '$graphql';
   import Img from './Img.svelte';
   import type { SystemStyleObject } from '@readable/styled-system/types';
   import type { ComponentProps } from 'svelte';
 
-  type Size = ComponentProps<Img>['size'];
+  type Size = ComponentProps<typeof Img>['size'];
 
-  export let id: string;
-  export let alt: string;
-  export let style: SystemStyleObject | undefined = undefined;
-  export let size: Size;
-  export let quality: number | undefined = undefined;
-  export let progressive = false;
+  type Props = {
+    id: string;
+    alt: string;
+    style?: SystemStyleObject;
+    size: Size;
+    quality?: number;
+    progressive?: boolean;
+  };
 
-  $: query = graphql(`
+  let { id, alt, style, size, quality, progressive = false }: Props = $props();
+
+  const query = graphql(`
     query LoadableImg_Query($id: ID!) @manual {
       image(id: $id) {
         id
@@ -23,9 +26,9 @@
     }
   `);
 
-  $: if (browser) {
+  $effect(() => {
     query.refetch({ id });
-  }
+  });
 </script>
 
 {#if $query}

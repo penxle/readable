@@ -3,33 +3,33 @@
   import { flex } from '@readable/styled-system/patterns';
   import { getFormContext } from '../forms';
   import Icon from './Icon.svelte';
-  import type { RecipeVariant, RecipeVariantProps, SystemStyleObject } from '@readable/styled-system/types';
-  import type { ComponentType } from 'svelte';
+  import type { RecipeVariantProps, SystemStyleObject } from '@readable/styled-system/types';
+  import type { Component, Snippet } from 'svelte';
   import type { HTMLInputAttributes } from 'svelte/elements';
 
-  export let name: string;
-  export let value: HTMLInputAttributes['value'] = undefined;
-  export let style: SystemStyleObject | undefined = undefined;
-  export let size: Variants['size'] = 'lg';
-  export let inputEl: HTMLInputElement | undefined = undefined;
-  export let leftIcon: ComponentType | undefined = undefined;
-  export let rightIcon: ComponentType | undefined = undefined;
-  export let hidden = false;
+  type Props = {
+    name?: string;
+    style?: SystemStyleObject;
+    inputEl?: HTMLInputElement;
+    leftIcon?: Component;
+    rightIcon?: Component;
+    hidden?: boolean;
+    leftItem?: Snippet;
+  } & RecipeVariantProps<typeof recipe> &
+    Omit<HTMLInputAttributes, 'class' | 'style' | 'size'>;
 
-  type $$Props = RecipeVariantProps<typeof recipe> &
-    Omit<HTMLInputAttributes, 'class' | 'style' | 'size'> & {
-      style?: SystemStyleObject;
-      inputEl?: HTMLInputElement;
-      leftIcon?: ComponentType;
-      rightIcon?: ComponentType;
-      hidden?: boolean;
-    };
-
-  type $$Events = {
-    input: Event & { currentTarget: HTMLInputElement };
-    keydown: KeyboardEvent & { currentTarget: HTMLInputElement };
-    blur: FocusEvent & { currentTarget: HTMLInputElement };
-  };
+  let {
+    name = $bindable(),
+    value = $bindable(),
+    style,
+    size = 'lg',
+    inputEl = $bindable(),
+    leftIcon,
+    rightIcon,
+    hidden = false,
+    leftItem,
+    ...rest
+  }: Props = $props();
 
   const { field } = getFormContext();
 
@@ -37,7 +37,6 @@
     name = field.name;
   }
 
-  type Variants = RecipeVariant<typeof recipe>;
   const recipe = cva({
     base: {
       display: 'flex',
@@ -110,9 +109,9 @@
     </div>
   {/if}
 
-  {#if 'left-item' in $$slots}
+  {#if leftItem}
     <div class={css({ marginRight: '8px' })}>
-      <slot name="left-item" />
+      {@render leftItem()}
     </div>
   {/if}
 
@@ -122,11 +121,8 @@
     {name}
     class={css({ flexGrow: '1', width: 'full', minWidth: '0' })}
     type="text"
-    on:input
-    on:keydown
-    on:blur
     bind:value
-    {...$$restProps}
+    {...rest}
     aria-live={value ? 'polite' : 'off'}
   />
 

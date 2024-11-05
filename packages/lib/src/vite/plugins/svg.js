@@ -33,9 +33,7 @@ export const svg = () => ({
     const { js } = compile(svg, {
       filename,
       namespace: 'svg',
-      css: 'none',
-      generate: transformOptions?.ssr ? 'ssr' : 'dom',
-      hydratable: !transformOptions?.ssr,
+      generate: transformOptions?.ssr ? 'server' : 'client',
     });
 
     return js;

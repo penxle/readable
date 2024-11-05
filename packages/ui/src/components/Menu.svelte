@@ -5,19 +5,38 @@
   import { createFloatingActions } from '../actions/index';
   import type { OffsetOptions, Placement } from '@floating-ui/dom';
   import type { SystemStyleObject } from '@readable/styled-system/types';
+  import type { Snippet } from 'svelte';
 
-  export let open = false;
-  export let placement: Placement = 'bottom';
-  export let offset: OffsetOptions = 6;
-  export let style: SystemStyleObject | undefined = undefined;
-  export let listStyle: SystemStyleObject | undefined = undefined;
-  export let setFullWidth = false;
-  export let disableAutoUpdate = false;
+  type Props = {
+    open?: boolean;
+    placement?: Placement;
+    offset?: OffsetOptions;
+    style?: SystemStyleObject;
+    listStyle?: SystemStyleObject;
+    setFullWidth?: boolean;
+    disableAutoUpdate?: boolean;
+    onopen?: () => void;
+    button?: Snippet<[{ open: boolean }]>;
+    action?: Snippet;
+    children?: Snippet<[{ close: () => void }]>;
+  };
 
-  export let onOpen: (() => void) | undefined = undefined;
+  let {
+    open = $bindable(false),
+    placement = 'bottom',
+    offset = 6,
+    style,
+    listStyle,
+    setFullWidth = false,
+    disableAutoUpdate = false,
+    onopen,
+    button,
+    action,
+    children,
+  }: Props = $props();
 
-  let buttonEl: HTMLButtonElement | undefined;
-  let menuEl: HTMLUListElement | undefined;
+  let buttonEl = $state<HTMLButtonElement>();
+  let menuEl = $state<HTMLUListElement>();
 
   const { anchor, floating } = createFloatingActions({
     placement,
@@ -104,22 +123,23 @@
   };
 </script>
 
-<svelte:window on:keydown={onKeydown} />
+<svelte:window onkeydown={onKeydown} />
 
 <button
   bind:this={buttonEl}
   class={cx(css(style), 'menu-button')}
   aria-expanded={open}
-  type="button"
-  on:click|preventDefault={() => {
+  onclick={(e) => {
+    e.preventDefault();
     open = !open;
     if (open) {
-      onOpen?.();
+      onopen?.();
     }
   }}
+  type="button"
   use:anchor
 >
-  <slot name="button" {open} />
+  {@render button?.({ open })}
 </button>
 
 {#if open}
@@ -141,25 +161,25 @@
         overflowY: 'auto',
         zIndex: '50',
       },
-      $$slots.action && { paddingBottom: '0' },
+      action && { paddingBottom: '0' },
       listStyle,
     )}
     role="menu"
     use:floating
   >
-    {#if $$slots.action}
+    {#if action}
       <li>
         <ul class={css({ display: 'flex', flexDirection: 'column', gap: '4px', overflowY: 'auto' })}>
-          <slot />
+          {@render children?.({ close })}
         </ul>
       </li>
     {:else}
-      <slot {close} />
+      {@render children?.({ close })}
     {/if}
 
-    {#if $$slots.action}
+    {#if action}
       <li class={css({ position: 'sticky', bottom: '0', paddingBottom: '12px', backgroundColor: 'surface.primary' })}>
-        <slot name="action" />
+        {@render action?.()}
       </li>
     {/if}
   </ul>

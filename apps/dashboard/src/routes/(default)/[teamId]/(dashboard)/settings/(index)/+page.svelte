@@ -21,7 +21,7 @@
   import { graphql } from '$graphql';
   import { AvatarInput, TitledModal } from '$lib/components';
 
-  $: query = graphql(`
+  const query = graphql(`
     query TeamSettingsPage_Query($teamId: ID!) {
       team(teamId: $teamId) {
         id
@@ -80,9 +80,11 @@
     },
   });
 
-  $: setInitialValues({ avatarId: $query.team.avatar.id, name: $query.team.name, teamId: $query.team.id });
+  $effect(() => {
+    setInitialValues({ avatarId: $query.team.avatar.id, name: $query.team.name, teamId: $query.team.id });
+  });
 
-  let deleteTeamOpen = false;
+  let deleteTeamOpen = $state(false);
 
   const {
     form: deleteForm,
@@ -121,8 +123,8 @@
       <FormField name="avatar" label="팀 로고" noMessage>
         <AvatarInput
           editable={$query.team.meAsMember?.role !== 'MEMBER'}
+          onchange={() => setIsDirty(true)}
           bind:id={$data.avatarId}
-          on:change={() => setIsDirty(true)}
         />
       </FormField>
       <FormField name="name" label="팀 이름">
@@ -160,11 +162,11 @@
   >
     <Button
       disabled={$query.team.sites.length > 0}
-      size="lg"
-      variant="danger-fill"
-      on:click={() => {
+      onclick={() => {
         deleteTeamOpen = true;
       }}
+      size="lg"
+      variant="danger-fill"
     >
       삭제
     </Button>
@@ -172,7 +174,9 @@
 </div>
 
 <TitledModal bind:open={deleteTeamOpen}>
-  <svelte:fragment slot="title">팀 삭제</svelte:fragment>
+  {#snippet title()}
+    팀 삭제
+  {/snippet}
 
   <p
     class={css({

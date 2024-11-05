@@ -5,7 +5,7 @@
   import dayjs from 'dayjs';
   import ky from 'ky';
   import { base64 } from 'rfc4648';
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { onMount } from 'svelte';
   import { IndexeddbPersistence } from 'y-indexeddb';
   import * as YAwareness from 'y-protocols/awareness';
   import * as Y from 'yjs';
@@ -18,45 +18,12 @@
   import type { Writable } from 'svelte/store';
   import type { PagePage_Editor_query } from '$graphql';
 
-  export let _query: PagePage_Editor_query;
+  type Props = {
+    $query: PagePage_Editor_query;
+    onconnectionstatechange?: (value: { state: 'connected' | 'disconnected' }) => void;
+  };
 
-  $: query = fragment(
-    _query,
-    graphql(`
-      fragment PagePage_Editor_query on Query {
-        me @required {
-          id
-          name
-        }
-
-        page(pageId: $pageId) {
-          id
-
-          site {
-            id
-
-            team {
-              id
-            }
-          }
-
-          content {
-            id
-            update
-          }
-
-          comments {
-            id
-            nodeId
-            content
-          }
-        }
-
-        ...PagePage_Breadcrumb_query
-        ...Editor_MenuHandler_query
-      }
-    `),
-  );
+  let { $query: _query, onconnectionstatechange }: Props = $props();
 
   const syncPageContent = graphql(`
     mutation PagePage_SyncPageContent_Mutation($input: SyncPageContentInput!) {
@@ -153,11 +120,8 @@
     }
   `);
 
-  const dispatch = createEventDispatcher<{ connectionStateChange: { state: 'connected' | 'disconnected' } }>();
-
-  let editor: Editor | undefined;
-
-  let titleEl: HTMLElement;
+  let editor = $state<Editor>();
+  let titleEl = $state<HTMLElement>();
 
   const createStore = (name: 'title' | 'subtitle'): Writable<string> => {
     const text = doc.getText(name);
@@ -189,12 +153,6 @@
       },
     };
   };
-
-  $: {
-    if (titleEl) adjustTextareaHeight(titleEl);
-
-    $title;
-  }
 
   const adjustTextareaHeight = (el: HTMLElement) => {
     el.style.height = 'auto';
@@ -305,10 +263,10 @@
     if (connectionState !== 'connected' && connected) {
       await forceSync();
       connectionState = 'connected';
-      dispatch('connectionStateChange', { state: 'connected' });
+      onconnectionstatechange?.({ state: 'connected' });
     } else if (connectionState !== 'disconnected' && !connected) {
       connectionState = 'disconnected';
-      dispatch('connectionStateChange', { state: 'disconnected' });
+      onconnectionstatechange?.({ state: 'disconnected' });
     }
   };
 
@@ -344,12 +302,55 @@
       doc.destroy();
     };
   });
+
+  const query = fragment(
+    _query,
+    graphql(`
+      fragment PagePage_Editor_query on Query {
+        me @required {
+          id
+          name
+        }
+
+        page(pageId: $pageId) {
+          id
+
+          site {
+            id
+
+            team {
+              id
+            }
+          }
+
+          content {
+            id
+            update
+          }
+
+          comments {
+            id
+            nodeId
+            content
+          }
+        }
+
+        ...PagePage_Breadcrumb_query
+        ...Editor_MenuHandler_query
+      }
+    `),
+  );
+
+  $effect(() => {
+    $title;
+    if (titleEl) adjustTextareaHeight(titleEl);
+  });
 </script>
 
 <div class={css({ flex: '1', overflowY: 'auto' })}>
   <div class={flex({ height: 'full', flexDirection: 'column' })}>
     <div class={css({ paddingTop: '46px' })}>
-      <Breadcrumb style={css.raw({ marginX: 'auto', width: '720px' })} _query={$query} />
+      <Breadcrumb style={css.raw({ marginX: 'auto', width: '720px' })} {$query} />
     </div>
 
     <div
@@ -373,15 +374,15 @@
           overflowY: 'hidden',
           resize: 'none',
         })}
-        placeholder="제목을 입력하세요"
-        rows="1"
-        on:keydown={(e) => {
+        onkeydown={(e) => {
           if (e.key === 'Enter') {
             e.preventDefault();
           }
         }}
+        placeholder="제목을 입력하세요"
+        rows="1"
         bind:value={$title}
-      />
+      ></textarea>
     </div>
 
     <!-- {#if editor}
@@ -431,8 +432,8 @@
               }
             : { href: resp.url };
         }}
+        onfile={(e) => handleFiles(e.pos, e.files)}
         bind:editor
-        on:file={(e) => handleFiles(e.detail.pos, e.detail.files)}
       />
 
       <div>

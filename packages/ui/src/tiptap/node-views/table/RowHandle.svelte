@@ -11,12 +11,16 @@
   import type { Editor } from '@tiptap/core';
   import type { Node } from '@tiptap/pm/model';
 
-  export let editor: Editor | null = null;
-  export let tableNode: Node;
-  export let tablePos: number;
-  export let i: number;
-  export let hoveredRowIndex: number | null = null;
-  export let hasSpan = false;
+  type Props = {
+    editor?: Editor;
+    tableNode: Node;
+    tablePos: number;
+    i: number;
+    hoveredRowIndex?: number | null;
+    hasSpan?: boolean;
+  };
+
+  let { editor, tableNode, tablePos, i, hoveredRowIndex, hasSpan = false }: Props = $props();
 
   function selectRow(rowIndex: number) {
     if (!editor) {
@@ -39,11 +43,11 @@
       bottom: rowIndex + 1,
     });
 
-    const $anchorCell = tr.doc.resolve(tableStart + rowCells[0]);
+    const anchorCell = tr.doc.resolve(tableStart + rowCells[0]);
     // eslint-disable-next-line unicorn/prefer-at
-    const $headCell = tr.doc.resolve(tableStart + rowCells[rowCells.length - 1]);
+    const headCell = tr.doc.resolve(tableStart + rowCells[rowCells.length - 1]);
 
-    const rowSelection = CellSelection.rowSelection($anchorCell, $headCell);
+    const rowSelection = CellSelection.rowSelection(anchorCell, headCell);
     editor.view.dispatch(tr.setSelection(rowSelection));
 
     return true;
@@ -93,98 +97,99 @@
 
 <Menu
   offset={4}
-  onOpen={() => {
+  onopen={() => {
     selectRow(i);
   }}
   placement="right-start"
-  let:close
 >
-  <div
-    slot="button"
-    class={center({
-      display: open || hoveredRowIndex === i ? 'flex' : 'none',
-      '.block-selection-decoration &': {
-        display: 'none',
-      },
-      _hover: {
-        backgroundColor: 'neutral.20',
-      },
-      _pressed: {
-        color: 'white',
-        backgroundColor: '[var(--prosemirror-color-selection)]',
-        borderWidth: '0',
-        _hover: {
-          backgroundColor: '[var(--prosemirror-color-selection)]',
+  {#snippet button({ open })}
+    <div
+      class={center({
+        display: open || hoveredRowIndex === i ? 'flex' : 'none',
+        '.block-selection-decoration &': {
+          display: 'none',
         },
-      },
-      width: '18px',
-      height: '24px',
-      color: 'neutral.50',
-      borderRadius: '4px',
-      backgroundColor: 'white',
-      borderWidth: '1px',
-      borderColor: 'neutral.30',
-      boxShadow: 'normal',
-    })}
-    aria-pressed={open}
-    let:open
-  >
-    <Icon icon={EllipsisVerticalIcon} size={14} />
-  </div>
-  {#if i !== 0}
-    <Tooltip enabled={hasSpan} message="표에 병합된 셀이 없을 때만 이동할 수 있습니다.">
-      <MenuItem
-        disabled={hasSpan}
-        on:click={() => {
-          close();
-          swapRows(i, i - 1);
-        }}
-      >
-        <Icon icon={MoveUpIcon} size={14} />
-        <span>위로 이동</span>
-      </MenuItem>
-    </Tooltip>
-  {/if}
-  {#if i !== tableNode.childCount - 1}
-    <Tooltip enabled={hasSpan} message="표에 병합된 셀이 없을 때만 이동할 수 있습니다.">
-      <MenuItem
-        disabled={hasSpan}
-        on:click={() => {
-          close();
-          swapRows(i, i + 1);
-        }}
-      >
-        <Icon icon={MoveDownIcon} size={14} />
-        <span>아래로 이동</span>
-      </MenuItem>
-    </Tooltip>
-  {/if}
-  <MenuItem
-    on:click={() => {
-      close();
-      editor?.commands.addRowBefore();
-    }}
-  >
-    <Icon icon={ArrowUpToLineIcon} size={14} />
-    <span>위에 행 추가</span>
-  </MenuItem>
-  <MenuItem
-    on:click={() => {
-      close();
-      editor?.commands.addRowAfter();
-    }}
-  >
-    <Icon icon={ArrowDownToLineIcon} size={14} />
-    <span>아래에 행 추가</span>
-  </MenuItem>
-  <MenuItem
-    variant="danger"
-    on:click={() => {
-      close();
-      editor?.commands.deleteRow();
-    }}
-  >
-    <Icon icon={Trash2Icon} size={14} />
-    <span>행 삭제</span>
-  </MenuItem>
+        _hover: {
+          backgroundColor: 'neutral.20',
+        },
+        _pressed: {
+          color: 'white',
+          backgroundColor: '[var(--prosemirror-color-selection)]',
+          borderWidth: '0',
+          _hover: {
+            backgroundColor: '[var(--prosemirror-color-selection)]',
+          },
+        },
+        width: '18px',
+        height: '24px',
+        color: 'neutral.50',
+        borderRadius: '4px',
+        backgroundColor: 'white',
+        borderWidth: '1px',
+        borderColor: 'neutral.30',
+        boxShadow: 'normal',
+      })}
+      aria-pressed={open}
+    >
+      <Icon icon={EllipsisVerticalIcon} size={14} />
+    </div>
+  {/snippet}
+  {#snippet children({ close })}
+    {#if i !== 0}
+      <Tooltip enabled={hasSpan} message="표에 병합된 셀이 없을 때만 이동할 수 있습니다.">
+        <MenuItem
+          disabled={hasSpan}
+          onclick={() => {
+            close();
+            swapRows(i, i - 1);
+          }}
+        >
+          <Icon icon={MoveUpIcon} size={14} />
+          <span>위로 이동</span>
+        </MenuItem>
+      </Tooltip>
+    {/if}
+    {#if i !== tableNode.childCount - 1}
+      <Tooltip enabled={hasSpan} message="표에 병합된 셀이 없을 때만 이동할 수 있습니다.">
+        <MenuItem
+          disabled={hasSpan}
+          onclick={() => {
+            close();
+            swapRows(i, i + 1);
+          }}
+        >
+          <Icon icon={MoveDownIcon} size={14} />
+          <span>아래로 이동</span>
+        </MenuItem>
+      </Tooltip>
+    {/if}
+    <MenuItem
+      onclick={() => {
+        close();
+        editor?.commands.addRowBefore();
+      }}
+    >
+      <Icon icon={ArrowUpToLineIcon} size={14} />
+      <span>위에 행 추가</span>
+    </MenuItem>
+    <MenuItem
+      onclick={() => {
+        close();
+        editor?.commands.addRowAfter();
+      }}
+    >
+      <Icon icon={ArrowDownToLineIcon} size={14} />
+      <span>아래에 행 추가</span>
+    </MenuItem>
+    <MenuItem
+      onclick={() => {
+        close();
+        editor?.commands.deleteRow();
+      }}
+      variant="danger"
+    >
+      <Icon icon={Trash2Icon} size={14} />
+      <span>행 삭제</span>
+    </MenuItem>
+  {/snippet}
 </Menu>

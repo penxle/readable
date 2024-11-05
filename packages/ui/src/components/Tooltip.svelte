@@ -5,15 +5,29 @@
   import { createFloatingActions, hover } from '../actions';
   import type { Placement } from '@floating-ui/dom';
   import type { SystemStyleObject } from '@readable/styled-system/types';
+  import type { Snippet } from 'svelte';
 
-  export let style: SystemStyleObject | undefined = undefined;
-  export let tooltipStyle: SystemStyleObject | undefined = undefined;
-  export let offset: number | undefined = undefined;
+  type Props = {
+    message?: string;
+    style?: SystemStyleObject;
+    tooltipStyle?: SystemStyleObject;
+    offset?: number;
+    enabled?: boolean;
+    placement?: Placement;
+    keepShowing?: boolean;
+    children: Snippet;
+  };
 
-  export let enabled = true;
-  export let message: string | undefined = undefined;
-  export let placement: Placement = 'bottom';
-  export let keepShowing = false;
+  let {
+    message,
+    style,
+    tooltipStyle,
+    offset,
+    enabled = true,
+    placement = 'bottom',
+    keepShowing = false,
+    children,
+  }: Props = $props();
 
   const hovered = writable(false);
 
@@ -25,7 +39,7 @@
 </script>
 
 <div class={css(style)} use:anchor use:hover={hovered}>
-  <slot />
+  {@render children()}
 </div>
 
 {#if enabled && ($hovered || keepShowing)}
@@ -49,9 +63,7 @@
     use:floating
     transition:scale={{ start: 0.9, duration: 200 }}
   >
-    <slot name="message">
-      {message}
-    </slot>
+    {message}
     <div
       class={css({
         borderTopLeftRadius: '2px',
@@ -59,6 +71,6 @@
         backgroundColor: { base: 'gray.800', _dark: 'darkgray.500' },
       })}
       use:arrow
-    />
+    ></div>
   </div>
 {/if}

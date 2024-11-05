@@ -7,19 +7,16 @@
   import { Button, Icon, Img, RingSpinner } from '../../../components';
   import type { NodeViewProps } from '@readable/ui/tiptap';
 
-  type $$Props = NodeViewProps;
-  $$restProps;
+  type Props = NodeViewProps;
 
-  export let node: NodeViewProps['node'];
-  export let editor: NodeViewProps['editor'] | undefined;
-  export let extension: NodeViewProps['extension'];
-  export let selected: NodeViewProps['selected'];
-  export let updateAttributes: NodeViewProps['updateAttributes'];
-  // export let deleteNode: NodeViewProps['deleteNode'];
+  let { node, editor, extension, selected, updateAttributes }: Props = $props();
 
-  let inflight = false;
-  let pickerOpened = false;
-  $: pickerOpened = selected;
+  let inflight = $state(false);
+  let pickerOpened = $state(false);
+
+  $effect(() => {
+    pickerOpened = selected;
+  });
 
   const { anchor, floating } = createFloatingActions({
     placement: 'bottom',
@@ -126,7 +123,7 @@
     use:floating
   >
     <span class={css({ textStyle: '13r', color: 'text.tertiary' })}>아래 버튼을 클릭해 파일을 선택하세요</span>
-    <Button style={css.raw({ marginTop: '12px', width: 'full' })} size="sm" variant="secondary" on:click={handleUpload}>
+    <Button style={css.raw({ marginTop: '12px', width: 'full' })} onclick={handleUpload} size="sm" variant="secondary">
       이미지 선택
     </Button>
   </div>

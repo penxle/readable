@@ -5,6 +5,7 @@
   import { createMutationForm } from '@readable/ui/forms';
   import { toast } from '@readable/ui/notification';
   import mixpanel from 'mixpanel-browser';
+  import { run } from 'svelte/legacy';
   import { z } from 'zod';
   import { dataSchemas } from '@/schemas';
   import TriangleAlertIcon from '~icons/lucide/triangle-alert';
@@ -14,12 +15,15 @@
   import { accessToken } from '$lib/graphql';
   import type { UserSetting_user } from '$graphql';
 
-  let _user: UserSetting_user;
-  export { _user as $user };
+  type Props = {
+    $user: UserSetting_user;
+  };
 
-  let deactivateOpen = false;
+  let { $user: _user }: Props = $props();
 
-  $: user = fragment(
+  let deactivateOpen = $state(false);
+
+  const user = fragment(
     _user,
     graphql(`
       fragment UserSetting_user on User {
@@ -88,9 +92,11 @@
     },
   });
 
-  $: if ($user) {
-    setInitialValues({ avatarId: $user.avatar.id, name: $user.name });
-  }
+  run(() => {
+    if ($user) {
+      setInitialValues({ avatarId: $user.avatar.id, name: $user.name });
+    }
+  });
 </script>
 
 <h1 class={css({ textStyle: '28eb' })}>개인 설정</h1>
@@ -100,7 +106,7 @@
 <FormProvider {context} {form}>
   <div class={flex({ flexDirection: 'column', gap: '24px' })}>
     <FormField name="avatar" label="이미지" noMessage>
-      <AvatarInput bind:id={$data.avatarId} on:change={() => setIsDirty(true)} />
+      <AvatarInput onchange={() => setIsDirty(true)} bind:id={$data.avatarId} />
     </FormField>
     <FormField name="name" label="이름">
       <TextInput name="name" placeholder="이름" />
@@ -140,16 +146,18 @@
   <Button
     style={css.raw({ marginTop: '8px', marginLeft: 'auto' })}
     disabled={$user.teams.length > 0}
+    onclick={() => (deactivateOpen = true)}
     size="lg"
     variant="danger-fill"
-    on:click={() => (deactivateOpen = true)}
   >
     계정 삭제
   </Button>
 </div>
 
 <TitledModal bind:open={deactivateOpen}>
-  <svelte:fragment slot="title">계정 삭제</svelte:fragment>
+  {#snippet title()}
+    계정 삭제
+  {/snippet}
 
   <p class={css({ marginBottom: '10px', textStyle: '13r', color: 'text.tertiary' })}>
     탈퇴 시 모든 정보가 영구적으로 제거되며, 되돌릴 수 없습니다.

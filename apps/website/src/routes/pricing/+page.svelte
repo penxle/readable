@@ -27,13 +27,13 @@
   import { withUtm } from '$lib/utm';
   import Header from '../Header.svelte';
   import SegmentButtons from '../SegmentButtons.svelte';
-  import type { ComponentType } from 'svelte';
+  import type { Component } from 'svelte';
 
-  let selectedPrice = 'yearly';
-  let darkSection: HTMLElement;
+  let selectedPrice = $state('yearly');
+  let darkSection = $state<HTMLElement>();
 
   type Feature = {
-    icon: ComponentType;
+    icon: Component;
     feature: string;
     tooltipMessage?: string;
   };
@@ -49,9 +49,7 @@
     addOns?: AddOn[];
   };
 
-  let plans: Plan[];
-
-  $: plans = [
+  const plans: Plan[] = $derived([
     {
       name: 'Starter',
       price: '무료',
@@ -121,9 +119,9 @@
         { icon: EllipsisIcon, feature: '그리고 무엇이든 요청하세요' },
       ],
     },
-  ];
+  ]);
 
-  $: darkSections = [darkSection].filter(Boolean);
+  const darkSections = $derived([darkSection].filter((v) => !!v));
 </script>
 
 <Helmet
@@ -189,8 +187,8 @@
           { label: '월 결제', value: 'monthly' },
           { label: '연 결제', value: 'yearly' },
         ]}
+        onselect={(value) => (selectedPrice = value)}
         variant="white"
-        on:select={(value) => (selectedPrice = value.detail)}
       />
       <span
         class={css({

@@ -31,15 +31,15 @@
   import { invokeAlert } from '$lib/components/invoke-alert';
   import TitledModal from '$lib/components/TitledModal.svelte';
 
-  let open = false;
+  let open = $state(false);
 
-  let hostCopied = false;
-  let valueCopied = false;
-  let verifying = false;
+  let hostCopied = $state(false);
+  let valueCopied = $state(false);
+  let verifying = $state(false);
 
-  let unsubscribe: (() => void) | undefined;
+  let unsubscribe = $state<() => void>();
 
-  $: query = graphql(`
+  const query = graphql(`
     query SiteSettingsDomainPage_Query($siteId: ID!) {
       site(siteId: $siteId) {
         id
@@ -132,20 +132,24 @@
     }
   };
 
-  $: if ($query.site) {
+  $effect(() => {
     setInitialValues({ siteId: $query.site.id, domain: $query.site.customDomain?.domain ?? '' });
-  }
+  });
 
-  $: if (verifying && $query.site.customDomain?.state === 'ACTIVE') {
-    open = false;
-    verifying = false;
-    unsubscribe?.();
-    mixpanel.track('site:custom-domain:validation:success');
-  }
+  $effect(() => {
+    if (verifying && $query.site.customDomain?.state === 'ACTIVE') {
+      open = false;
+      verifying = false;
+      unsubscribe?.();
+      mixpanel.track('site:custom-domain:validation:success');
+    }
+  });
 
-  $: if (open === false && unsubscribe) {
-    unsubscribe?.();
-  }
+  $effect(() => {
+    if (open === false && unsubscribe) {
+      unsubscribe?.();
+    }
+  });
 </script>
 
 <Helmet title="커스텀 도메인 설정" trailing={$query.site.name} />
@@ -205,37 +209,37 @@
         {/if}
       </div>
       <Menu style={css.raw({ marginX: '10px' })} placement="bottom-start">
-        <div
-          slot="button"
-          class={css({
-            borderRadius: '4px',
-            padding: '4px',
-            color: 'text.secondary',
-            _hover: { backgroundColor: 'neutral.20' },
-          })}
-        >
-          <Icon icon={EllipsisIcon} size={20} />
-        </div>
+        {#snippet button()}
+          <div
+            class={css({
+              borderRadius: '4px',
+              padding: '4px',
+              color: 'text.secondary',
+              _hover: { backgroundColor: 'neutral.20' },
+            })}
+          >
+            <Icon icon={EllipsisIcon} size={20} />
+          </div>
+        {/snippet}
         {#if $query.site.customDomain.state !== 'ACTIVE'}
           <MenuItem
-            variant="default"
-            on:click={() => {
+            onclick={() => {
               open = true;
               verifyStream();
             }}
+            variant="default"
           >
             <Icon icon={SearchCheckIcon} size={14} />
             <span>재확인</span>
           </MenuItem>
         {/if}
         <MenuItem
-          variant="danger"
-          on:click={() => {
+          onclick={() => {
             invokeAlert({
               title: '커스텀 도메인을 제거하시겠어요?',
               content: '커스텀 도메인을 제거하면 기존 주소로는 접근할 수 없습니다',
-              actionText: '제거',
-              action: async () => {
+              action: '제거',
+              onaction: async () => {
                 if ($query.site.customDomain) {
                   await unsetSiteCustomDomain({ siteCustomDomainId: $query.site.customDomain.id });
                   mixpanel.track('site:custom-domain:unset');
@@ -244,6 +248,7 @@
               },
             });
           }}
+          variant="danger"
         >
           <Icon icon={Trash2Icon} size={14} />
           <span>제거</span>
@@ -268,11 +273,10 @@
   >
     <input name="siteId" type="hidden" />
     <FormField name="domain" label="커스텀 도메인 URL">
-      <LiteBadge
-        slot="label-suffix"
-        disabled={!$query.site.team.plan.plan.rules.customDomain}
-        via="site-custom-domain:lite-badge"
-      />
+      {#snippet labelSuffix()}
+        <LiteBadge disabled={!$query.site.team.plan.plan.rules.customDomain} via="site-custom-domain:lite-badge" />
+      {/snippet}
+
       <TextInput
         name="domain"
         disabled={!!$query.site.customDomain || !$query.site.team.plan.plan.rules.customDomain}
@@ -287,7 +291,7 @@
 {/if}
 
 <TitledModal bind:open>
-  <svelte:fragment slot="title">
+  {#snippet title()}
     <div class={flex({ alignItems: 'center', gap: '8px' })}>
       {#if $query.site.logo}
         <Img
@@ -304,7 +308,7 @@
       {/if}
       DNS 레코드를 추가해주세요
     </div>
-  </svelte:fragment>
+  {/snippet}
 
   <div class={flex({ direction: 'column', gap: '20px' })}>
     <div class={css({ textStyle: '13r', color: 'text.secondary' })}>
@@ -343,8 +347,7 @@
         <dd class={flex({ align: 'center', gap: '8px' })}>
           <span class={css({ truncate: true })}>{$query.site.customDomain?.domain}</span>
           <button
-            type="button"
-            on:click={() => {
+            onclick={() => {
               if (!$query.site.customDomain) {
                 return;
               }
@@ -361,6 +364,7 @@
                 console.error(err);
               }
             }}
+            type="button"
           >
             <Icon style={css.raw({ color: 'neutral.40' })} icon={hostCopied ? CheckIcon : CopyIcon} size={14} />
           </button>
@@ -372,8 +376,7 @@
         <dd class={flex({ align: 'center', gap: '8px' })}>
           <span>{env.PUBLIC_USERSITE_CNAME_HOST}</span>
           <button
-            type="button"
-            on:click={() => {
+            onclick={() => {
               try {
                 navigator.clipboard.writeText(env.PUBLIC_USERSITE_CNAME_HOST);
                 valueCopied = true;
@@ -386,6 +389,7 @@
                 console.error(err);
               }
             }}
+            type="button"
           >
             <Icon style={css.raw({ color: 'neutral.40' })} icon={valueCopied ? CheckIcon : CopyIcon} size={14} />
           </button>
@@ -393,6 +397,6 @@
       </div>
     </dl>
 
-    <Button loading={verifying} size="lg" type="button" on:click={verifyStream}>DNS 레코드 확인</Button>
+    <Button loading={verifying} onclick={verifyStream} size="lg" type="button">DNS 레코드 확인</Button>
   </div>
 </TitledModal>

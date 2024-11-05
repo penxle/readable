@@ -10,7 +10,7 @@
   import { graphql } from '$graphql';
   import { LiteBadge } from '$lib/components';
 
-  $: query = graphql(`
+  const query = graphql(`
     query SiteSettingsThemePage_Query($siteId: ID!) {
       site(siteId: $siteId) {
         id
@@ -81,12 +81,14 @@
     },
   });
 
-  $: setInitialValues({
-    siteId: $query.site.id,
-    name: $query.site.name,
-    slug: $query.site.slug,
-    themeColor: $query.site.themeColor,
-    logoId: $query.site.logo?.id,
+  $effect(() => {
+    setInitialValues({
+      siteId: $query.site.id,
+      name: $query.site.name,
+      slug: $query.site.slug,
+      themeColor: $query.site.themeColor,
+      logoId: $query.site.logo?.id,
+    });
   });
 </script>
 
@@ -109,20 +111,24 @@
   {form}
 >
   <FormField name="themeColor" label="테마 색상">
-    <LiteBadge slot="label-suffix" via="site-theme-color:lite-badge" />
+    {#snippet labelSuffix()}
+      <LiteBadge via="site-theme-color:lite-badge" />
+    {/snippet}
+
     <TextInput
       disabled={!$query.site.team.plan.plan.rules.themeColor}
-      on:input={(e) => {
+      oninput={(e) => {
         if (e.currentTarget.value[0] !== '#') {
           e.currentTarget.value = `#${e.currentTarget.value}`;
         }
       }}
     >
-      <div
-        slot="left-item"
-        style:background={$data.themeColor}
-        class={css({ borderWidth: '1px', borderColor: 'border.image', borderRadius: 'full', size: '20px' })}
-      />
+      {#snippet leftItem()}
+        <div
+          style:background={$data.themeColor}
+          class={css({ borderWidth: '1px', borderColor: 'border.image', borderRadius: 'full', size: '20px' })}
+        ></div>
+      {/snippet}
     </TextInput>
   </FormField>
 

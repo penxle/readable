@@ -9,11 +9,15 @@
   import Trash2Icon from '~icons/lucide/trash-2';
   import RingSpinner from '../../../components/RingSpinner.svelte';
 
-  export let unsetLink: () => void;
-  export let hide: () => void;
-  export let linkHref: string;
-  export let openLinkEditPopover: () => void;
-  export let handleLink: (url: string) => Promise<Record<string, unknown>>;
+  type Props = {
+    unsetLink: () => void;
+    hide: () => void;
+    linkHref: string;
+    openLinkEditPopover: () => void;
+    handleLink: (url: string) => Promise<Record<string, unknown>>;
+  };
+
+  let { unsetLink, hide, linkHref, openLinkEditPopover, handleLink }: Props = $props();
 
   const menuButtonStyle = flex({
     width: '22px',
@@ -116,14 +120,14 @@
     >
       <button
         class={menuButtonStyle}
-        type="button"
-        on:click={() => {
-          openLinkEditPopover?.();
+        onclick={() => {
+          openLinkEditPopover();
         }}
+        type="button"
       >
         <Icon icon={PencilLineIcon} size={16} />
       </button>
-      <button class={menuButtonStyle} type="button" on:click={() => unlink()}>
+      <button class={menuButtonStyle} onclick={() => unlink()} type="button">
         <Icon icon={Trash2Icon} size={16} />
       </button>
     </div>

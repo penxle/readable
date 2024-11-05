@@ -8,14 +8,20 @@
   import CloseIcon from '~icons/lucide/x';
   import ReadableIcon from '~icons/rdbl/readable';
   import { env } from '$env/dynamic/public';
+  import type { Snippet } from 'svelte';
 
-  export let siteId: string;
-  export let siteUrl: string;
+  type Props = {
+    siteId: string;
+    siteUrl: string;
+    navigation: Snippet;
+  };
+
+  let { siteId, siteUrl, navigation }: Props = $props();
   const mobileNavOpen = getContext('mobileNavOpen');
 </script>
 
 <svelte:window
-  on:resize={() => {
+  onresize={() => {
     if ($mobileNavOpen && window.innerWidth >= 768) {
       // NOTE: 닫아주지 않으면 scrollLock이 계속 적용됨
       mobileNavOpen.set(false);
@@ -46,13 +52,13 @@
         backgroundColor: 'gray.1000/24',
         zIndex: '100',
       })}
+      onclick={() => mobileNavOpen.set(false)}
+      onkeypress={null}
       role="button"
       tabindex="-1"
-      on:click={() => mobileNavOpen.set(false)}
-      on:keypress={null}
       in:fade={{ duration: 200 }}
       out:fade={{ duration: 200 }}
-    />
+    ></div>
     <aside
       class={flex({
         position: 'fixed',
@@ -83,7 +89,7 @@
         })}
       >
         <h2 class={css({ textStyle: '18b' })}>페이지 목록</h2>
-        <button type="button" on:click={() => mobileNavOpen.set(false)}>
+        <button onclick={() => mobileNavOpen.set(false)} type="button">
           <Icon style={css.raw({ color: 'neutral.60' })} icon={CloseIcon} size={24} />
         </button>
       </div>
@@ -97,7 +103,7 @@
         })}
       >
         <div class={css({ padding: '16px', paddingBottom: '80px' })}>
-          <slot name="navigation" />
+          {@render navigation()}
         </div>
 
         <div

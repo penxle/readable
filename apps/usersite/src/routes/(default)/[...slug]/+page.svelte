@@ -5,7 +5,6 @@
   import { TiptapRenderer } from '@readable/ui/tiptap';
   import { getContext } from 'svelte';
   import MenuIcon from '~icons/lucide/menu';
-  import { browser } from '$app/environment';
   import { env } from '$env/dynamic/public';
   import { graphql } from '$graphql';
   import Handler from './@floating/Handler.svelte';
@@ -14,7 +13,7 @@
   import type { Editor } from '@tiptap/core';
   import type { Writable } from 'svelte/store';
 
-  $: query = graphql(`
+  const query = graphql(`
     query PagePage_Query($path: String!) {
       publicSite {
         id
@@ -43,8 +42,8 @@
     }
   `);
 
-  let editor: Editor | undefined = undefined;
-  let headings: { level: number; text: string; scrollTop: number }[] = [];
+  let editor: Editor | undefined = $state(undefined);
+  let headings: { level: number; text: string; scrollTop: number }[] = $state([]);
 
   const blurEffect = getContext<Writable<boolean>>('blurEffect');
   const mobileNavOpen = getContext('mobileNavOpen');
@@ -59,9 +58,9 @@
     });
   };
 
-  $: if (browser) {
+  $effect(() => {
     reportPageView($query.publicPage.id);
-  }
+  });
 </script>
 
 <Helmet
@@ -104,11 +103,11 @@
         backdropBlur: '8px',
       })}
       aria-hidden="true"
-    />
-    <button aria-label="메뉴 열기" type="button" on:click={() => mobileNavOpen.set(true)}>
+    ></div>
+    <button aria-label="메뉴 열기" onclick={() => mobileNavOpen.set(true)} type="button">
       <Icon style={css.raw({ color: 'text.secondary' })} icon={MenuIcon} size={20} />
     </button>
-    <Breadcrumb _publicPage={$query.publicPage} />
+    <Breadcrumb $publicPage={$query.publicPage} />
   </div>
   <div
     class={grid({
@@ -148,7 +147,7 @@
         maxWidth: '720px',
       })}
     >
-      <Breadcrumb _publicPage={$query.publicPage} />
+      <Breadcrumb $publicPage={$query.publicPage} />
     </div>
     <h1
       class={css({
@@ -192,8 +191,8 @@
             },
           })}
           content={$query.publicPage.content.content}
+          ontocupdate={(e) => (headings = e)}
           bind:editor
-          on:tocUpdate={(e) => (headings = e.detail.headings)}
         />
         {#if editor}
           <Handler {editor} />

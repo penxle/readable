@@ -1,4 +1,4 @@
-<script context="module" lang="ts">
+<script lang="ts" module>
   import { graphql } from '$graphql';
 
   export const sitemapQuery = graphql(`

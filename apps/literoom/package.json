@@ -9,7 +9,7 @@
     "lint:typecheck": "tsc"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.682.0",
+    "@aws-sdk/client-s3": "^3.685.0",
     "sharp": "^0.33.5"
   },
   "devDependencies": {

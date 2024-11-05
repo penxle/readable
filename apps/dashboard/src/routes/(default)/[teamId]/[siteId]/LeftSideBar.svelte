@@ -13,10 +13,13 @@
   import type { LeftSideBar_site } from '$graphql';
   import type { CategoryData, PageData } from './@page-tree/types';
 
-  let _site: LeftSideBar_site;
-  export { _site as $site };
+  type Props = {
+    $site: LeftSideBar_site;
+  };
 
-  $: site = fragment(
+  let { $site: _site }: Props = $props();
+
+  const site = fragment(
     _site,
     graphql(`
       fragment LeftSideBar_site on Site {
@@ -169,7 +172,7 @@
     }
   `);
 
-  let findOutdatedsModalOpen = false;
+  let findOutdatedsModalOpen = $state(false);
 </script>
 
 <FindOutdatedsModal bind:open={findOutdatedsModalOpen} />
@@ -191,8 +194,8 @@
 >
   <Button
     style={css.raw({ margin: '20px', marginBottom: '0' })}
+    onclick={() => (findOutdatedsModalOpen = true)}
     variant="secondary"
-    on:click={() => (findOutdatedsModalOpen = true)}
   >
     콘텐츠 최신화
   </Button>
@@ -210,8 +213,8 @@
       <PageList
         getPageUrl={(page) => `/${$site.team.id}/${$site.id}/${page.id}`}
         items={$site.categories}
-        onCreate={onCreatePage}
-        onCreateCategory={async () => {
+        oncreate={onCreatePage}
+        oncreatecategory={async () => {
           const category = await createCategory({
             siteId: $site.id,
             lower: $site.categories.at(-1)?.order,
@@ -221,8 +224,8 @@
 
           mixpanel.track('category:create');
         }}
-        onDrop={onDropPage}
-        onDropCategory={async (target) => {
+        ondrop={onDropPage}
+        ondropcategory={async (target) => {
           await updateCategoryPosition({
             categoryId: target.categoryId,
             lower: target.previousOrder,

@@ -1,22 +1,26 @@
 <script lang="ts">
   import { css } from '@readable/styled-system/css';
   import { flex } from '@readable/styled-system/patterns';
-  import { createEventDispatcher } from 'svelte';
 
-  export let variant: 'default' | 'white' = 'default';
-  export let defaultValue: string | undefined = undefined;
-  export let items: {
-    label: string;
-    value: string;
-  }[] = [];
+  type Props = {
+    variant?: 'default' | 'white';
+    defaultValue?: string;
+    items?: {
+      label: string;
+      value: string;
+    }[];
+    onselect: (value: string) => void;
+  };
 
-  let selectedValue = defaultValue ?? items[0].value;
-  const dispatch = createEventDispatcher<{
-    select: string;
-  }>();
-  $: dispatch('select', selectedValue);
+  let { variant = 'default', defaultValue, items = [], onselect }: Props = $props();
 
-  $: selectedIndex = items.findIndex((item) => item.value === selectedValue);
+  let selectedValue = $state(defaultValue ?? items[0].value);
+
+  $effect(() => {
+    onselect(selectedValue);
+  });
+
+  const selectedIndex = $derived(items.findIndex((item) => item.value === selectedValue));
 </script>
 
 <div
@@ -47,7 +51,7 @@
       variant === 'white' && { background: 'white' },
     )}
     aria-hidden="true"
-  />
+  ></div>
 
   {#each items as item (item.value)}
     <button
@@ -65,8 +69,8 @@
         },
         variant === 'white' && selectedValue === item.value && { color: 'text.primary' },
       )}
+      onclick={() => (selectedValue = item.value)}
       type="button"
-      on:click={() => (selectedValue = item.value)}
     >
       {item.label}
     </button>

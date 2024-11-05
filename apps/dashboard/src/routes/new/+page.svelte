@@ -22,7 +22,7 @@
   import { graphql } from '$graphql';
   import UserMenu from '../(default)/[teamId]/@header/UserMenu.svelte';
 
-  $: query = graphql(`
+  const query = graphql(`
     query NewPage_Query {
       ...UserMenu_query
 
@@ -94,8 +94,8 @@
     },
   });
 
-  let purpose = '';
-  let jobRole = '';
+  let purpose = $state('');
+  let jobRole = $state('');
 
   onMount(() => {
     mixpanel.identify($query.me.id);
@@ -156,42 +156,45 @@
       </p>
 
       <Menu placement="bottom" setFullWidth>
-        <div
-          slot="button"
-          class={css(
-            {
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              outlineWidth: '1px',
-              outlineColor: { base: 'gray.200', _dark: 'darkgray.700' },
-              borderRadius: '8px',
-              paddingX: '16px',
-              paddingY: '6px',
-              width: 'full',
-              _hover: { outlineColor: { base: 'brand.400', _dark: 'brand.300' } },
-            },
-            open && {
-              outlineWidth: '2px',
-              outlineColor: { base: 'brand.600', _dark: 'brand.500' },
-              backgroundColor: { base: 'red.100', _dark: '[#880808/20]' },
-            },
-          )}
-          let:open
-        >
-          <span
-            class={css({ textStyle: '16r' }, purpose === '' && { color: { base: 'gray.600', _dark: 'darkgray.400' } })}
+        {#snippet button({ open })}
+          <div
+            class={css(
+              {
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                outlineWidth: '1px',
+                outlineColor: { base: 'gray.200', _dark: 'darkgray.700' },
+                borderRadius: '8px',
+                paddingX: '16px',
+                paddingY: '6px',
+                width: 'full',
+                _hover: { outlineColor: { base: 'brand.400', _dark: 'brand.300' } },
+              },
+              open && {
+                outlineWidth: '2px',
+                outlineColor: { base: 'brand.600', _dark: 'brand.500' },
+                backgroundColor: { base: 'red.100', _dark: '[#880808/20]' },
+              },
+            )}
           >
-            {purpose === '' ? '선택' : purpose}
-          </span>
-          <Icon style={css.raw({ color: 'neutral.50' })} icon={ChevronDownIcon} size={18} />
-        </div>
+            <span
+              class={css(
+                { textStyle: '16r' },
+                purpose === '' && { color: { base: 'gray.600', _dark: 'darkgray.400' } },
+              )}
+            >
+              {purpose === '' ? '선택' : purpose}
+            </span>
+            <Icon style={css.raw({ color: 'neutral.50' })} icon={ChevronDownIcon} size={18} />
+          </div>
+        {/snippet}
 
-        <MenuItem on:click={() => (purpose = '고객용 도움센터')}>고객용 도움센터</MenuItem>
-        <MenuItem on:click={() => (purpose = '업데이트 노트')}>업데이트 노트</MenuItem>
-        <MenuItem on:click={() => (purpose = '개발자 문서')}>개발자 문서</MenuItem>
-        <MenuItem on:click={() => (purpose = '사내 문서')}>사내 문서</MenuItem>
-        <MenuItem on:click={() => (purpose = '기타')}>기타</MenuItem>
+        <MenuItem onclick={() => (purpose = '고객용 도움센터')}>고객용 도움센터</MenuItem>
+        <MenuItem onclick={() => (purpose = '업데이트 노트')}>업데이트 노트</MenuItem>
+        <MenuItem onclick={() => (purpose = '개발자 문서')}>개발자 문서</MenuItem>
+        <MenuItem onclick={() => (purpose = '사내 문서')}>사내 문서</MenuItem>
+        <MenuItem onclick={() => (purpose = '기타')}>기타</MenuItem>
       </Menu>
 
       <p
@@ -206,43 +209,46 @@
       </p>
 
       <Menu setFullWidth>
-        <div
-          slot="button"
-          class={css(
-            {
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              outlineWidth: '1px',
-              outlineColor: { base: 'gray.200', _dark: 'darkgray.700' },
-              borderRadius: '8px',
-              paddingX: '16px',
-              paddingY: '6px',
-              width: 'full',
-              _hover: { outlineColor: { base: 'brand.400', _dark: 'brand.300' } },
-            },
-            open && {
-              outlineWidth: '2px',
-              outlineColor: { base: 'brand.600', _dark: 'brand.500' },
-              backgroundColor: { base: 'red.100', _dark: '[#880808/20]' },
-            },
-          )}
-          let:open
-        >
-          <span
-            class={css({ textStyle: '16r' }, jobRole === '' && { color: { base: 'gray.600', _dark: 'darkgray.400' } })}
+        {#snippet button({ open })}
+          <div
+            class={css(
+              {
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                outlineWidth: '1px',
+                outlineColor: { base: 'gray.200', _dark: 'darkgray.700' },
+                borderRadius: '8px',
+                paddingX: '16px',
+                paddingY: '6px',
+                width: 'full',
+                _hover: { outlineColor: { base: 'brand.400', _dark: 'brand.300' } },
+              },
+              open && {
+                outlineWidth: '2px',
+                outlineColor: { base: 'brand.600', _dark: 'brand.500' },
+                backgroundColor: { base: 'red.100', _dark: '[#880808/20]' },
+              },
+            )}
           >
-            {jobRole === '' ? '선택' : jobRole}
-          </span>
-          <Icon style={css.raw({ color: 'neutral.50' })} icon={ChevronDownIcon} size={18} />
-        </div>
+            <span
+              class={css(
+                { textStyle: '16r' },
+                jobRole === '' && { color: { base: 'gray.600', _dark: 'darkgray.400' } },
+              )}
+            >
+              {jobRole === '' ? '선택' : jobRole}
+            </span>
+            <Icon style={css.raw({ color: 'neutral.50' })} icon={ChevronDownIcon} size={18} />
+          </div>
+        {/snippet}
 
-        <MenuItem on:click={() => (jobRole = '운영/고객지원')}>운영/고객지원</MenuItem>
-        <MenuItem on:click={() => (jobRole = '기획/마케팅')}>기획/마케팅</MenuItem>
-        <MenuItem on:click={() => (jobRole = '개발')}>개발</MenuItem>
-        <MenuItem on:click={() => (jobRole = '디자인')}>디자인</MenuItem>
-        <MenuItem on:click={() => (jobRole = '1인 사업자/프리랜서')}>1인 사업자/프리랜서</MenuItem>
-        <MenuItem on:click={() => (jobRole = '기타')}>기타</MenuItem>
+        <MenuItem onclick={() => (jobRole = '운영/고객지원')}>운영/고객지원</MenuItem>
+        <MenuItem onclick={() => (jobRole = '기획/마케팅')}>기획/마케팅</MenuItem>
+        <MenuItem onclick={() => (jobRole = '개발')}>개발</MenuItem>
+        <MenuItem onclick={() => (jobRole = '디자인')}>디자인</MenuItem>
+        <MenuItem onclick={() => (jobRole = '1인 사업자/프리랜서')}>1인 사업자/프리랜서</MenuItem>
+        <MenuItem onclick={() => (jobRole = '기타')}>기타</MenuItem>
       </Menu>
     </div>
 

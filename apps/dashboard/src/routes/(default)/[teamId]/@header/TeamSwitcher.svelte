@@ -15,11 +15,13 @@
   import { Img, TitledModal } from '$lib/components';
   import type { TeamSwitcher_user } from '$graphql';
 
-  let _user: TeamSwitcher_user;
+  type Props = {
+    $user: TeamSwitcher_user;
+  };
 
-  export { _user as $user };
+  let { $user: _user }: Props = $props();
 
-  $: user = fragment(
+  const user = fragment(
     _user,
     graphql(`
       fragment TeamSwitcher_user on User {
@@ -36,7 +38,7 @@
     `),
   );
 
-  $: currentTeamId = $page.params.teamId;
+  const currentTeamId = $derived($page.params.teamId);
 
   const createTeam = graphql(`
     mutation TeamSwitcher_CreateTeam_Mutation($input: CreateTeamInput!) {
@@ -46,7 +48,7 @@
     }
   `);
 
-  let newTeamModalOpen = false;
+  let newTeamModalOpen = $state(false);
 
   const { form: newTeamForm, context: newTeamFormContext } = createMutationForm({
     schema: z.object({
@@ -70,20 +72,21 @@
   }}
   placement="bottom-start"
 >
-  <button
-    slot="button"
-    class={flex({
-      alignItems: 'center',
-      borderRadius: '6px',
-      padding: '3px',
-      color: 'neutral.50',
-      _hover: { backgroundColor: 'neutral.20' },
-    })}
-    aria-label="팀 선택"
-    type="button"
-  >
-    <Icon icon={ChevronDownIcon} size={16} />
-  </button>
+  {#snippet button()}
+    <button
+      class={flex({
+        alignItems: 'center',
+        borderRadius: '6px',
+        padding: '3px',
+        color: 'neutral.50',
+        _hover: { backgroundColor: 'neutral.20' },
+      })}
+      aria-label="팀 선택"
+      type="button"
+    >
+      <Icon icon={ChevronDownIcon} size={16} />
+    </button>
+  {/snippet}
 
   <div
     class={css({
@@ -107,7 +110,7 @@
         },
       })}
       aria-current={currentTeamId === team.id ? 'page' : undefined}
-      on:click={() => goto(`/${team.id}`)}
+      onclick={() => goto(`/${team.id}`)}
     >
       <Img
         style={css.raw({ borderWidth: '1px', borderColor: 'border.image', size: '20px', borderRadius: 'full' })}
@@ -124,7 +127,7 @@
 
   <MenuItem
     style={flex.raw({ paddingX: '10px', color: 'text.tertiary', gap: '10px' })}
-    on:click={() => (newTeamModalOpen = true)}
+    onclick={() => (newTeamModalOpen = true)}
   >
     <Icon icon={CirclePlusIcon} size={16} />
     <span>새 팀 만들기</span>
@@ -132,7 +135,9 @@
 </Menu>
 
 <TitledModal bind:open={newTeamModalOpen}>
-  <svelte:fragment slot="title">새 팀 만들기</svelte:fragment>
+  {#snippet title()}
+    새 팀 만들기
+  {/snippet}
 
   <FormProvider context={newTeamFormContext} form={newTeamForm}>
     <FormField name="name" label="팀 이름">

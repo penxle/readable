@@ -34,8 +34,12 @@
   };
 
   type Entity = PageEntity | CategoryEntity;
-  export let entity: Entity;
-  export let open: boolean;
+  type Props = {
+    entity: Entity;
+    open: boolean;
+  };
+
+  let { entity, open = $bindable() }: Props = $props();
 
   function getPrecedingPath(entity: Entity) {
     if (entity.__typename === 'Category') {
@@ -46,10 +50,13 @@
     }
   }
 
-  let precedingPath = '';
-  $: if (open) {
-    precedingPath = getPrecedingPath(entity);
-  }
+  let precedingPath = $state('');
+
+  $effect(() => {
+    if (open) {
+      precedingPath = getPrecedingPath(entity);
+    }
+  });
 
   const site = getContext<{
     url: string;
@@ -121,18 +128,14 @@
     },
   });
 
-  let form, context;
-  if (entity.__typename === 'Category') {
-    form = updateCategorySlugForm;
-    context = updateCategorySlugContext;
-  } else {
-    form = updatePageSlugForm;
-    context = updatePageSlugContext;
-  }
+  const form = $derived(entity.__typename === 'Category' ? updateCategorySlugForm : updatePageSlugForm);
+  const context = $derived(entity.__typename === 'Category' ? updateCategorySlugContext : updatePageSlugContext);
 </script>
 
 <TitledModal bind:open>
-  <svelte:fragment slot="title">URL 변경</svelte:fragment>
+  {#snippet title()}
+    URL 변경
+  {/snippet}
 
   <FormProvider {context} {form}>
     <div class={flex({ direction: 'column', gap: '20px' })}>

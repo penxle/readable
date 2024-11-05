@@ -21,10 +21,10 @@
   import { pageUrl } from '$lib/utils/url';
   import Editor from './Editor.svelte';
 
-  let deletePageOpen = false;
-  let unpublishPageOpen = false;
+  let deletePageOpen = $state(false);
+  let unpublishPageOpen = $state(false);
 
-  $: query = graphql(`
+  const query = graphql(`
     query PagePage_Query($siteId: ID!, $pageId: ID!) {
       site(siteId: $siteId) {
         id
@@ -130,7 +130,7 @@
     }
   `);
 
-  let connectionState: 'idle' | 'connected' | 'disconnected' = 'idle';
+  let connectionState = $state<'idle' | 'connected' | 'disconnected'>('idle');
 
   afterNavigate(() => {
     // NOTE: maxDepth = 2
@@ -228,7 +228,7 @@
         </div>
       {/if}
 
-      <Editor _query={$query} on:connectionStateChange={(e) => (connectionState = e.detail.state)} />
+      <Editor {$query} onconnectionstatechange={(e) => (connectionState = e.state)} />
     {/key}
   </div>
 
@@ -272,20 +272,21 @@
           </a>
         {/if}
         <Menu offset={2} placement="bottom-end">
-          <div
-            slot="button"
-            class={css({
-              borderRadius: '2px',
-              padding: '4px',
-              color: 'text.secondary',
-              _hover: { backgroundColor: 'neutral.10' },
-            })}
-          >
-            <Icon icon={EllipsisIcon} size={16} />
-          </div>
+          {#snippet button()}
+            <div
+              class={css({
+                borderRadius: '2px',
+                padding: '4px',
+                color: 'text.secondary',
+                _hover: { backgroundColor: 'neutral.10' },
+              })}
+            >
+              <Icon icon={EllipsisIcon} size={16} />
+            </div>
+          {/snippet}
 
           <MenuItem
-            on:click={async () => {
+            onclick={async () => {
               await duplicatePage({ pageId: $query.page.id });
               mixpanel.track('page:duplicate', {
                 via: 'panel',
@@ -296,12 +297,12 @@
             <span>복제</span>
           </MenuItem>
           {#if $query.page.state === PageState.PUBLISHED}
-            <MenuItem on:click={() => (unpublishPageOpen = true)}>
+            <MenuItem onclick={() => (unpublishPageOpen = true)}>
               <Icon icon={UndoIcon} size={14} />
               <span>게시 취소</span>
             </MenuItem>
           {/if}
-          <MenuItem variant="danger" on:click={() => (deletePageOpen = true)}>
+          <MenuItem onclick={() => (deletePageOpen = true)} variant="danger">
             <Icon icon={Trash2Icon} size={14} />
             <span>삭제</span>
           </MenuItem>
@@ -320,15 +321,14 @@
         disabled={$query.page.hasUnpublishedParents ||
           ($query.page.state === PageState.PUBLISHED && !$query.page.hasUnpublishedChanges)}
         glossy
-        size="md"
-        on:click={async () => {
+        onclick={async () => {
           if ($query.page.state === PageState.DRAFT) {
             invokeAlert({
               title: `"${$query.page.content.title}" 페이지를 게시하시겠어요?`,
               content: '누구나 사이트에서 이 페이지를 볼 수 있으며, 언제든 게시를 취소할 수 있습니다',
-              actionText: '게시 및 발행',
+              action: '게시 및 발행',
               variant: 'primary',
-              action: async () => {
+              onaction: async () => {
                 await publishPage({ pageId: $query.page.id });
                 toast.success('발행이 완료되었습니다');
                 mixpanel.track('page:publish', {
@@ -346,6 +346,7 @@
             });
           }
         }}
+        size="md"
       >
         {#if $query.page.state === PageState.DRAFT}
           게시 및 발행
@@ -454,7 +455,7 @@
 {/if}
 
 <Alert
-  onAction={async () => {
+  onaction={async () => {
     await deletePage({ pageId: $query.page.id });
     toast.success('페이지가 삭제되었습니다');
     mixpanel.track('page:delete', {
@@ -466,10 +467,12 @@
   }}
   bind:open={deletePageOpen}
 >
-  <svelte:fragment slot="title">
+  {#snippet title()}
     "{$query.page.content?.title ?? '(제목 없음)'}" 페이지를 삭제하시겠어요?
-  </svelte:fragment>
-  <svelte:fragment slot="content">삭제된 페이지는 복구할 수 없습니다</svelte:fragment>
+  {/snippet}
+  {#snippet content()}
+    삭제된 페이지는 복구할 수 없습니다
+  {/snippet}
 
   {#if $query.page.recursiveChildCount > 0}
     <div
@@ -490,12 +493,16 @@
     </div>
   {/if}
 
-  <svelte:fragment slot="action">삭제</svelte:fragment>
-  <svelte:fragment slot="cancel">취소</svelte:fragment>
+  {#snippet action()}
+    삭제
+  {/snippet}
+  {#snippet cancel()}
+    취소
+  {/snippet}
 </Alert>
 
 <Alert
-  onAction={async () => {
+  onaction={async () => {
     await unpublishPage({ pageId: $query.page.id });
     mixpanel.track('page:unpublish', {
       via: 'panel',
@@ -503,14 +510,14 @@
   }}
   bind:open={unpublishPageOpen}
 >
-  <svelte:fragment slot="title">
+  {#snippet title()}
     "{$query.page.content?.title ?? '(제목 없음)'}" 페이지 게시를 취소하시겠어요?
-  </svelte:fragment>
-  <svelte:fragment slot="content">
+  {/snippet}
+  {#snippet content()}
     사이트에서 이 페이지가 더 이상 노출되지 않습니다.
     <br />
     게시 취소한 페이지는 언제든 발행 버튼으로 다시 게시할 수 있습니다
-  </svelte:fragment>
+  {/snippet}
 
   {#if $query.page.recursiveChildCount > 0}
     <div
@@ -531,6 +538,10 @@
     </div>
   {/if}
 
-  <svelte:fragment slot="action">게시 취소</svelte:fragment>
-  <svelte:fragment slot="cancel">취소</svelte:fragment>
+  {#snippet action()}
+    게시 취소
+  {/snippet}
+  {#snippet cancel()}
+    취소
+  {/snippet}
 </Alert>

@@ -4,9 +4,13 @@
   import { pageUrl } from '$lib/utils/url';
   import type { PagePage_Breadcrumb_publicPage } from '$graphql';
 
-  export let _publicPage: PagePage_Breadcrumb_publicPage;
+  type Props = {
+    $publicPage: PagePage_Breadcrumb_publicPage;
+  };
 
-  $: publicPage = fragment(
+  let { $publicPage: _publicPage }: Props = $props();
+
+  const publicPage = fragment(
     _publicPage,
     graphql(`
       fragment PagePage_Breadcrumb_publicPage on PublicPage {

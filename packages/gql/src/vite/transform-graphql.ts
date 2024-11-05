@@ -23,7 +23,26 @@ export const transformGraphQLPlugin = (contextHolder: ContextHolder): Plugin => 
         return;
       }
 
-      let needDataProp = false;
+      let propsUsed = false;
+
+      AST.walk(program, {
+        visitCallExpression(p) {
+          const { node } = p;
+
+          if (node.callee.type === 'Identifier' && node.callee.name === 'fragment') {
+            p.replace(
+              AST.b.callExpression.from({
+                callee: AST.b.identifier('$derived'),
+                arguments: [node],
+              }),
+            );
+
+            return false;
+          }
+
+          this.traverse(p);
+        },
+      });
 
       AST.walk(program, {
         visitCallExpression(p) {
@@ -41,8 +60,13 @@ export const transformGraphQLPlugin = (contextHolder: ContextHolder): Plugin => 
               if (artifact.kind === 'fragment') {
                 p.replace(AST.b.nullLiteral());
               } else if (artifact.kind === 'query' && artifact.meta.mode !== 'manual') {
-                p.replace(AST.b.identifier(`__gql_data.__gql_${artifact.name}`));
-                needDataProp = true;
+                p.replace(
+                  AST.b.callExpression.from({
+                    callee: AST.b.identifier('$derived'),
+                    arguments: [AST.b.identifier(`__gql_props.data.__gql_${artifact.name}`)],
+                  }),
+                );
+                propsUsed = true;
               } else {
                 p.replace(
                   AST.b.callExpression.from({
@@ -68,18 +92,28 @@ export const transformGraphQLPlugin = (contextHolder: ContextHolder): Plugin => 
         },
       });
 
-      if (needDataProp) {
+      if (propsUsed) {
+        AST.walk(program, {
+          visitCallExpression(p) {
+            const { node } = p;
+            if (node.callee.type === 'Identifier' && node.callee.name === '$props') {
+              p.replace(AST.b.identifier('__gql_props'));
+            }
+
+            this.traverse(p);
+          },
+        });
+
         program.body.unshift(
           AST.b.variableDeclaration.from({
             kind: 'let',
-            declarations: [AST.b.identifier('__gql_data')],
-          }),
-          AST.b.exportNamedDeclaration.from({
-            declaration: null,
-            specifiers: [
-              AST.b.exportSpecifier.from({
-                local: AST.b.identifier('__gql_data'),
-                exported: AST.b.identifier('data'),
+            declarations: [
+              AST.b.variableDeclarator.from({
+                id: AST.b.identifier('__gql_props'),
+                init: AST.b.callExpression.from({
+                  callee: AST.b.identifier('$props'),
+                  arguments: [],
+                }),
               }),
             ],
           }),

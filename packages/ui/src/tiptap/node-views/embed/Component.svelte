@@ -13,27 +13,25 @@
   import { addHttpScheme } from '../../../utils';
   import type { NodeViewProps } from '@readable/ui/tiptap';
 
-  type $$Props = NodeViewProps;
-  $$restProps;
+  type Props = NodeViewProps;
 
-  export let node: NodeViewProps['node'];
-  export let editor: NodeViewProps['editor'] | undefined;
-  export let extension: NodeViewProps['extension'];
-  export let selected: NodeViewProps['selected'];
-  export let updateAttributes: NodeViewProps['updateAttributes'];
-  export let deleteNode: NodeViewProps['deleteNode'];
+  let { node, editor, extension, selected, updateAttributes, deleteNode }: Props = $props();
 
-  let url = '';
-  let inflight = false;
-  let pickerOpened = false;
-  let inputEl: HTMLInputElement;
-  let embedContainerEl: HTMLDivElement;
+  let url = $state('');
+  let inflight = $state(false);
+  let pickerOpened = $state(false);
+  let inputEl = $state<HTMLInputElement>();
+  let embedContainerEl = $state<HTMLDivElement>();
 
-  $: pickerOpened = selected;
+  $effect(() => {
+    pickerOpened = selected;
+  });
 
-  $: if (pickerOpened && inputEl) {
-    inputEl.focus();
-  }
+  $effect(() => {
+    if (pickerOpened && inputEl) {
+      inputEl.focus();
+    }
+  });
 
   const { anchor, floating } = createFloatingActions({
     placement: 'bottom',
@@ -148,8 +146,8 @@
             },
             !node.attrs.id && { top: '1/2', translate: 'auto', translateY: '-1/2' },
           )}
+          onclick={() => deleteNode()}
           type="button"
-          on:click={() => deleteNode()}
         >
           <Icon icon={Trash2Icon} size={16} />
         </button>
@@ -181,24 +179,24 @@
       </div>
 
       <Menu style={css.raw({ position: 'absolute', top: '12px', right: '12px' })}>
-        <div
-          slot="button"
-          class={css(
-            {
-              display: 'none',
-              borderRadius: '4px',
-              padding: '2px',
-              color: 'text.tertiary',
-              _hover: { backgroundColor: 'neutral.30' },
-            },
-            open && { display: 'flex' },
-          )}
-          let:open
-        >
-          <Icon icon={EllipsisIcon} size={20} />
-        </div>
+        {#snippet button({ open })}
+          <div
+            class={css(
+              {
+                display: 'none',
+                borderRadius: '4px',
+                padding: '2px',
+                color: 'text.tertiary',
+                _hover: { backgroundColor: 'neutral.30' },
+              },
+              open && { display: 'flex' },
+            )}
+          >
+            <Icon icon={EllipsisIcon} size={20} />
+          </div>
+        {/snippet}
 
-        <MenuItem variant="danger" on:click={() => deleteNode()}>
+        <MenuItem onclick={() => deleteNode()} variant="danger">
           <Icon icon={Trash2Icon} size={12} />
           <span>삭제</span>
         </MenuItem>
@@ -221,7 +219,10 @@
       boxShadow: 'heavy',
       zIndex: '1',
     })}
-    on:submit|preventDefault={handleInsert}
+    onsubmit={(e) => {
+      e.preventDefault();
+      handleInsert();
+    }}
     use:floating
   >
     <span class={css({ marginBottom: '12px', textStyle: '13r', color: 'text.tertiary' })}>
@@ -230,6 +231,7 @@
       다양한 콘텐츠를 임베드할 수 있어요
     </span>
     <TextInput
+      name="url"
       style={css.raw({ textStyle: '14r', width: 'full', height: '[32px!]' })}
       placeholder="https://..."
       size="md"

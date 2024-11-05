@@ -18,7 +18,7 @@
     }
   `);
 
-  $: email = $page.url.searchParams.get('email');
+  const email = $derived($page.url.searchParams.get('email'));
 </script>
 
 <div
@@ -44,9 +44,7 @@
 
   <Button
     style={flex.raw({ gap: '6px', width: '240px' })}
-    size="lg"
-    variant="secondary"
-    on:click={async () => {
+    onclick={async () => {
       const url = await generateSingleSignOnAuthorizationUrl({
         provider: SingleSignOnProvider.GOOGLE,
         email,
@@ -58,6 +56,8 @@
 
       location.href = url;
     }}
+    size="lg"
+    variant="secondary"
   >
     <GoogleLogo class={css({ size: '16px' })} />
     <span>구글로 시작하기</span>

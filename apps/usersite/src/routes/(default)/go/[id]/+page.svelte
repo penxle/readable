@@ -1,7 +1,8 @@
 <script lang="ts">
   import { graphql } from '$graphql';
 
-  $: graphql(`
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const query = graphql(`
     query GoPage_Query($pageId: ID!) {
       publicPageById(pageId: $pageId) {
         id

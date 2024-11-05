@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { createBubbler, run, stopPropagation } from 'svelte/legacy';
+
+  const bubble = createBubbler();
   import { Readability } from '@mozilla/readability';
   import stringHash from '@sindresorhus/string-hash';
   import stringify from 'fast-json-stable-stringify';
@@ -14,7 +17,7 @@
   const themeColor = token('colors.neutral.100');
 
   let popoverEl: HTMLDivElement;
-  let open = false;
+  let open = $state(false);
 
   const selectors = [
     'title',
@@ -28,19 +31,13 @@
     '[role="tab"][aria-selected="true"]',
   ];
 
-  let loadingCount = 0;
+  let loadingCount = $state(0);
   let lastHash = 0;
 
-  let response: {
+  let response = $state<{
     site: { id: string; name: string; url: string };
     pages: { id: string; title: string; score: number }[];
-  } | null = null;
-
-  $: pages = response?.pages.filter((page) => page.score >= 0.8);
-
-  $: if (open) {
-    observe();
-  }
+  } | null>(null);
 
   let lastTopLayerElement: HTMLElement | null = null;
   let topLayerElements: HTMLElement[] = [];
@@ -120,6 +117,14 @@
       observer.disconnect();
     };
   });
+
+  const pages = $derived.by(() => response?.pages.filter((page) => page.score >= 0.8));
+
+  run(() => {
+    if (open) {
+      observe();
+    }
+  });
 </script>
 
 <div
@@ -144,9 +149,9 @@
       size: '48px',
       pointerEvents: 'auto',
     })}
+    onclick={() => (open = !open)}
+    onpointerdown={stopPropagation(bubble('pointerdown'))}
     type="button"
-    on:click={() => (open = !open)}
-    on:pointerdown|stopPropagation
     transition:fly={{ y: 5 }}
   >
     {#if open}
@@ -205,7 +210,7 @@
         boxShadow: 'emphasize',
         pointerEvents: 'auto',
       })}
-      on:pointerdown|stopPropagation
+      onpointerdown={stopPropagation(bubble('pointerdown'))}
       transition:fly={{ y: 5 }}
     >
       <div class={css({ textStyle: '14b' })}>관련 문서</div>

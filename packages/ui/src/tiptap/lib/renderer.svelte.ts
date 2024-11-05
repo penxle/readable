@@ -1,4 +1,5 @@
 import { NodeView } from '@tiptap/core';
+import { mount, unmount } from 'svelte';
 import type {
   DecorationWithType,
   NodeViewProps,
@@ -8,26 +9,22 @@ import type {
 } from '@tiptap/core';
 import type { Node as ProseMirrorNode } from '@tiptap/pm/model';
 import type { Decoration, DecorationSource, NodeView as ProseMirrorNodeView } from '@tiptap/pm/view';
-import type { ComponentType, SvelteComponent } from 'svelte';
+import type { Component } from 'svelte';
 
-type NodeViewComponent = SvelteComponent<NodeViewProps>;
-export type NodeViewComponentType = ComponentType<NodeViewComponent>;
+export type NodeViewComponent = Component<NodeViewProps>;
 export type { NodeViewProps } from '@tiptap/core';
 
-class SvelteNodeView extends NodeView<NodeViewComponentType> implements ProseMirrorNodeView {
+class SvelteNodeView extends NodeView<NodeViewComponent> implements ProseMirrorNodeView {
   #element: HTMLElement;
   #contentElement: HTMLElement | null = null;
-  #component: NodeViewComponent;
+  #component: Record<string, never>;
+  #props: NodeViewProps = $state({} as NodeViewProps);
 
   #handleSelectionUpdate: () => void;
   #handleTransaction: () => void;
   #onDragStart: (event: DragEvent) => void;
 
-  constructor(
-    component: NodeViewComponentType,
-    props: NodeViewRendererProps,
-    options?: Partial<NodeViewRendererOptions>,
-  ) {
+  constructor(component: NodeViewComponent, props: NodeViewRendererProps, options?: Partial<NodeViewRendererOptions>) {
     super(component, props, options);
 
     this.#onDragStart = (event: DragEvent) => {
@@ -47,23 +44,25 @@ class SvelteNodeView extends NodeView<NodeViewComponentType> implements ProseMir
     const context = new Map();
     context.set('onDragStart', (event: DragEvent) => this.#onDragStart(event));
 
-    const target = document.createElement(this.node.isInline ? 'span' : 'div');
-    this.#component = new this.component({
-      target,
-      props: {
-        editor: this.editor,
-        view: this.view,
-        node: this.node,
-        decorations: this.decorations as DecorationWithType[],
-        innerDecorations: this.innerDecorations,
-        HTMLAttributes: this.HTMLAttributes,
-        extension: this.extension,
-        selected: false,
+    this.#props = {
+      editor: this.editor,
+      view: this.view,
+      node: this.node,
+      decorations: this.decorations as DecorationWithType[],
+      innerDecorations: this.innerDecorations,
+      HTMLAttributes: this.HTMLAttributes,
+      extension: this.extension,
+      selected: false,
 
-        getPos: () => this.getPos(),
-        updateAttributes: (attrs) => this.updateAttributes(attrs),
-        deleteNode: () => this.deleteNode(),
-      },
+      getPos: () => this.getPos(),
+      updateAttributes: (attrs) => this.updateAttributes(attrs),
+      deleteNode: () => this.deleteNode(),
+    };
+
+    const target = document.createElement(this.node.isInline ? 'span' : 'div');
+    this.#component = mount(this.component, {
+      target,
+      props: this.#props,
       context,
     });
 
@@ -97,7 +96,7 @@ class SvelteNodeView extends NodeView<NodeViewComponentType> implements ProseMir
     };
 
     this.#handleTransaction = () => {
-      this.#component.$set({ editor: this.editor });
+      this.#props.editor = this.editor;
     };
 
     this.editor.on('selectionUpdate', this.#handleSelectionUpdate);
@@ -121,37 +120,35 @@ class SvelteNodeView extends NodeView<NodeViewComponentType> implements ProseMir
     this.decorations = decorations;
     this.innerDecorations = innerDecorations;
 
-    this.#component.$set({
-      node,
-      decorations: decorations as DecorationWithType[],
-      innerDecorations,
-    });
+    this.#props.node = node;
+    this.#props.decorations = decorations as DecorationWithType[];
+    this.#props.innerDecorations = innerDecorations;
 
     return true;
   }
 
   selectNode() {
     if (this.editor.isEditable && this.node.type.spec.selectable !== false) {
-      this.#component.$set({ selected: true });
+      this.#props.selected = true;
     }
   }
 
   deselectNode() {
     if (this.editor.isEditable && this.node.type.spec.selectable !== false) {
-      this.#component.$set({ selected: false });
+      this.#props.selected = false;
     }
   }
 
   destroy() {
     this.editor.off('selectionUpdate', this.#handleSelectionUpdate);
     this.editor.off('transaction', this.#handleTransaction);
-    this.#component.$destroy();
+    unmount(this.#component);
     this.#contentElement = null;
   }
 }
 
 export const SvelteNodeViewRenderer = (
-  component: NodeViewComponentType,
+  component: NodeViewComponent,
   options?: Partial<NodeViewRendererOptions>,
 ): NodeViewRenderer => {
   return (props) => new SvelteNodeView(component, props, options);

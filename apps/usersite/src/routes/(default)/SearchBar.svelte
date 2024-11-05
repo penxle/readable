@@ -22,19 +22,6 @@
   const searchBarOpen = getContext('searchBarOpen');
   const hasCmd = getContext('hasCmd');
 
-  let _publicSite: SearchBar_publicSite;
-  export { _publicSite as $publicSite };
-
-  $: publicSite = fragment(
-    _publicSite,
-    graphql(`
-      fragment SearchBar_publicSite on PublicSite {
-        id
-        aiSearchEnabled
-      }
-    `),
-  );
-
   // NOTE: p, em, strong, ul, ol, li 이외에는 AI 출력에서 발견하지 못함
   const markdownStyles = css({
     '& p:not(:last-child)': {
@@ -107,7 +94,12 @@
   }
 
   let lastRequestedQuery = '';
-  export let searchResults: Awaited<ReturnType<typeof searchPublicPage.refetch>>['searchPublicPage']['hits'] = [];
+  type Props = {
+    $publicSite: SearchBar_publicSite;
+    searchResults?: Awaited<ReturnType<typeof searchPublicPage.refetch>>['searchPublicPage']['hits'];
+  };
+
+  let { $publicSite: _publicSite, searchResults = $bindable([]) }: Props = $props();
 
   const searchPublicPage = graphql(`
     query SearchBar_Query($query: String!) @manual {
@@ -146,12 +138,10 @@
     }
   `);
 
-  $: aiEnabled = $publicSite.aiSearchEnabled;
-
-  let aiState: 'idle' | 'loading' | 'success' | 'error' = 'idle';
+  let aiState: 'idle' | 'loading' | 'success' | 'error' = $state('idle');
   let aiSearchResult:
     | Awaited<ReturnType<typeof searchPublicPageByNaturalLanguage.refetch>>['searchPublicPageByNaturalLanguage']
-    | null = null;
+    | null = $state(null);
 
   const debouncedSearch = R.debounce(
     async (query: string) => {
@@ -166,15 +156,6 @@
       waitMs: 16,
     },
   );
-
-  $: if ($searchQuery.length > 0 && aiState === 'idle') {
-    if (browser) {
-      debouncedSearch.call($searchQuery);
-    }
-  } else if ($searchQuery.length === 0 && aiState !== 'idle') {
-    aiState = 'idle';
-    aiSearchResult = null;
-  }
 
   async function aiSearch(query: string) {
     if (query === lastRequestedQuery) {
@@ -218,19 +199,12 @@
     lastRequestedQuery = '';
     searchResults = [];
     selectedResultIndex = null;
-    inputEl.focus();
+    inputEl?.focus();
   }
 
-  let modalEl: HTMLDivElement;
-  let inputEl: HTMLInputElement;
-  let listEl: HTMLUListElement;
-  let selectedResultIndex: number | null = null;
-
-  $: if (browser && $searchBarOpen) {
-    tick().then(() => {
-      inputEl.focus();
-    });
-  }
+  let inputEl = $state<HTMLInputElement>();
+  let listEl = $state<HTMLUListElement>();
+  let selectedResultIndex = $state<number | null>(null);
 
   function handleInputKeyDown(event: KeyboardEvent) {
     if ((event.key === 'ArrowDown' || event.key === 'ArrowUp') && event.isComposing) {
@@ -282,6 +256,7 @@
         const selectedElem = listEl?.querySelector<HTMLElement>(`& > [aria-selected="true"]`);
         if (
           selectedElem &&
+          listEl &&
           (selectedElem.offsetTop < listEl.scrollTop ||
             selectedElem.offsetTop + selectedElem.clientHeight > listEl.scrollTop + listEl.clientHeight)
         ) {
@@ -305,9 +280,40 @@
   beforeNavigate(() => {
     closeModal();
   });
+
+  const publicSite = fragment(
+    _publicSite,
+    graphql(`
+      fragment SearchBar_publicSite on PublicSite {
+        id
+        aiSearchEnabled
+      }
+    `),
+  );
+
+  const aiEnabled = $derived($publicSite.aiSearchEnabled);
+
+  $effect(() => {
+    if ($searchQuery.length > 0 && aiState === 'idle') {
+      if (browser) {
+        debouncedSearch.call($searchQuery);
+      }
+    } else if ($searchQuery.length === 0 && aiState !== 'idle') {
+      aiState = 'idle';
+      aiSearchResult = null;
+    }
+  });
+
+  $effect(() => {
+    if ($searchBarOpen) {
+      tick().then(() => {
+        inputEl?.focus();
+      });
+    }
+  });
 </script>
 
-<svelte:window on:keydown={handleKeyDown} />
+<svelte:window onkeydown={handleKeyDown} />
 
 {#if $searchBarOpen}
   <div
@@ -332,13 +338,12 @@
         backdropBlur: '4px',
       })}
       aria-label="검색 모드 닫기"
+      onclick={closeModal}
+      onkeydown={closeModal}
       role="button"
       tabindex="-1"
-      on:click={closeModal}
-      on:keydown={closeModal}
-    />
+    ></div>
     <div
-      bind:this={modalEl}
       class={flex({
         position: 'relative',
         zIndex: '100',
@@ -371,7 +376,7 @@
           },
         })}
       >
-        <button class={flex({ hideFrom: 'md' })} aria-label="검색 모드 닫기" type="button" on:click={closeModal}>
+        <button class={flex({ hideFrom: 'md' })} aria-label="검색 모드 닫기" onclick={closeModal} type="button">
           <Icon icon={MoveLeftIcon} size={24} />
         </button>
         <label
@@ -433,8 +438,8 @@
                 padding: '2px',
               })}
               aria-label="AI 검색 취소"
+              onclick={() => (aiState = 'idle')}
               type="button"
-              on:click={() => (aiState = 'idle')}
             >
               <Icon style={css.raw({ color: 'neutral.50' })} icon={ChevronLeftIcon} size={18} />
             </button>
@@ -450,10 +455,10 @@
               height: '47px',
             })}
             aria-live={$searchQuery ? 'polite' : 'off'}
+            onkeydown={handleInputKeyDown}
             placeholder="검색어를 입력하세요"
             type="text"
             bind:value={$searchQuery}
-            on:keydown={handleInputKeyDown}
           />
 
           {#if $searchQuery}
@@ -464,8 +469,8 @@
                 color: 'neutral.50',
               })}
               aria-label="검색어 지우기"
+              onclick={clearSearch}
               type="button"
-              on:click={clearSearch}
             >
               <Icon icon={CircleXIcon} size={18} />
             </button>
@@ -495,13 +500,13 @@
                   },
                 })}
                 aria-selected={selectedResultIndex === -1}
-                role="option"
-                tabindex="0"
-                on:focus={() => {
+                onclick={() => aiSearch($searchQuery)}
+                onfocus={() => {
                   selectedResultIndex = -1;
                 }}
-                on:click={() => aiSearch($searchQuery)}
-                on:keydown={null}
+                onkeydown={null}
+                role="option"
+                tabindex="0"
               >
                 <AiIcon />
 
@@ -540,11 +545,11 @@
                   })}
                   aria-selected={selectedResultIndex === index}
                   href={pageUrl(result.page)}
-                  role="option"
-                  tabindex="0"
-                  on:focus={() => {
+                  onfocus={() => {
                     selectedResultIndex = index;
                   }}
+                  role="option"
+                  tabindex="0"
                 >
                   <h3
                     class={css({

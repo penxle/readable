@@ -1,1 +1,1 @@
-export { BubbleMenu } from './extension';
+export { BubbleMenu } from './extension.svelte';

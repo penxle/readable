@@ -1,5 +1,7 @@
 <script lang="ts">
   import { flex } from '@readable/styled-system/patterns';
+
+  let { children } = $props();
 </script>
 
 <div
@@ -9,5 +11,5 @@
     minHeight: 'screen',
   })}
 >
-  <slot />
+  {@render children()}
 </div>

@@ -1,14 +1,18 @@
 <script lang="ts">
   import { flex } from '@readable/styled-system/patterns';
   import { Icon } from '@readable/ui/components';
-  import type { ComponentType } from 'svelte';
+  import type { Component } from 'svelte';
 
-  export let setting: {
-    icon: ComponentType;
-    name: string;
-    href: string;
-    selected: boolean;
+  type Props = {
+    setting: {
+      icon: Component;
+      name: string;
+      href: string;
+      selected: boolean;
+    };
   };
+
+  let { setting }: Props = $props();
 </script>
 
 <a

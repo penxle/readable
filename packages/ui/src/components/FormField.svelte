@@ -7,12 +7,20 @@
   import Icon from './Icon.svelte';
   import Tooltip from './Tooltip.svelte';
   import type { SystemStyleObject } from '@readable/styled-system/types';
+  import type { Snippet } from 'svelte';
 
-  export let style: SystemStyleObject | undefined = undefined;
-  export let name: string;
-  export let label: string | undefined = undefined;
-  export let description: string | undefined = undefined;
-  export let noMessage = false;
+  type Props = {
+    style?: SystemStyleObject;
+    name: string;
+    label?: string;
+    description?: string;
+    noMessage?: boolean;
+    labelSuffix?: Snippet;
+    children?: Snippet;
+    rightText?: Snippet;
+  };
+
+  let { style, name, label, description, noMessage = false, labelSuffix, children, rightText }: Props = $props();
 
   setFormField({
     name,
@@ -38,11 +46,11 @@
           <Icon style={css.raw({ color: 'neutral.50', marginLeft: '4px' })} icon={InfoIcon} size={14} />
         </Tooltip>
       {/if}
-      <slot name="label-suffix" />
+      {@render labelSuffix?.()}
     </label>
   {/if}
 
-  <slot />
+  {@render children?.()}
 
   {#if !noMessage}
     <div
@@ -57,15 +65,17 @@
       })}
     >
       <div class={flex({ align: 'center', gap: '4px' })}>
-        <FormValidationMessage for={name} let:message>
-          <Icon icon={InfoIcon} size={12} />
-          {message}
+        <FormValidationMessage for={name}>
+          {#snippet children({ message })}
+            <Icon icon={InfoIcon} size={12} />
+            {message}
+          {/snippet}
         </FormValidationMessage>
       </div>
 
-      {#if 'right-text' in $$slots}
+      {#if rightText}
         <span class={css({ textStyle: '12m', color: 'neutral.70' })}>
-          <slot name="right-text" />
+          {@render rightText()}
         </span>
       {/if}
     </div>

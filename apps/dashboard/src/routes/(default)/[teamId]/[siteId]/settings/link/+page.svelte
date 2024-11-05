@@ -12,9 +12,9 @@
   import { LiteBadge } from '$lib/components';
   import { invokeAlert } from '$lib/components/invoke-alert';
 
-  let useSiteHeaderLink = false;
+  let useSiteHeaderLink = $state(false);
 
-  $: query = graphql(`
+  const query = graphql(`
     query SiteSettingsLinkPage_Query($siteId: ID!) {
       site(siteId: $siteId) {
         id
@@ -80,10 +80,12 @@
     },
   });
 
-  $: setInitialValues({
-    siteId: $query.site.id,
-    label: $query.site.headerLink?.label ?? '',
-    url: $query.site.headerLink?.url ?? '',
+  $effect(() => {
+    setInitialValues({
+      siteId: $query.site.id,
+      label: $query.site.headerLink?.label ?? '',
+      url: $query.site.headerLink?.url ?? '',
+    });
   });
 </script>
 
@@ -110,18 +112,17 @@
     <Switch
       name="useSiteHeaderLink"
       disabled={!$query.site.team.plan.plan.rules.headerLink}
-      bind:checked={useSiteHeaderLink}
-      on:change={(e) => {
+      onchange={(e) => {
         if (!e.currentTarget.checked) {
           if ($query.site.headerLink?.state === 'ACTIVE') {
             invokeAlert({
               title: '헤더 링크 버튼을 제거할까요?',
               content: '더 이상 사이트 헤더에 링크 버튼이 나타나지 않게 됩니다',
-              actionText: '제거',
-              cancel: () => {
+              action: '제거',
+              oncancel: () => {
                 useSiteHeaderLink = true;
               },
-              action: async () => {
+              onaction: async () => {
                 if ($query.site.headerLink) {
                   await disableSiteHeaderLink({ siteHeaderLinkId: $query.site.headerLink.id });
                   mixpanel.track('site:header-link:disable');
@@ -135,6 +136,7 @@
           reset();
         }
       }}
+      bind:checked={useSiteHeaderLink}
     />
   </div>
 

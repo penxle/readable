@@ -12,10 +12,14 @@
   import { TitledModal } from '$lib/components';
   import type { BillingCycle } from '@/enums';
 
-  export let open = false;
-  export let teamId: string;
-  export let plan: { id: string; name: string; price: number };
-  export let planCycle: BillingCycle = 'MONTHLY';
+  type Props = {
+    open?: boolean;
+    teamId: string;
+    plan: { id: string; name: string; price: number };
+    planCycle?: BillingCycle;
+  };
+
+  let { open = $bindable(false), teamId, plan, planCycle = 'MONTHLY' }: Props = $props();
 
   const updateCard = graphql(`
     mutation EnrollPlanWithCardModal_UpdatePaymentMethod_Mutation($input: UpdatePaymentMethodInput!) {
@@ -81,7 +85,7 @@
     },
   });
 
-  $: maybeBusinessRegistrationNumber = $data.birthOrBusinessRegistrationNumber?.length > 6;
+  const maybeBusinessRegistrationNumber = $derived($data.birthOrBusinessRegistrationNumber?.length > 6);
 
   function formatBusinessNumber(event: Event) {
     const input = event.target as HTMLInputElement;
@@ -108,15 +112,17 @@
     { name: 'NICEPAY 전자금융거래 기본약관', url: 'https://www.nicepay.co.kr/cs/terms/policy1.do' },
   ];
 
-  let agreementChecks = agreements.map(() => false);
-  $: allChecked = agreementChecks.every(Boolean);
+  let agreementChecks = $state(agreements.map(() => false));
+  const allChecked = $derived(agreementChecks.every(Boolean));
   function handleAllCheck() {
     agreementChecks = agreementChecks.map(() => !allChecked);
   }
 </script>
 
 <TitledModal bind:open>
-  <svelte:fragment slot="title">카드 추가 및 결제</svelte:fragment>
+  {#snippet title()}
+    카드 추가 및 결제
+  {/snippet}
 
   <div
     class={flex({
@@ -140,10 +146,10 @@
         <TextInput
           inputmode="numeric"
           maxlength={19}
+          oninput={formatCardNumber}
           pattern="[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{4}"
           placeholder="0000-0000-0000-0000"
           required
-          on:input={formatCardNumber}
         />
       </FormField>
       <div class={flex({ width: 'full', gap: '16px' })}>
@@ -151,10 +157,10 @@
           <TextInput
             inputmode="numeric"
             maxlength={5}
+            oninput={formatCardExpiry}
             pattern="(0[1-9]|1[0-2])\/[0-9]{2}"
             placeholder="MM/YY"
             required
-            on:input={formatCardExpiry}
           />
         </FormField>
         <FormField name="passwordTwoDigits" style={css.raw({ flex: '1' })} label="비밀번호 앞 두자리" noMessage>
@@ -178,16 +184,16 @@
         <TextInput
           inputmode="numeric"
           maxlength={12}
+          oninput={maybeBusinessRegistrationNumber ? formatBusinessNumber : undefined}
           pattern={maybeBusinessRegistrationNumber ? '[0-9]{3}-[0-9]{2}-[0-9]{5}' : '[0-9]{6}'}
           placeholder=""
           required
-          on:input={maybeBusinessRegistrationNumber ? formatBusinessNumber : undefined}
         />
       </FormField>
     </div>
 
     <div class={flex({ marginTop: '60px', flexDirection: 'column', gap: '8px' })}>
-      <Checkbox checked={allChecked} size="md" variant="brand" on:change={handleAllCheck}>
+      <Checkbox checked={allChecked} onchange={handleAllCheck} size="md" variant="brand">
         <span class={css({ textStyle: '16sb', color: 'text.secondary' })}>모두 확인하고 동의합니다.</span>
       </Checkbox>
 

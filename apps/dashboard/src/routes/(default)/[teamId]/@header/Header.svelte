@@ -13,10 +13,13 @@
   import UserMenu from './UserMenu.svelte';
   import type { Header_query } from '$graphql';
 
-  let _query: Header_query;
-  export { _query as $query };
+  type Props = {
+    $query: Header_query;
+  };
 
-  $: query = fragment(
+  let { $query: _query }: Props = $props();
+
+  const query = fragment(
     _query,
     graphql(`
       fragment Header_query on Query {
@@ -50,10 +53,10 @@
     `),
   );
 
-  $: currentSiteId = $page.params.siteId;
-  $: currentSite = $query.team.sites.find((site) => site.id === currentSiteId);
+  const currentSiteId = $derived($page.params.siteId);
+  const currentSite = $derived($query.team.sites.find((site) => site.id === currentSiteId));
 
-  let isFeedbackModalOpen = false;
+  let isFeedbackModalOpen = $state(false);
 </script>
 
 <header
@@ -131,12 +134,12 @@
         textStyle: '14sb',
         borderRadius: '4px',
       })}
+      onclick={() => {
+        isFeedbackModalOpen = true;
+      }}
       size="sm"
       type="button"
       variant="secondary"
-      on:click={() => {
-        isFeedbackModalOpen = true;
-      }}
     >
       피드백
     </Button>

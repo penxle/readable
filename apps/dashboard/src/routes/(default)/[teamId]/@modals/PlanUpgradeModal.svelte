@@ -7,26 +7,30 @@
   import PlanCycleToggle from './PlanCycleToggle.svelte';
   import type { BillingCycle } from '@/enums';
 
-  export let open = false;
-  export let confirm: (cycle: BillingCycle) => void;
-  export let plan: { id: string; name: string; price: number };
-  export let planCycle: BillingCycle = 'MONTHLY';
+  type Props = {
+    open?: boolean;
+    confirm: (cycle: BillingCycle) => void;
+    plan: { id: string; name: string; price: number };
+    planCycle?: BillingCycle;
+  };
 
-  $: finalPaymentAmount = calculateDetailedAmount(
-    calculatePaymentAmount({ fee: plan.price, billingCycle: planCycle }).final,
+  let { open = $bindable(false), confirm, plan, planCycle = $bindable('MONTHLY') }: Props = $props();
+
+  const finalPaymentAmount = $derived(
+    calculateDetailedAmount(calculatePaymentAmount({ fee: plan.price, billingCycle: planCycle }).final),
   );
 </script>
 
 <TitledModal bind:open>
-  <svelte:fragment slot="title">
+  {#snippet title()}
     {plan.name} 플랜으로 업그레이드
-  </svelte:fragment>
+  {/snippet}
 
   <div class={flex({ flexDirection: 'column', gap: '20px' })}>
     <p class={css({ textStyle: '14r', color: 'text.tertiary' })}>
       {plan.name} 플랜으로 업그레이드하면 모든 기능을 이용할 수 있습니다.
     </p>
-    <PlanCycleToggle defaultValue={planCycle} on:select={(cycle) => (planCycle = cycle.detail)} />
+    <PlanCycleToggle defaultValue={planCycle} onselect={(cycle) => (planCycle = cycle)} />
     <table
       class={css({
         width: 'full',
@@ -58,7 +62,7 @@
       </tbody>
     </table>
   </div>
-  <Button style={css.raw({ width: 'full', marginTop: '40px' })} glossy size="lg" on:click={() => confirm(planCycle)}>
+  <Button style={css.raw({ width: 'full', marginTop: '40px' })} glossy onclick={() => confirm(planCycle)} size="lg">
     확인 및 결제
   </Button>
 </TitledModal>

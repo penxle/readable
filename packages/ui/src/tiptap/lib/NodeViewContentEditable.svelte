@@ -2,10 +2,13 @@
   import { css } from '@readable/styled-system/css';
   import type { SystemStyleObject } from '@readable/styled-system/types';
 
-  export let as: keyof HTMLElementTagNameMap = 'div';
-  export let style: SystemStyleObject | undefined = undefined;
+  type Props = {
+    as?: keyof HTMLElementTagNameMap;
+    style?: SystemStyleObject | undefined;
+    [key: string]: unknown;
+  };
+
+  let { as = 'div', style, ...rest }: Props = $props();
 </script>
 
-<svelte:element this={as} class={css(style)} data-node-view-content-editable {...$$restProps}>
-  <slot />
-</svelte:element>
+<svelte:element this={as} class={css(style)} data-node-view-content-editable {...rest} />

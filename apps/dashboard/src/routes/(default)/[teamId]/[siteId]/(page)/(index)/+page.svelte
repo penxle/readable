@@ -6,7 +6,7 @@
   import FileTextIcon from '~icons/lucide/file-text';
   import { graphql } from '$graphql';
 
-  $: query = graphql(`
+  const query = graphql(`
     query SitePage_Query($siteId: ID!) {
       site(siteId: $siteId) {
         id

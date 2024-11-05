@@ -3,9 +3,8 @@
 
   import { setContext } from 'svelte';
   import { writable } from 'svelte/store';
-  import { browser } from '$app/environment';
 
-  export let data: { hasCmd: boolean };
+  let { data, children } = $props();
 
   const mobileNavOpen = writable(false);
   const searchBarOpen = writable(false);
@@ -17,9 +16,9 @@
   setContext('searchBarOpen', searchBarOpen);
   setContext('hasCmd', hasCmd);
 
-  $: if (browser) {
+  $effect(() => {
     hasCmd.set(navigator.platform.toUpperCase().includes('MAC') || /(ipad|iphone|ipod)/i.test(navigator.userAgent));
-  }
+  });
 </script>
 
-<slot />
+{@render children()}

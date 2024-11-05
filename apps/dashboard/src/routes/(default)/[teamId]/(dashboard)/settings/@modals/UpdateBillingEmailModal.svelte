@@ -10,8 +10,12 @@
   import { graphql } from '$graphql';
   import { TitledModal } from '$lib/components';
 
-  export let open = false;
-  export let teamId: string;
+  type Props = {
+    open?: boolean;
+    teamId: string;
+  };
+
+  let { open = $bindable(false), teamId }: Props = $props();
 
   const { form, isValid, context } = createMutationForm({
     mutation: graphql(`
@@ -42,7 +46,9 @@
 </script>
 
 <TitledModal bind:open>
-  <svelte:fragment slot="title">청구서 수신 이메일 변경</svelte:fragment>
+  {#snippet title()}
+    청구서 수신 이메일 변경
+  {/snippet}
 
   <FormProvider class={flex({ flexDirection: 'column', gap: '20px' })} {context} {form}>
     <input name="teamId" type="hidden" value={teamId} />

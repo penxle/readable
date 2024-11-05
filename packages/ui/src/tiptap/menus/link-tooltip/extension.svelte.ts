@@ -2,6 +2,7 @@ import { autoUpdate, computePosition } from '@floating-ui/dom';
 import { center } from '@readable/styled-system/patterns';
 import { Extension, posToDOMRect } from '@tiptap/core';
 import { Plugin, PluginKey, TextSelection } from '@tiptap/pm/state';
+import { mount, unmount } from 'svelte';
 import Component from './Component.svelte';
 import type { VirtualElement } from '@floating-ui/dom';
 import type { Node } from '@tiptap/pm/model';
@@ -75,7 +76,22 @@ export const LinkTooltip = Extension.create<Options>({
             cleanup?.();
           };
 
-          let tooltipComponent: Component | null = null;
+          let tooltipComponent: object | null = null;
+          const tooltipComponentProps = $state<{
+            hide: () => void;
+            handleLink: (url: string) => Promise<Record<string, unknown>>;
+            unsetLink: () => void;
+            linkHref: string;
+            openLinkEditPopover: () => void;
+          }>({
+            hide: hideTooltip,
+            handleLink: this.options.handleLink,
+            // eslint-disable-next-line @typescript-eslint/no-empty-function
+            unsetLink: () => {},
+            linkHref: '',
+            // eslint-disable-next-line @typescript-eslint/no-empty-function
+            openLinkEditPopover: () => {},
+          });
 
           return {
             update: async (view, oldState) => {
@@ -120,16 +136,14 @@ export const LinkTooltip = Extension.create<Options>({
                 this.editor.chain().focus().setTextSelection(selection).unsetLink().run();
               };
 
+              tooltipComponentProps.unsetLink = unsetLink;
+              tooltipComponentProps.linkHref = linkHref;
+              tooltipComponentProps.openLinkEditPopover = openLinkEditPopover;
+
               if (!tooltipComponent) {
-                tooltipComponent = new Component({
+                tooltipComponent = mount(Component, {
                   target: dom,
-                  props: {
-                    hide: hideTooltip,
-                    handleLink: this.options.handleLink,
-                    unsetLink,
-                    linkHref,
-                    openLinkEditPopover,
-                  },
+                  props: tooltipComponentProps,
                 });
 
                 dom.className = center({
@@ -142,8 +156,6 @@ export const LinkTooltip = Extension.create<Options>({
 
                 document.body.append(dom);
               }
-
-              tooltipComponent.$set({ linkHref, unsetLink, openLinkEditPopover });
 
               cleanup?.();
               cleanup = autoUpdate(element, dom, async () => {
@@ -159,7 +171,9 @@ export const LinkTooltip = Extension.create<Options>({
             },
             destroy: () => {
               hideTooltip();
-              tooltipComponent?.$destroy();
+              if (tooltipComponent) {
+                unmount(tooltipComponent);
+              }
               dom.remove();
             },
           };

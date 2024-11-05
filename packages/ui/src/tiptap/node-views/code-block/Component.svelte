@@ -4,13 +4,9 @@
   import Menu from './Menu.svelte';
   import type { NodeViewProps } from '../../lib';
 
-  type $$Props = NodeViewProps;
-  $$restProps;
+  type Props = NodeViewProps;
 
-  export let node: NodeViewProps['node'];
-  export let editor: NodeViewProps['editor'] | undefined;
-  // export let selected: NodeViewProps['selected'];
-  export let updateAttributes: NodeViewProps['updateAttributes'];
+  let { node, editor, updateAttributes }: Props = $props();
 </script>
 
 <NodeView style={css.raw({ position: 'relative' })}>

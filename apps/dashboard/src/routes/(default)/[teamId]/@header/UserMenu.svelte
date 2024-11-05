@@ -15,18 +15,21 @@
   import UserSettingModal from './UserSettingModal.svelte';
   import type { UserMenu_query } from '$graphql';
 
-  let _query: UserMenu_query;
-  export { _query as $query };
-  export let teamId: string | undefined = undefined;
+  type Props = {
+    $query: UserMenu_query;
+    teamId?: string | undefined;
+  };
 
-  let openUserSettingModal = false;
+  let { $query: _query, teamId = undefined }: Props = $props();
 
-  $: {
+  let openUserSettingModal = $state(false);
+
+  $effect(() => {
     const tab = $page.url.searchParams.get('tab');
     openUserSettingModal = !!tab && (tab === 'settings/personal' || tab.startsWith('settings/team'));
-  }
+  });
 
-  $: query = fragment(
+  const query = fragment(
     _query,
     graphql(`
       fragment UserMenu_query on Query {
@@ -53,19 +56,21 @@
 </script>
 
 <Menu style={css.raw({ height: 'fit' })} listStyle={css.raw({ width: '[180px!]' })} placement="top">
-  <div slot="button">
-    <Img
-      style={css.raw({
-        borderWidth: '1px',
-        borderColor: 'border.image',
-        borderRadius: 'full',
-        size: '32px',
-      })}
-      $image={$query.me.avatar}
-      alt={`${$query.me.name}의 아바타`}
-      size={32}
-    />
-  </div>
+  {#snippet button()}
+    <div>
+      <Img
+        style={css.raw({
+          borderWidth: '1px',
+          borderColor: 'border.image',
+          borderRadius: 'full',
+          size: '32px',
+        })}
+        $image={$query.me.avatar}
+        alt={`${$query.me.name}의 아바타`}
+        size={32}
+      />
+    </div>
+  {/snippet}
 
   <li class={css({ paddingX: '6px' })}>
     <div
@@ -123,8 +128,7 @@
   <HorizontalDivider /> -->
 
   <MenuItem
-    type="button"
-    on:click={async () => {
+    onclick={async () => {
       await logout();
       $accessToken = null;
 
@@ -135,10 +139,11 @@
 
       location.href = '/';
     }}
+    type="button"
   >
     <Icon icon={LogOutIcon} size={14} />
     <span>로그아웃</span>
   </MenuItem>
 </Menu>
 
-<UserSettingModal $user={$query.me} bind:open={openUserSettingModal} />
+<UserSettingModal $user={$query.me} open={openUserSettingModal} />

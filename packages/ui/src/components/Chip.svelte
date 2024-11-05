@@ -1,5 +1,12 @@
 <script lang="ts">
   import { css } from '@readable/styled-system/css';
+  import type { Snippet } from 'svelte';
+
+  type Props = {
+    children: Snippet;
+  };
+
+  let { children }: Props = $props();
 </script>
 
 <div
@@ -19,5 +26,5 @@
     height: '26px',
   })}
 >
-  <slot />
+  {@render children()}
 </div>

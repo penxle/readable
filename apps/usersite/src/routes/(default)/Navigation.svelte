@@ -12,10 +12,13 @@
   import { pageUrl } from '$lib/utils/url';
   import type { Navigation_publicSite } from '$graphql';
 
-  let _publicSite: Navigation_publicSite;
-  export { _publicSite as $publicSite };
+  type Props = {
+    $publicSite: Navigation_publicSite;
+  };
 
-  $: publicSite = fragment(
+  let { $publicSite: _publicSite }: Props = $props();
+
+  const publicSite = fragment(
     _publicSite,
     graphql(`
       fragment Navigation_publicSite on PublicSite {
@@ -60,7 +63,7 @@
     `),
   );
 
-  $: currentSlug = $page.params.slug;
+  const currentSlug = $derived($page.params.slug);
 
   function findPage(slug: string) {
     const [categorySlug, ...pageSlugs] = slug.split('/');
@@ -82,38 +85,42 @@
     return page;
   }
 
-  let currentPageId: string;
+  let currentPageId = $state<string>();
   const treeOpenState = writable<Record<string, boolean>>({});
   const mobileNavOpen = getContext('mobileNavOpen');
 
-  $: if (currentSlug) {
-    // NOTE: 모바일에서 사이드바를 열 때는 현재 페이지만 트리에서 열도록 함
-    if ($mobileNavOpen) {
-      $treeOpenState = {};
-    }
-    const page = findPage(currentSlug);
+  $effect(() => {
+    if (currentSlug) {
+      // NOTE: 모바일에서 사이드바를 열 때는 현재 페이지만 트리에서 열도록 함
+      if ($mobileNavOpen) {
+        $treeOpenState = {};
+      }
+      const page = findPage(currentSlug);
 
-    if (page) {
-      currentPageId = page.id;
-      $treeOpenState[page.id] = true;
-      if (page.parent) {
-        $treeOpenState[page.parent.id] = true;
+      if (page) {
+        currentPageId = page.id;
+        $treeOpenState[page.id] = true;
+        if (page.parent) {
+          $treeOpenState[page.parent.id] = true;
+        }
       }
     }
-  }
+  });
 
-  let navEl: HTMLElement;
+  let navEl = $state<HTMLElement>();
 
-  $: if (navEl) {
-    const currentEl = navEl.querySelector('[aria-current="page"]');
+  $effect(() => {
+    if (navEl) {
+      const currentEl = navEl.querySelector('[aria-current="page"]');
 
-    if (currentEl) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const navRect = navEl.parentElement!.getBoundingClientRect();
-      const currentRect = currentEl.getBoundingClientRect();
-      navEl.parentElement?.scrollTo({ top: currentRect.top - navRect.height / 2 });
+      if (currentEl) {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const navRect = navEl.parentElement!.getBoundingClientRect();
+        const currentRect = currentEl.getBoundingClientRect();
+        navEl.parentElement?.scrollTo({ top: currentRect.top - navRect.height / 2 });
+      }
     }
-  }
+  });
 
   beforeNavigate(() => {
     mobileNavOpen.set(false);
@@ -169,7 +176,7 @@
               })}
               aria-current={page.id === currentPageId ? 'page' : undefined}
               href={pageUrl(page)}
-              on:click={() => {
+              onclick={() => {
                 $treeOpenState[page.id] = true;
               }}
             >
@@ -192,10 +199,10 @@
                 })}
                 aria-expanded={$treeOpenState[page.id] ? 'true' : 'false'}
                 aria-label={$treeOpenState[page.id] ? '하위 메뉴 닫기' : '하위 메뉴 열기'}
-                type="button"
-                on:click={() => {
+                onclick={() => {
                   $treeOpenState[page.id] = !$treeOpenState[page.id];
                 }}
+                type="button"
               >
                 <Icon ariaHidden={true} icon={$treeOpenState[page.id] ? ChevronDownIcon : ChevronRightIcon} size={16} />
               </button>

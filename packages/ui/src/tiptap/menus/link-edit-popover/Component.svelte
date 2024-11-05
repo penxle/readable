@@ -7,18 +7,22 @@
   import type { VirtualElement } from '@floating-ui/dom';
   import type { Editor } from '@tiptap/core';
 
-  export let editor: Editor;
-  export let from: number;
-  export let to: number;
-  export let referenceElement: Element | VirtualElement;
-  export let currentLink: string | null;
-  export let defaultLink = '';
-  export let onClose: () => void;
-  export let handleLink: (url: string) => Promise<Record<string, unknown>>;
+  type Props = {
+    editor: Editor;
+    from: number;
+    to: number;
+    referenceElement: Element | VirtualElement;
+    currentLink: string | null;
+    defaultLink?: string;
+    onclose: () => void;
+    handleLink: (url: string) => Promise<Record<string, unknown>>;
+  };
 
-  let linkDraft = '';
-  let floatingElement: HTMLElement;
-  let inputElement: HTMLInputElement;
+  let { editor, from, to, referenceElement, currentLink, defaultLink = '', onclose, handleLink }: Props = $props();
+
+  let linkDraft = $state('');
+  let floatingElement = $state<HTMLElement>();
+  let inputElement = $state<HTMLInputElement>();
   let cleanup: (() => void) | null = null;
 
   const addHttpScheme = (url: string) => {
@@ -37,8 +41,6 @@
     }
   };
 
-  $: loadLink(defaultLink);
-
   const updateLink = async () => {
     linkDraft = linkDraft.trim();
     linkDraft = addHttpScheme(linkDraft);
@@ -49,17 +51,25 @@
     tr.addMark(from, to, editor.schema.marks.link.create({ ...attrs }));
     editor.view.dispatch(tr);
 
-    onClose();
+    onclose();
   };
 
   const clickListener = (event: Event) => {
     if (!floatingElement?.contains(event.target as Node)) {
-      onClose();
+      onclose();
     }
   };
 
   onMount(() => {
+    if (!floatingElement) {
+      return;
+    }
+
     cleanup = autoUpdate(referenceElement, floatingElement, async () => {
+      if (!floatingElement) {
+        return;
+      }
+
       const { x, y } = await computePosition(referenceElement, floatingElement, {
         placement: 'bottom-start',
         middleware: [offset(4)],
@@ -70,12 +80,14 @@
     });
 
     setTimeout(() => {
-      inputElement.focus();
+      inputElement?.focus();
     });
 
     setTimeout(() => {
       document.addEventListener('click', clickListener);
     });
+
+    loadLink(defaultLink);
   });
 
   onDestroy(() => {
@@ -84,7 +96,7 @@
   });
 </script>
 
-<svelte:window on:keydown={(e) => e.key === 'Escape' && onClose()} />
+<svelte:window onkeydown={(e) => e.key === 'Escape' && onclose()} />
 
 <div
   bind:this={floatingElement}
@@ -103,7 +115,10 @@
       gap: '4px',
       padding: '4px',
     })}
-    on:submit|preventDefault={updateLink}
+    onsubmit={(e) => {
+      e.preventDefault();
+      updateLink();
+    }}
   >
     <!-- FIXME: 유효한 링크인지 검사? -->
     <TextInput

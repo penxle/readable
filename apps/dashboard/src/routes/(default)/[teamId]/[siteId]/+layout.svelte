@@ -3,14 +3,15 @@
   import { flex } from '@readable/styled-system/patterns';
   import { Icon } from '@readable/ui/components';
   import mixpanel from 'mixpanel-browser';
-  import { onDestroy, setContext } from 'svelte';
+  import { onDestroy, setContext, untrack } from 'svelte';
   import MousePointerClickIcon from '~icons/lucide/mouse-pointer-click';
-  import { browser } from '$app/environment';
   import { page } from '$app/stores';
   import { graphql } from '$graphql';
   import { Tabs } from '$lib/components';
 
-  $: query = graphql(`
+  let { children } = $props();
+
+  const query = graphql(`
     query SiteLayout_Query($siteId: ID!) {
       me @required {
         id
@@ -57,10 +58,12 @@
     }
   `);
 
-  let unsubscribe: (() => void) | null = null;
+  let unsubscribe: (() => void) | null = $state(null);
 
-  $: if (browser) {
-    unsubscribe?.();
+  $effect(() => {
+    untrack(() => {
+      unsubscribe?.();
+    });
 
     unsubscribe = siteUpdateStream.subscribe({
       siteId: $query.site.id,
@@ -69,14 +72,14 @@
     mixpanel.register({
       site_id: $query.site.id,
     });
-  }
+  });
 
   onDestroy(() => {
     mixpanel.unregister('site_id');
     unsubscribe?.();
   });
 
-  $: setContext('site', $query.site);
+  setContext('site', $query.site);
 </script>
 
 <div style:--usersite-theme-color={$query.site.themeColor} class={css({ display: 'contents' })}>
@@ -139,6 +142,6 @@
       overflow: 'auto',
     })}
   >
-    <slot />
+    {@render children()}
   </div>
 </div>

@@ -1,23 +1,18 @@
 <script lang="ts">
   import { css, cva } from '@readable/styled-system/css';
   import type { RecipeVariantProps } from '@readable/styled-system/css';
-  import type { RecipeVariant, SystemStyleObject } from '@readable/styled-system/types';
+  import type { SystemStyleObject } from '@readable/styled-system/types';
+  import type { Snippet } from 'svelte';
   import type { HTMLInputAttributes } from 'svelte/elements';
 
-  type $$Events = {
-    change: Event & { currentTarget: HTMLInputElement };
-  };
+  type Props = {
+    style?: SystemStyleObject;
+    checked?: boolean;
+    children?: Snippet;
+  } & Omit<HTMLInputAttributes, 'size' | 'style'> &
+    RecipeVariantProps<typeof recipe>;
 
-  type $$Props = Omit<HTMLInputAttributes, 'size' | 'style'> &
-    RecipeVariantProps<typeof recipe> & {
-      style?: SystemStyleObject;
-    };
-
-  type Variants = RecipeVariant<typeof recipe>;
-  export let size: Variants['size'] = 'lg';
-
-  export let style: SystemStyleObject | undefined = undefined;
-  export let checked: boolean | null | undefined = undefined;
+  let { size = 'lg', style, checked = $bindable(false), children, ...rest }: Props = $props();
 
   const recipe = cva({
     base: {
@@ -53,7 +48,7 @@
   });
 </script>
 
-<label class={css(style)} for={$$restProps['name']}>
-  <slot />
-  <input id={$$restProps['name']} class={recipe({ size })} type="checkbox" on:change bind:checked {...$$restProps} />
+<label class={css(style)} for={rest['name']}>
+  {@render children?.()}
+  <input id={rest['name']} class={recipe({ size })} type="checkbox" bind:checked {...rest} />
 </label>

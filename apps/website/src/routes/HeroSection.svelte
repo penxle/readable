@@ -11,17 +11,22 @@
   import { withUtm } from '$lib/utm';
   import SegmentButtons from './SegmentButtons.svelte';
 
-  export let section: HTMLElement;
+  type Props = {
+    section: HTMLElement | undefined;
+  };
+
+  let { section = $bindable() }: Props = $props();
 
   const keywords = ['도움센터', '유저 가이드', '업데이트 노트', '개발자 문서'];
 
-  let i = 0;
-  $: idx = i % keywords.length;
+  let i = $state(0);
+  const idx = $derived(i % keywords.length);
 
-  let selectedHeroMockup = 'site';
-  let visible = false;
+  let selectedHeroMockup = $state('site');
+  let visible = $state(false);
 
   let interval: ReturnType<typeof setInterval>;
+
   onMount(() => {
     visible = true;
 
@@ -164,7 +169,7 @@
             { label: '사이트', value: 'site' },
             { label: '에디터', value: 'editor' },
           ]}
-          on:select={(value) => (selectedHeroMockup = value.detail)}
+          onselect={(value) => (selectedHeroMockup = value)}
         />
       </div>
     </div>

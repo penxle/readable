@@ -17,10 +17,13 @@
   import { isPlanUpgradeModalOpen, isPro, selectedPlan } from '$lib/svelte/stores/ui';
   import type { SiteSwitcher_team } from '$graphql';
 
-  let _team: SiteSwitcher_team;
-  export { _team as $team };
+  type Props = {
+    $team: SiteSwitcher_team;
+  };
 
-  $: team = fragment(
+  let { $team: _team }: Props = $props();
+
+  const team = fragment(
     _team,
     graphql(`
       fragment SiteSwitcher_team on Team {
@@ -38,7 +41,7 @@
     `),
   );
 
-  $: currentSiteId = $page.params.siteId;
+  const currentSiteId = $derived($page.params.siteId);
 
   const createSite = graphql(`
     mutation TeamLayout_CreateSite_Mutation($input: CreateSiteInput!) {
@@ -52,7 +55,7 @@
     }
   `);
 
-  let newSiteModalOpen = false;
+  let newSiteModalOpen = $state(false);
 
   const { form: newSiteForm, context: newSiteFormContext } = createMutationForm({
     schema: z.object({
@@ -77,19 +80,20 @@
   }}
   placement="bottom-start"
 >
-  <button
-    slot="button"
-    class={flex({
-      borderRadius: '6px',
-      padding: '3px',
-      color: 'neutral.50',
-      _hover: { backgroundColor: 'neutral.20' },
-    })}
-    aria-label="사이트 선택"
-    type="button"
-  >
-    <Icon icon={ChevronDownIcon} size={16} />
-  </button>
+  {#snippet button()}
+    <button
+      class={flex({
+        borderRadius: '6px',
+        padding: '3px',
+        color: 'neutral.50',
+        _hover: { backgroundColor: 'neutral.20' },
+      })}
+      aria-label="사이트 선택"
+      type="button"
+    >
+      <Icon icon={ChevronDownIcon} size={16} />
+    </button>
+  {/snippet}
 
   <div
     class={css({
@@ -134,7 +138,7 @@
             borderRadius: '4px',
           })}
           aria-hidden="true"
-        />
+        ></div>
       {/if}
       <span class={css({ textStyle: '14m', truncate: true })}>{site.name}</span>
       {#if currentSiteId === site.id}
@@ -145,7 +149,7 @@
 
   <MenuItem
     style={flex.raw({ paddingX: '10px', color: 'text.tertiary', gap: '10px' })}
-    on:click={() => {
+    onclick={() => {
       if ($isPro) {
         newSiteModalOpen = true;
       } else {
@@ -162,7 +166,9 @@
 </Menu>
 
 <TitledModal bind:open={newSiteModalOpen}>
-  <svelte:fragment slot="title">새 사이트 만들기</svelte:fragment>
+  {#snippet title()}
+    새 사이트 만들기
+  {/snippet}
 
   <FormProvider context={newSiteFormContext} form={newSiteForm}>
     <input name="teamId" type="hidden" value={$team.id} />

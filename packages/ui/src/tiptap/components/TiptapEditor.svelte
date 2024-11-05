@@ -1,7 +1,7 @@
 <script lang="ts">
   import { css } from '@readable/styled-system/css';
   import { Editor } from '@tiptap/core';
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { onMount } from 'svelte';
   import { Collaboration } from '../extensions/collaboration';
   import { Freeze } from '../extensions/freeze';
   import { LinkEditPopover } from '../menus/link-edit-popover';
@@ -15,25 +15,35 @@
   import type * as YAwareness from 'y-protocols/awareness';
   import type * as Y from 'yjs';
 
-  const dispatch = createEventDispatcher<{
-    initialize: null;
-    file: { pos: number; files: File[] };
-  }>();
+  type Props = {
+    style?: SystemStyleObject;
+    editor?: Editor;
+    frozen?: boolean;
+    doc?: Y.Doc;
+    awareness?: YAwareness.Awareness;
+    oninitialize?: () => void;
+    onfile?: (event: { pos: number; files: File[] }) => void;
+    handleImageUpload: (file: File) => Promise<Record<string, unknown>>;
+    handleFileUpload: (file: File) => Promise<Record<string, unknown>>;
+    handleEmbed: (url: string) => Promise<Record<string, unknown>>;
+    handleLink: (url: string) => Promise<Record<string, unknown>>;
+  };
 
-  export let style: SystemStyleObject | undefined = undefined;
+  let {
+    style,
+    editor = $bindable(),
+    frozen = false,
+    doc,
+    awareness,
+    oninitialize,
+    onfile,
+    handleImageUpload,
+    handleFileUpload,
+    handleEmbed,
+    handleLink,
+  }: Props = $props();
 
-  export let editor: Editor | undefined = undefined;
-  export let frozen = false;
-
-  export let doc: Y.Doc | undefined = undefined;
-  export let awareness: YAwareness.Awareness | undefined = undefined;
-
-  export let handleImageUpload: (file: File) => Promise<Record<string, unknown>>;
-  export let handleFileUpload: (file: File) => Promise<Record<string, unknown>>;
-  export let handleEmbed: (url: string) => Promise<Record<string, unknown>>;
-  export let handleLink: (url: string) => Promise<Record<string, unknown>>;
-
-  let element: HTMLDivElement;
+  let element = $state<HTMLDivElement>();
 
   onMount(() => {
     editor = new Editor({
@@ -57,7 +67,7 @@
         scrollThreshold: { top: 150, bottom: 50, left: 0, right: 0 },
         handleDrop: (view, event) => {
           if (event.dataTransfer?.files?.length) {
-            dispatch('file', {
+            onfile?.({
               pos: view.posAtCoords({ left: event.clientX, top: event.clientY })?.pos ?? view.state.selection.to,
               files: [...event.dataTransfer.files],
             });
@@ -67,7 +77,7 @@
         },
         handlePaste: (view, event) => {
           if (event.clipboardData?.files?.length) {
-            dispatch('file', {
+            onfile?.({
               pos: view.state.selection.to,
               files: [...event.clipboardData.files],
             });
@@ -81,7 +91,7 @@
       },
     });
 
-    dispatch('initialize');
+    oninitialize?.();
 
     return () => {
       editor?.destroy();
@@ -94,6 +104,5 @@
   bind:this={element}
   class={css({ display: 'contents', fontFamily: 'prose', whiteSpace: 'pre-wrap', wordBreak: 'break-all' })}
   autocapitalize="off"
-  autocorrect="off"
   spellcheck="false"
-/>
+></div>

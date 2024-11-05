@@ -5,17 +5,20 @@
   import type { ComponentProps } from 'svelte';
   import type { Img_image } from '$graphql';
 
-  type Size = ComponentProps<Img>['size'];
+  type Size = ComponentProps<typeof Img>['size'];
 
-  let _image: Img_image;
-  export { _image as $image };
-  export let alt: string;
-  export let style: SystemStyleObject | undefined = undefined;
-  export let size: Size;
-  export let quality: number | undefined = undefined;
-  export let progressive = false;
+  type Props = {
+    $image: Img_image;
+    alt: string;
+    style?: SystemStyleObject;
+    size: Size;
+    quality?: number;
+    progressive?: boolean;
+  };
 
-  $: image = fragment(
+  let { $image: _image, alt, style, size, quality, progressive = false }: Props = $props();
+
+  const image = fragment(
     _image,
     graphql(`
       fragment Img_image on Image {

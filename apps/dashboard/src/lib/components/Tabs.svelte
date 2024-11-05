@@ -2,12 +2,16 @@
   import { css } from '@readable/styled-system/css';
   import { center, flex } from '@readable/styled-system/patterns';
 
-  export let tabs: {
-    title: string;
-    path: string;
-    selected: boolean;
-    badge?: number | string;
-  }[] = [];
+  type Props = {
+    tabs?: {
+      title: string;
+      path: string;
+      selected: boolean;
+      badge?: number | string;
+    }[];
+  };
+
+  let { tabs = [] }: Props = $props();
 </script>
 
 <div class={flex({ gap: '4px', position: 'relative', paddingTop: '6px' })} role="tablist">

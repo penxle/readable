@@ -1,62 +1,68 @@
-<script generics="T extends 'button' | 'link' = 'button'" lang="ts">
+<script lang="ts">
   import { css, cva, cx } from '@readable/styled-system/css';
   import { flex } from '@readable/styled-system/patterns';
   import { getContext } from 'svelte';
   import type { SystemStyleObject } from '@readable/styled-system/types';
+  import type { Snippet } from 'svelte';
   import type { HTMLAnchorAttributes, HTMLButtonAttributes } from 'svelte/elements';
 
-  type $$Props = {
-    type?: T;
+  type BaseProps = {
     style?: SystemStyleObject;
     disabled?: boolean;
     variant?: 'default' | 'danger';
-  } & (T extends 'link'
-    ? Omit<HTMLAnchorAttributes, 'type' | 'style' | 'disabled'> & { external?: boolean }
-    : unknown) &
-    (T extends 'button' ? Omit<HTMLButtonAttributes, 'type' | 'style' | 'disabled'> : unknown);
+    children?: Snippet;
+    prefix?: Snippet;
+    onclick?: () => void;
+  };
 
-  type $$Events = T extends 'link' ? unknown : { click: MouseEvent };
+  type ButtonAttributes = Omit<HTMLButtonAttributes, 'type' | 'style' | 'disabled' | 'prefix'>;
+  type ButtonProps = ButtonAttributes & {
+    type?: 'button';
+  };
 
-  export let type: 'button' | 'link' = 'button';
+  type LinkAttributes = Omit<HTMLAnchorAttributes, 'type' | 'style' | 'disabled' | 'prefix'>;
+  type LinkProps = LinkAttributes & {
+    type?: 'link';
+    external?: boolean;
+  };
 
-  export let style: SystemStyleObject | undefined = undefined;
+  type ButtonAllProps = BaseProps & ButtonProps;
+  type LinkAllProps = BaseProps & LinkProps;
 
-  export let variant: 'default' | 'danger' = 'default';
+  type Props = ButtonAllProps | LinkAllProps;
 
-  export let disabled = false;
-  export let href: string | undefined = undefined;
-  export let external = !href?.startsWith('/');
+  let {
+    type = 'button',
+    style,
+    variant = 'default',
+    disabled = false,
+    children,
+    prefix,
+    onclick,
+    ...rest
+  }: Props = $props();
 
-  let element: 'a' | 'button';
-  $: element = type === 'link' ? 'a' : type;
-  $: props =
-    (type === 'link' && { href: disabled || href, 'data-sveltekit-preload-data': false }) ||
-    (type === 'button' && { type: 'button', disabled }) ||
-    {};
+  const element = $derived(type === 'link' ? 'a' : 'button');
+  const properties = $derived(type === 'link' ? { 'aria-disabled': disabled } : { type, disabled });
 
   let close = getContext<undefined | (() => void)>('close');
 
-  let focused = false;
+  let focused = $state(false);
 </script>
 
 <svelte:element
   this={element}
+  onblur={() => (focused = false)}
+  onclick={() => {
+    close?.();
+    onclick?.();
+  }}
+  onfocus={() => (focused = true)}
   role="menuitem"
   tabindex={focused ? 0 : -1}
-  on:focus={() => (focused = true)}
-  on:blur={() => (focused = false)}
-  on:click
-  on:click={close}
-  {...external && {
-    target: '_blank',
-    rel: 'noopener noreferrer',
-  }}
-  {...props}
-  {...$$restProps}
-  {...type === 'link' && {
-    // NOTE: link 타입이어도 _enabled 스타일이 적용되도록 함
-    'aria-disabled': 'false',
-  }}
+  {...type === 'link' && 'external' in rest && rest.external ? { target: '_blank', rel: 'noopener noreferrer' } : {}}
+  {...properties}
+  {...rest}
   class={cx(
     cva({
       base: flex.raw({
@@ -103,6 +109,6 @@
     css(style),
   )}
 >
-  <slot name="prefix" />
-  <slot />
+  {@render prefix?.()}
+  {@render children?.()}
 </svelte:element>

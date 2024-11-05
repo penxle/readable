@@ -2,10 +2,17 @@
   import { css, cx } from '@readable/styled-system/css';
   import { getContext } from 'svelte';
   import type { SystemStyleObject } from '@readable/styled-system/types';
+  import type { Snippet } from 'svelte';
   import type { DragEventHandler } from 'svelte/elements';
 
-  export let as: keyof HTMLElementTagNameMap = 'div';
-  export let style: SystemStyleObject | undefined = undefined;
+  type Props = {
+    as?: keyof HTMLElementTagNameMap;
+    style?: SystemStyleObject;
+    children: Snippet;
+    [key: string]: unknown;
+  };
+
+  let { as = 'div', style, children, ...rest }: Props = $props();
 
   const onDragStart = getContext<DragEventHandler<HTMLDivElement>>('onDragStart');
 </script>
@@ -14,9 +21,9 @@
   this={as}
   class={cx(css({ whiteSpace: 'normal' }, style))}
   data-node-view
+  ondragstart={onDragStart}
   role="presentation"
-  on:dragstart={onDragStart}
-  {...$$restProps}
+  {...rest}
 >
-  <slot />
+  {@render children()}
 </svelte:element>

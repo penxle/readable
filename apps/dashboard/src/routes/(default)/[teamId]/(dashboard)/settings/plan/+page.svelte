@@ -11,7 +11,7 @@
   import { graphql } from '$graphql';
   import { isPlanUpgradeModalOpen, selectedPlan, selectedPlanCycle } from '$lib/svelte/stores/ui';
 
-  $: query = graphql(`
+  const query = graphql(`
     query TeamSettingsPlanPage_Query($teamId: ID!) {
       team(teamId: $teamId) {
         id
@@ -30,8 +30,8 @@
     }
   `);
 
-  const onSelect = (value: CustomEvent<string>) => {
-    selectedPlanCycle.set(value.detail as 'MONTHLY' | 'YEARLY');
+  const onSelect = (value: string) => {
+    selectedPlanCycle.set(value as 'MONTHLY' | 'YEARLY');
   };
 
   const usages = [
@@ -138,7 +138,7 @@
     },
   ];
 
-  $: addOns = [
+  const addOns = $derived([
     {
       title: '화이트 라벨링',
       starter: '',
@@ -146,7 +146,7 @@
       pro: `${$selectedPlanCycle === 'YEARLY' ? '15,400' : '22,000'}원/사이트/월`,
       enterprise: CheckIcon,
     },
-  ];
+  ]);
 </script>
 
 <Helmet title="플랜" trailing={$query.team.name} />
@@ -168,8 +168,8 @@
     <table class={css({ width: 'full', borderSpacing: '0' })}>
       <thead>
         <tr>
-          <th class={css({ width: '128px' })} />
-          <th />
+          <th class={css({ width: '128px' })}></th>
+          <th></th>
           <th>
             <div class={css({ position: 'relative', marginBottom: '10px' })}>
               <SegmentButtons
@@ -178,8 +178,8 @@
                   { label: '월 결제', value: 'MONTHLY' },
                   { label: '연 결제', value: 'YEARLY' },
                 ]}
+                onselect={onSelect}
                 size="sm"
-                on:select={onSelect}
               />
               <div
                 class={css({
@@ -198,10 +198,10 @@
               </div>
             </div>
           </th>
-          <th />
+          <th></th>
         </tr>
         <tr class={css({ '& > th': { paddingX: '12px', paddingY: '20px', textAlign: 'left' } })}>
-          <th />
+          <th></th>
           <th class={css({ width: '160px' })}>
             <p class={css({ marginBottom: '4px', textStyle: '13m' })}>Starter</p>
             <span class={css({ textStyle: '20b' })}>무료</span>
@@ -248,13 +248,13 @@
             {:else}
               <Button
                 style={css.raw({ marginTop: '40px', width: 'full' })}
-                size="sm"
-                variant="secondary"
-                on:click={() => {
+                onclick={() => {
                   mixpanel.track('plan:upgrade:show', { via: 'plan' });
                   $isPlanUpgradeModalOpen = true;
                   $selectedPlan = LitePlan;
                 }}
+                size="sm"
+                variant="secondary"
               >
                 업그레이드
               </Button>
@@ -284,15 +284,15 @@
               style={css.raw({ marginTop: '40px', width: 'full' })}
               disabled={$query.team.plan.plan.id === PlanId.PRO}
               glossy
-              size="sm"
-              variant="primary"
-              on:click={() => {
+              onclick={() => {
                 if ($query.team.plan.plan.id !== PlanId.PRO) {
                   mixpanel.track('plan:upgrade:show', { via: 'plan' });
                   $isPlanUpgradeModalOpen = true;
                   $selectedPlan = ProPlan;
                 }
               }}
+              size="sm"
+              variant="primary"
             >
               {$query.team.plan.plan.id === PlanId.PRO ? '현재 플랜' : '업그레이드'}
             </Button>
@@ -326,10 +326,10 @@
       >
         <tr class={css({ '& > td': { borderBottomWidth: '1px' } })}>
           <td class={css({ textStyle: '13sb' })}>Usage</td>
-          <td />
-          <td />
-          <td class={css({ backgroundColor: 'neutral.10' })} />
-          <td />
+          <td></td>
+          <td></td>
+          <td class={css({ backgroundColor: 'neutral.10' })}></td>
+          <td></td>
         </tr>
         {#each usages as usage (usage.title)}
           <tr class={css({ '& > td': { borderBottomWidth: '1px', textStyle: '13r' } })}>
@@ -349,17 +349,17 @@
         {/each}
         <tr>
           <td>&nbsp;</td>
-          <td />
-          <td />
-          <td class={css({ backgroundColor: 'neutral.10' })} />
-          <td />
+          <td></td>
+          <td></td>
+          <td class={css({ backgroundColor: 'neutral.10' })}></td>
+          <td></td>
         </tr>
         <tr class={css({ '& > td': { borderBottomWidth: '1px' } })}>
           <td class={css({ textStyle: '13sb' })}>Premium</td>
-          <td />
-          <td />
-          <td class={css({ backgroundColor: 'neutral.10' })} />
-          <td />
+          <td></td>
+          <td></td>
+          <td class={css({ backgroundColor: 'neutral.10' })}></td>
+          <td></td>
         </tr>
         {#each premiums as premium (premium.title)}
           <tr class={css({ '& > td': { borderBottomWidth: '1px', textStyle: '13r' } })}>
@@ -390,17 +390,17 @@
         {/each}
         <tr>
           <td>&nbsp;</td>
-          <td />
-          <td />
-          <td class={css({ backgroundColor: 'neutral.10' })} />
-          <td />
+          <td></td>
+          <td></td>
+          <td class={css({ backgroundColor: 'neutral.10' })}></td>
+          <td></td>
         </tr>
         <tr class={css({ '& > td': { borderBottomWidth: '1px' } })}>
           <td class={css({ textStyle: '13sb' })}>Add-on</td>
-          <td />
-          <td />
-          <td class={css({ backgroundColor: 'neutral.10' })} />
-          <td />
+          <td></td>
+          <td></td>
+          <td class={css({ backgroundColor: 'neutral.10' })}></td>
+          <td></td>
         </tr>
         {#each addOns as addOn (addOn.title)}
           <tr class={css({ '& > td': { borderBottomWidth: '1px', textStyle: '13r' } })}>
