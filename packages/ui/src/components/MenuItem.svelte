@@ -6,47 +6,45 @@
   import { flex } from '@readable/styled-system/patterns';
   import { getContext } from 'svelte';
   import type { SystemStyleObject } from '@readable/styled-system/types';
+  import type { Snippet } from 'svelte';
   import type { HTMLAnchorAttributes, HTMLButtonAttributes } from 'svelte/elements';
-
-  type $$Props = {
-    type?: T;
-    style?: SystemStyleObject;
-    disabled?: boolean;
-    variant?: 'default' | 'danger';
-  } & (T extends 'link'
-    ? Omit<HTMLAnchorAttributes, 'type' | 'style' | 'disabled'> & { external?: boolean }
-    : unknown) &
-    (T extends 'button' ? Omit<HTMLButtonAttributes, 'type' | 'style' | 'disabled'> : unknown);
 
   type $$Events = T extends 'link' ? unknown : { click: MouseEvent };
 
-  type Props = {
-    type?: 'button' | 'link';
+  type BaseProps = {
+    type?: T;
     style?: SystemStyleObject | undefined;
-    variant?: 'default' | 'danger';
     disabled?: boolean;
-    href?: string | undefined;
-    external?: any;
-    prefix?: import('svelte').Snippet;
-    children?: import('svelte').Snippet;
-    [key: string]: any;
+    variant?: 'default' | 'danger';
+    children?: Snippet;
+    prefix?: Snippet;
   };
 
+  type LinkProps = {
+    external?: boolean;
+  } & Omit<HTMLAnchorAttributes, 'type' | 'style' | 'disabled'>;
+
+  type ButtonProps = Omit<HTMLButtonAttributes, 'type' | 'style' | 'disabled'>;
+
+  type Props = BaseProps & (T extends 'link' ? LinkProps : ButtonProps);
+
+  let props: Props = $props();
+
   let {
-    type = 'button',
+    type = 'button' as T,
     style = undefined,
     variant = 'default',
     disabled = false,
-    href = undefined,
-    external = !href?.startsWith('/'),
-    prefix,
     children,
+    prefix,
     ...rest
-  }: Props = $props();
+  } = props;
 
-  let element: 'a' | 'button' = $derived(type === 'link' ? 'a' : type);
+  let { href = undefined, external = !href?.startsWith('/') } = props as LinkProps;
 
-  let props = $derived(
+  let element: 'a' | 'button' = $derived(type === 'link' ? 'a' : 'button');
+
+  let additionalProps = $derived(
     (type === 'link' && { href: disabled || href, 'data-sveltekit-preload-data': false }) ||
       (type === 'button' && { type: 'button', disabled }) ||
       {},
@@ -60,7 +58,7 @@
 <svelte:element
   this={element}
   onblur={() => (focused = false)}
-  onclick={handlers(bubble('click'), close)}
+  onclick={handlers(...(close ? [bubble('click'), close] : [bubble('click')]))}
   onfocus={() => (focused = true)}
   role="menuitem"
   tabindex={focused ? 0 : -1}
@@ -68,7 +66,7 @@
     target: '_blank',
     rel: 'noopener noreferrer',
   }}
-  {...props}
+  {...additionalProps}
   {...rest}
   {...type === 'link' && {
     // NOTE: link 타입이어도 _enabled 스타일이 적용되도록 함

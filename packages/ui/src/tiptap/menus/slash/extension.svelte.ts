@@ -48,16 +48,16 @@ export const SlashMenu = Extension.create({
               return prev;
             }
 
-            const { $anchor, empty } = state.selection;
+            const { $anchor: anchor, empty } = state.selection;
             if (!empty) {
               return { active: false };
             }
 
-            if ($anchor.parent.type.name === 'codeBlock') {
+            if (anchor.parent.type.name === 'codeBlock') {
               return { active: false };
             }
 
-            const node = $anchor.node();
+            const node = anchor.node();
             const text = node.textContent;
 
             if (!text) {
@@ -66,7 +66,7 @@ export const SlashMenu = Extension.create({
 
             const matches = text.matchAll(pattern);
             const match = [...matches].find(
-              (match) => $anchor.parentOffset > match.index && $anchor.parentOffset <= match.index + match[0].length,
+              (match) => anchor.parentOffset > match.index && anchor.parentOffset <= match.index + match[0].length,
             );
 
             if (!match) {
@@ -75,7 +75,7 @@ export const SlashMenu = Extension.create({
 
             const query = match[1];
 
-            const block = match.index === 0 ? $anchor.node(Math.max(0, $anchor.depth - 1)) : $anchor.parent;
+            const block = match.index === 0 ? anchor.node(Math.max(0, anchor.depth - 1)) : anchor.parent;
             const typeSet = new Set<string>();
 
             for (let i = 0; i < block.type.contentMatch.edgeCount; i++) {
@@ -95,8 +95,8 @@ export const SlashMenu = Extension.create({
             return {
               active: true,
               range: {
-                from: $anchor.start() + match.index,
-                to: $anchor.start() + match.index + match[0].length,
+                from: anchor.start() + match.index,
+                to: anchor.start() + match.index + match[0].length,
               },
               items,
             };

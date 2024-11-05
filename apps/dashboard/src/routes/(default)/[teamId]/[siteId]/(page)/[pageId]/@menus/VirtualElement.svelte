@@ -77,7 +77,7 @@
     <div class={flex({ flex: '1', justify: 'flex-end', align: 'center', height: '[1lh]' })}>
       <slot name="left" />
     </div>
-    <div class={css({ width: '720px' })} />
+    <div class={css({ width: '720px' })}></div>
     <div class={flex({ flex: '1', justify: 'flex-start', align: 'center', height: '[1lh]' })}>
       <slot name="right" />
     </div>

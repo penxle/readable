@@ -1,12 +1,12 @@
 <script lang="ts">
   import { css, cva } from '$styled-system/css';
-  import type { ComponentType } from 'svelte';
+  import type { Component } from 'svelte';
   import type { RecipeVariant, SystemStyleObject } from '$styled-system/types';
 
   type Variants = RecipeVariant<typeof recipe>;
 
   type Props = {
-    icon: ComponentType;
+    icon: Component;
     style?: SystemStyleObject | undefined;
     size?: Variants['size'];
     ariaHidden?: boolean;

@@ -16,7 +16,7 @@
   const siteId = (document.currentScript as HTMLScriptElement).dataset.siteId;
   const themeColor = token('colors.neutral.100');
 
-  let popoverEl: HTMLDivElement = $state();
+  let popoverEl: HTMLDivElement;
   let open = $state(false);
 
   const selectors = [
@@ -117,7 +117,8 @@
       observer.disconnect();
     };
   });
-  let pages = $derived(response?.pages.filter((page) => page.score >= 0.8));
+  let pages = $derived.by(() => response?.pages.filter((page) => page.score >= 0.8));
+
   run(() => {
     if (open) {
       observe();

@@ -44,7 +44,9 @@
     onCreateCategory: (() => Promise<void>) | undefined;
     getPageUrl: (page: PageData) => string;
     indicatorElem?: HTMLElement | null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     nodeMap?: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     registerNode?: any;
   };
 
@@ -71,7 +73,7 @@
       nodeMap.set(node, item);
     },
   }: Props = $props();
-  let listElem: HTMLElement = $state();
+  let listElem: HTMLElement;
   let dragging: DraggingState | null = null;
   let dropTarget: DropTarget | null = null;
 

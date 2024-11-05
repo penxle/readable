@@ -1,6 +1,6 @@
 import { autoUpdate, computePosition, hide, inline, offset, shift } from '@floating-ui/dom';
 import { center } from '@readable/styled-system/patterns';
-import { Extension, posToDOMRect } from '@tiptap/core';
+import { Editor, Extension, posToDOMRect } from '@tiptap/core';
 import { NodeSelection, Plugin, PluginKey, TextSelection } from '@tiptap/pm/state';
 import { mount, unmount } from 'svelte';
 import { BlockSelection } from '../../extensions/block-selection';
@@ -29,7 +29,15 @@ export const BubbleMenu = Extension.create({
             cleanup?.();
           };
 
-          let bubbleComponent: Component | null = null;
+          let bubbleComponent: object | null = null;
+          const bubbleComponentProps = $state<{
+            editor: Editor;
+            openLinkEditPopover: () => void;
+          }>({
+            editor: this.editor,
+            // eslint-disable-next-line @typescript-eslint/no-empty-function
+            openLinkEditPopover: () => {},
+          });
 
           return {
             update: async (view, oldState) => {
@@ -47,7 +55,7 @@ export const BubbleMenu = Extension.create({
                 this.editor.commands.showLinkEditPopoverForActiveSelection();
               };
 
-              bubbleComponent?.$set({ openLinkEditPopover });
+              bubbleComponentProps.openLinkEditPopover = openLinkEditPopover;
 
               if (
                 selection.empty ||
@@ -85,10 +93,7 @@ export const BubbleMenu = Extension.create({
               if (!bubbleComponent) {
                 bubbleComponent = mount(Component, {
                   target: dom,
-                  props: {
-                    editor: this.editor,
-                    openLinkEditPopover,
-                  },
+                  props: bubbleComponentProps,
                 });
 
                 dom.className = center({
