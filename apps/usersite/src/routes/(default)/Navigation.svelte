@@ -89,7 +89,7 @@
   const treeOpenState = writable<Record<string, boolean>>({});
   const mobileNavOpen = getContext('mobileNavOpen');
 
-  $effect(() => {
+  $effect.pre(() => {
     if (currentSlug) {
       // NOTE: 모바일에서 사이드바를 열 때는 현재 페이지만 트리에서 열도록 함
       if ($mobileNavOpen) {
