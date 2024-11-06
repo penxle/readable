@@ -221,7 +221,11 @@
   let lastHeartbeatAt = dayjs();
   let connectionState: 'idle' | 'connected' | 'disconnected' = 'idle';
 
-  pageContentSyncStream.on('data', ({ pageContentSyncStream: { kind, data } }) => {
+  pageContentSyncStream.on('data', ({ pageContentSyncStream: { pageId, kind, data } }) => {
+    if (pageId !== $query.page.id) {
+      return;
+    }
+
     if (kind === PageContentSyncKind.UPDATE) {
       Y.applyUpdateV2(doc, base64.parse(data), 'remote');
     } else if (kind === PageContentSyncKind.AWARENESS) {
