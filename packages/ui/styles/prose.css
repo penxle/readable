@@ -87,7 +87,7 @@
     }
   }
 
-  :is(ul, ol) :is(ul, ol) li:first-child {
+  :is(ul, ol) :is(ul, ol) li:not([role='tab']):first-child {
     margin-top: 4px;
   }
 
