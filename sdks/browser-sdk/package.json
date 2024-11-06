@@ -14,6 +14,8 @@
     "@readable/styled-system": "workspace:*",
     "@readable/ui": "workspace:*",
     "@sindresorhus/string-hash": "^2.0.0",
+    "@trpc/client": "^11.0.0-rc.608",
+    "@trpc/server": "^11.0.0-rc.608",
     "fast-json-stable-stringify": "^2.1.0"
   },
   "devDependencies": {
@@ -21,6 +23,7 @@
     "@pandacss/dev": "^0.47.0",
     "@pulumi/aws": "^6.57.0",
     "@pulumi/pulumi": "^3.137.0",
+    "@readable/api": "workspace:*",
     "@readable/tsconfig": "workspace:*",
     "@sveltejs/kit": "^2.7.5",
     "@sveltejs/vite-plugin-svelte": "^4.0.0",

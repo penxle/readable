@@ -9,8 +9,11 @@
   import { onMount, untrack } from 'svelte';
   import { fly, scale } from 'svelte/transition';
   import IconX from '~icons/lucide/x';
+  import { trpc } from './trpc';
+  import type { TRPCOutput } from './trpc';
 
-  const siteId = (document.currentScript as HTMLScriptElement).dataset.siteId;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const siteId = (document.currentScript as HTMLScriptElement).dataset.siteId!;
   const themeColor = token('colors.neutral.100');
 
   let popoverEl: HTMLDivElement;
@@ -31,10 +34,7 @@
   let loadingCount = $state(0);
   let lastHash = 0;
 
-  let response = $state<{
-    site: { id: string; name: string; url: string };
-    pages: { id: string; title: string; score: number }[];
-  } | null>(null);
+  let response = $state<TRPCOutput['widget']['findRelatedPages']>();
 
   let lastTopLayerElement: HTMLElement | null = null;
   let topLayerElements: HTMLElement[] = [];
@@ -71,7 +71,7 @@
         .map((text) => text?.replaceAll(/\s+/g, ' ').trim())
         .filter((text) => text?.length) as string[];
 
-      const text = article?.textContent?.replaceAll(/\s+/g, ' ').trim();
+      const text = article?.textContent?.replaceAll(/\s+/g, ' ').trim() ?? '';
 
       const hash = stringHash(stringify({ keywords, text }));
 
@@ -81,16 +81,11 @@
 
       lastHash = hash;
 
-      const url = import.meta.env.PROD ? 'https://api.rdbl.io/widget/query' : 'http://localhost:3000/widget/query';
-      const resp = await fetch(url, {
-        method: 'POST',
-        body: JSON.stringify({ siteId, keywords, text }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      response = await trpc.widget.findRelatedPages.query({
+        siteId,
+        keywords,
+        text,
       });
-
-      response = await resp.json();
     } finally {
       loadingCount -= 1;
     }
