@@ -1,7 +1,7 @@
 import * as aws from '@pulumi/aws';
 import * as pulumi from '@pulumi/pulumi';
 
-const cdn = new aws.s3.Bucket('cdn', {
+const cdn = new aws.s3.BucketV2('cdn', {
   bucket: 'readable-cdn',
 });
 
@@ -20,7 +20,7 @@ new aws.s3.BucketPolicy('cdn', {
   },
 });
 
-const sdk = new aws.s3.Bucket('sdk', {
+const sdk = new aws.s3.BucketV2('sdk', {
   bucket: 'readable-sdk',
 });
 
@@ -39,20 +39,8 @@ new aws.s3.BucketPolicy('sdk', {
   },
 });
 
-const usercontents = new aws.s3.Bucket('usercontents', {
+const usercontents = new aws.s3.BucketV2('usercontents', {
   bucket: 'readable-usercontents',
-
-  lifecycleRules: [
-    {
-      enabled: true,
-      transitions: [
-        {
-          days: 0,
-          storageClass: 'INTELLIGENT_TIERING',
-        },
-      ],
-    },
-  ],
 });
 
 new aws.s3.BucketPolicy('usercontents', {
@@ -70,20 +58,32 @@ new aws.s3.BucketPolicy('usercontents', {
   },
 });
 
-const uploads = new aws.s3.Bucket('uploads', {
-  bucket: 'readable-uploads',
-
-  corsRules: [
+new aws.s3.BucketLifecycleConfigurationV2('usercontents', {
+  bucket: usercontents.bucket,
+  rules: [
     {
-      allowedHeaders: ['*'],
-      allowedMethods: ['POST'],
-      allowedOrigins: ['https://app.rdbl.io', 'https://app.rdbl.ninja', 'http://localhost:4100'],
+      id: 'transition-to-intelligent-tiering',
+      status: 'Enabled',
+      transitions: [
+        {
+          days: 0,
+          storageClass: 'INTELLIGENT_TIERING',
+        },
+      ],
     },
   ],
+});
 
-  lifecycleRules: [
+const uploads = new aws.s3.BucketV2('uploads', {
+  bucket: 'readable-uploads',
+});
+
+new aws.s3.BucketLifecycleConfigurationV2('uploads', {
+  bucket: uploads.bucket,
+  rules: [
     {
-      enabled: true,
+      id: 'delete-after-1-day',
+      status: 'Enabled',
       expiration: {
         days: 1,
       },
@@ -91,10 +91,20 @@ const uploads = new aws.s3.Bucket('uploads', {
   ],
 });
 
+new aws.s3.BucketCorsConfigurationV2('uploads', {
+  bucket: uploads.bucket,
+  corsRules: [
+    {
+      allowedHeaders: ['*'],
+      allowedMethods: ['POST'],
+      allowedOrigins: ['https://app.rdbl.io', 'https://app.rdbl.ninja', 'http://localhost:4100'],
+    },
+  ],
+});
+
 export const buckets = { cdn, sdk, usercontents, uploads };
 
 export const outputs = {
-  AWS_S3_BUCKET_SDK_ARN: sdk.arn,
   AWS_S3_BUCKET_USERCONTENTS_ARN: usercontents.arn,
   AWS_S3_BUCKET_UPLOADS_ARN: uploads.arn,
 };
