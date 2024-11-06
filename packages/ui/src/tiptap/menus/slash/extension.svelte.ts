@@ -30,6 +30,7 @@ export const SlashMenu = Extension.create({
     let dom: HTMLElement | null = null;
     let component: { handleKeyDown: (event: KeyboardEvent) => boolean } | null = null;
     let cleanup: (() => void) | null = null;
+    const items = $state<MenuItem[]>([]);
 
     return [
       new Plugin<State>({
@@ -112,9 +113,9 @@ export const SlashMenu = Extension.create({
               }
 
               if (state.active) {
-                let items = $state(state.items);
-
                 if (!prev.active) {
+                  items.splice(0, items.length, ...state.items);
+
                   dom = document.createElement('div');
                   component = mount(Component, {
                     target: dom,
@@ -152,7 +153,7 @@ export const SlashMenu = Extension.create({
                   return;
                 }
 
-                items = state.items;
+                items.splice(0, items.length, ...state.items);
 
                 const virtualEl: VirtualElement = {
                   getBoundingClientRect: () => posToDOMRect(view, state.range.from, state.range.to),
@@ -181,6 +182,7 @@ export const SlashMenu = Extension.create({
                 cleanup?.();
                 if (component) {
                   unmount(component);
+                  component = null;
                 }
                 dom?.remove();
               }
@@ -189,6 +191,7 @@ export const SlashMenu = Extension.create({
               cleanup?.();
               if (component) {
                 unmount(component);
+                component = null;
               }
               dom?.remove();
             },
