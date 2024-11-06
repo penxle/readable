@@ -52,6 +52,10 @@
       onBeforeCreate: () => {
         loaded = true;
       },
+
+      onTransaction: ({ editor: editor_ }) => {
+        editor = editor_;
+      },
     });
 
     return () => {

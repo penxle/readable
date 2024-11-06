@@ -42,8 +42,8 @@
     }
   `);
 
-  let editor: Editor | undefined = $state(undefined);
-  let headings: { level: number; text: string; scrollTop: number }[] = $state([]);
+  let editor = $state<Editor>();
+  let headings = $state<{ level: number; text: string; scrollTop: number }[]>([]);
 
   const blurEffect = getContext<Writable<boolean>>('blurEffect');
   const mobileNavOpen = getContext('mobileNavOpen');

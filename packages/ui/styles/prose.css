@@ -79,12 +79,14 @@
     position: relative;
   }
 
-  li {
+  li:not([role='tab']) {
     margin-top: 4px;
+
+    &:first-child {
+      margin-top: 0;
+    }
   }
-  li:first-child {
-    margin-top: 0;
-  }
+
   :is(ul, ol) :is(ul, ol) li:first-child {
     margin-top: 4px;
   }

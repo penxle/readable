@@ -2,8 +2,7 @@
   import { css } from '@readable/styled-system/css';
   import { center, flex } from '@readable/styled-system/patterns';
   import { NodeView, NodeViewContentEditable } from '@readable/ui/tiptap';
-  import { tick } from 'svelte';
-  import { stopPropagation } from 'svelte/legacy';
+  import { onMount, tick } from 'svelte';
   import PlusIcon from '~icons/lucide/plus';
   import XIcon from '~icons/lucide/x';
   import { Icon } from '../../../components';
@@ -24,7 +23,7 @@
     return tabs;
   };
 
-  const tabs = $derived(getTabs(editor, node));
+  let tabs = $state<{ title: string; selected: boolean }[]>(getTabs(editor, node));
 
   let renamingTabIdx = $state<number | null>(null);
   let renamingTabTitle = $state('');
@@ -44,6 +43,18 @@
     renamingTabIdx = null;
     renamingTabTitle = '';
   };
+
+  onMount(() => {
+    const update = () => {
+      tabs = getTabs(editor, node);
+    };
+
+    editor.on('transaction', update);
+
+    return () => {
+      editor?.off('transaction', update);
+    };
+  });
 </script>
 
 <NodeView>
@@ -146,13 +157,14 @@
                 color: 'neutral.50',
                 _hover: { backgroundColor: 'neutral.30/40' },
               })}
-              onclick={stopPropagation(() => {
+              onclick={(e) => {
+                e.stopPropagation();
                 editor
                   ?.chain()
                   .setTextSelection(getPos() + 1)
                   .deleteTab(i)
                   .run();
-              })}
+              }}
               type="button"
             >
               <Icon icon={XIcon} />
