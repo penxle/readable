@@ -15,7 +15,7 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import { graphql } from '$graphql';
-  import { editingCategoryId } from '$lib/svelte/stores/ui';
+  import { editingCategoryId, treeOpenState } from '$lib/svelte/stores/ui';
   import ModifyUrlModal from '../@modals/ModifyUrlModal.svelte';
   import { maxDepth } from './const';
   import PageList from './PageList.svelte';
@@ -167,7 +167,7 @@
           })}
           aria-expanded={openState[item.id] ? 'true' : 'false'}
           onclick={() => {
-            openState[item.id] = !openState[item.id];
+            $treeOpenState[item.id] = !openState[item.id];
           }}
           type="button"
         >

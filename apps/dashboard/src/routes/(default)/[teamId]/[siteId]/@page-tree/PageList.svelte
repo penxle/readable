@@ -5,6 +5,7 @@
   import { Icon, VerticalDivider } from '@readable/ui/components';
   import FolderPlusIcon from '~icons/lucide/folder-plus';
   import PlusIcon from '~icons/lucide/plus';
+  import { treeOpenState } from '$lib/svelte/stores/ui';
   import { maxDepth } from './const';
   import PageItem from './PageItem.svelte';
   import type { CategoryData, PageData, VirtualRootPageData } from './types';
@@ -245,7 +246,7 @@
           });
 
           if (targetItem.id !== null) {
-            openState[targetItem.id] = true;
+            $treeOpenState[targetItem.id] = true;
           }
           // eslint-disable-next-line unicorn/no-negated-condition
         } else if (dropTarget.indicatorPosition !== null) {
@@ -462,7 +463,7 @@
     ondrop,
     ondropcategory,
     onpointerdown,
-    openState,
+    openState: $treeOpenState,
     registerNode,
   });
 </script>
