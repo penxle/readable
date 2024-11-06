@@ -88,6 +88,10 @@
     if (cell) {
       hoveredColumnIndex = (cell as HTMLTableCellElement).cellIndex;
       hoveredRowIndex = (cell.parentElement as HTMLTableRowElement).rowIndex;
+
+      const prevCols = [...(cell.parentElement?.children ?? [])].slice(0, hoveredColumnIndex);
+      // 왼쪽에 병합된 열이 있는 경우를 고려한 hoveredColumnIndex
+      hoveredColumnIndex = prevCols.reduce((acc, col) => acc + (col as HTMLTableCellElement).colSpan, 0);
     }
   }
 </script>
