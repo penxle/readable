@@ -3,6 +3,7 @@
   import { flex } from '@readable/styled-system/patterns';
   import { matchSorter } from 'match-sorter';
   import { bundledLanguagesInfo } from 'shiki';
+  import { tick } from 'svelte';
   import IconCheck from '~icons/lucide/check';
   import IconChevronDown from '~icons/lucide/chevron-down';
   import IconChevronUp from '~icons/lucide/chevron-up';
@@ -27,7 +28,9 @@
 
   $effect(() => {
     if (open) {
-      inputElem?.focus();
+      tick().then(() => {
+        inputElem?.focus();
+      });
     }
   });
 

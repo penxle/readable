@@ -3,7 +3,7 @@
   import { flex } from '@readable/styled-system/patterns';
   import { createFloatingActions } from '@readable/ui/actions';
   import { NodeView } from '@readable/ui/tiptap';
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { ReadableError } from '@/errors';
   import EllipsisIcon from '~icons/lucide/ellipsis';
   import FileUpIcon from '~icons/lucide/file-up';
@@ -29,7 +29,9 @@
 
   $effect(() => {
     if (pickerOpened) {
-      inputEl?.focus();
+      tick().then(() => {
+        inputEl?.focus();
+      });
     }
   });
 
