@@ -174,7 +174,7 @@ export const SlashMenu = Extension.create({
                   dom.style.left = `${x}px`;
                   dom.style.top = `${y}px`;
                   dom.style.visibility = middlewareData.hide?.referenceHidden ? 'hidden' : 'visible';
-                  dom.style.zIndex = '20';
+                  dom.style.zIndex = '30';
                 });
               }
 
