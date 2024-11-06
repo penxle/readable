@@ -272,7 +272,6 @@ const extensions = [
   }),
   Link.configure({
     openOnClick: false,
-    protocols: ['page'],
     HTMLAttributes: {
       class: css({
         color: 'var(--usersite-theme-color)',
