@@ -3,7 +3,7 @@ import type { Action } from 'svelte/action';
 type Parameter = HTMLElement | string | undefined;
 
 export const portal: Action<HTMLElement, Parameter> = (element, target: Parameter = 'body') => {
-  $effect(() => {
+  $effect.pre(() => {
     let targetElement: HTMLElement | null;
 
     if (typeof target === 'string') {
