@@ -5,7 +5,7 @@
   import { onMount } from 'svelte';
   import { cubicOut } from 'svelte/easing';
   import { tweened } from 'svelte/motion';
-  import { derived, readable } from 'svelte/store';
+  import { derived } from 'svelte/store';
   import XIcon from '~icons/lucide/x';
   import { Icon, Img } from '../../../components';
   import type { NodeViewProps } from '@readable/ui/tiptap';
@@ -26,7 +26,7 @@
 
   const progress = tweened(0, { duration: 300, easing: cubicOut });
   const opacity = derived(progress, ($progress) => $progress);
-  let rect: Readable<Rect | null> = readable(null);
+  let rect = $state<Readable<Rect>>();
 
   onMount(async () => {
     if (!referenceEl || !targetEl) {
