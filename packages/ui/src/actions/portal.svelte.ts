@@ -3,7 +3,7 @@ import type { Action } from 'svelte/action';
 type Parameter = HTMLElement | string | undefined;
 
 export const portal: Action<HTMLElement, Parameter> = (element, target: Parameter = 'body') => {
-  const update = (target: Parameter = 'body') => {
+  $effect(() => {
     let targetElement: HTMLElement | null;
 
     if (typeof target === 'string') {
@@ -16,14 +16,9 @@ export const portal: Action<HTMLElement, Parameter> = (element, target: Paramete
     }
 
     targetElement.append(element);
-  };
 
-  update(target);
-
-  return {
-    update,
-    destroy: () => {
+    return () => {
       element.remove();
-    },
-  };
+    };
+  });
 };

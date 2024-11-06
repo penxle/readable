@@ -1,4 +1,5 @@
 import { arrow, autoUpdate, computePosition, flip, offset, shift } from '@floating-ui/dom';
+import { on } from 'svelte/events';
 import { match } from 'ts-pattern';
 import type { FloatingElement, Middleware, OffsetOptions, Placement, ReferenceElement } from '@floating-ui/dom';
 import type { Action } from 'svelte/action';
@@ -29,6 +30,7 @@ export function createFloatingActions(options?: CreateFloatingActionsOptions): C
   let floatingElement: FloatingElement | undefined;
   let arrowElement: HTMLElement | undefined;
   let cleanupAutoUpdate: (() => void) | undefined;
+  let cleanupClickListener: (() => void) | undefined;
 
   const updatePosition: UpdatePosition = async () => {
     if (!referenceElement || !floatingElement) {
@@ -109,8 +111,9 @@ export function createFloatingActions(options?: CreateFloatingActionsOptions): C
     }
 
     setTimeout(() => {
-      window.addEventListener('click', clickListener);
-    });
+      cleanupClickListener?.();
+      cleanupClickListener = on(window, 'click', clickListener);
+    }, 0);
   };
 
   const unmount = () => {
@@ -119,62 +122,63 @@ export function createFloatingActions(options?: CreateFloatingActionsOptions): C
       cleanupAutoUpdate = undefined;
     }
 
-    window.removeEventListener('click', clickListener);
+    cleanupClickListener?.();
+    cleanupClickListener = undefined;
   };
 
   const referenceAction: ReferenceAction = (element) => {
-    referenceElement = element;
-    mount();
+    $effect(() => {
+      referenceElement = element;
+      mount();
 
-    return {
-      destroy: () => {
+      return () => {
         unmount();
         referenceElement = undefined;
-      },
-    };
+      };
+    });
   };
 
   const floatingAction: FloatingAction = (element) => {
-    // NOTE: top layer에 표시되는 조상 요소가 있다면 그 요소에 추가해서 floating element와 상호작용이 되도록 함
-    const topLayerElem = element.closest('dialog, [popover]');
-    if (topLayerElem) {
-      topLayerElem.append(element);
-    } else {
-      document.body.append(element);
-    }
+    $effect(() => {
+      // NOTE: top layer에 표시되는 조상 요소가 있다면 그 요소에 추가해서 floating element와 상호작용이 되도록 함
+      const topLayerElem = element.closest('dialog, [popover]');
+      if (topLayerElem) {
+        topLayerElem.append(element);
+      } else {
+        document.body.append(element);
+      }
 
-    Object.assign(element.style, {
-      position: 'absolute',
-      top: '0',
-      left: '0',
-    });
+      Object.assign(element.style, {
+        position: 'absolute',
+        top: '0',
+        left: '0',
+      });
 
-    floatingElement = element;
-    mount();
+      floatingElement = element;
+      mount();
 
-    return {
-      destroy: () => {
+      return () => {
         unmount();
         floatingElement?.remove();
         floatingElement = undefined;
-      },
-    };
+      };
+    });
   };
 
   const arrowAction: ArrowAction = (element) => {
-    Object.assign(element.style, {
-      position: 'absolute',
-    });
+    $effect(() => {
+      Object.assign(element.style, {
+        position: 'absolute',
+      });
 
-    arrowElement = element;
-    mount();
+      arrowElement = element;
+      mount();
 
-    return {
-      destroy: () => {
+      return () => {
         unmount();
         arrowElement = undefined;
-      },
-    };
+      };
+    });
   };
 
   return {
