@@ -1,7 +1,7 @@
 import { Editor, findChildren } from '@tiptap/core';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
-import { createHighlighter, getTokenStyleObject, stringifyTokenStyle } from 'shiki';
+import { getSingletonHighlighter, getTokenStyleObject, stringifyTokenStyle } from 'shiki';
 import { createNodeView } from '../../lib';
 import Component from './Component.svelte';
 import type { Node } from '@tiptap/pm/model';
@@ -110,7 +110,7 @@ export const CodeBlock = createNodeView<Options, Storage>(Component, {
         key,
         state: {
           init: () => {
-            createHighlighter({
+            getSingletonHighlighter({
               themes: [this.options.theme],
               langs: [],
             }).then((highlighter) => {
