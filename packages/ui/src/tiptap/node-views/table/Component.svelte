@@ -30,13 +30,16 @@
   const colElems = $derived(_colElems.filter(Boolean)); // 열 삭제에 대응
 
   const hasSpan = $derived.by(() => {
+    let has = false;
+
     node.descendants((node) => {
       if (node.type.name === 'tableCell' && (node.attrs.colspan > 1 || node.attrs.rowspan > 1)) {
-        return true;
+        has = true;
+        return;
       }
     });
 
-    return false;
+    return has;
   });
 
   let rowElems = $state<HTMLElement[]>([]);
