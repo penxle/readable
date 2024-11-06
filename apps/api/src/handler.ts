@@ -1,13 +1,13 @@
 import { getClientAddress } from '@readable/lib';
-import Elysia from 'elysia';
 import { createYoga, useExecutionCancellation } from 'graphql-yoga';
+import { Hono } from 'hono';
 import { createContext } from '@/context';
 import { schema } from '@/graphql';
 import { useCache } from './plugins/cache';
 import { useError } from './plugins/error';
 import { useLogger } from './plugins/logger';
 
-export const yoga = new Elysia({ prefix: '/graphql' });
+export const yoga = new Hono();
 
 const app = createYoga({
   schema,
@@ -20,5 +20,5 @@ const app = createYoga({
   plugins: [useExecutionCancellation(), useLogger(), useError(), useCache()],
 });
 
-yoga.get('/', (ctx) => app(ctx.request, { ip: getClientAddress(ctx.request, ctx.server) }));
-yoga.post('/', (ctx) => app(ctx.request, { ip: getClientAddress(ctx.request, ctx.server) }));
+yoga.get('/', (c) => app.handleRequest(c.req.raw, { ip: getClientAddress(c) }));
+yoga.post('/', (c) => app.handleRequest(c.req.raw, { ip: getClientAddress(c) }));

@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "dayjs": "^1.11.13",
+    "hono": "^4.6.9",
     "ipaddr.js": "^2.2.0",
     "pino": "^9.5.0",
     "remeda": "^2.16.0",

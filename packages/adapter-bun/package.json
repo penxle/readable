@@ -13,7 +13,8 @@
     "lint:typecheck": "tsc"
   },
   "dependencies": {
-    "@readable/lib": "workspace:*"
+    "@readable/lib": "workspace:*",
+    "hono": "^4.6.9"
   },
   "devDependencies": {
     "@readable/tsconfig": "workspace:*",

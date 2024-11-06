@@ -1,19 +1,20 @@
 import { and, eq } from 'drizzle-orm';
-import Elysia from 'elysia';
+import { Hono } from 'hono';
+import { HTTPException } from 'hono/http-exception';
 import { db, first, SiteCustomDomains } from '@/db';
 import { SiteCustomDomainState } from '@/enums';
 import { env } from '@/env';
 
-export const caddy = new Elysia({ prefix: '/caddy' });
+export const caddy = new Hono();
 
-caddy.get('/tls', async ({ query, error }) => {
-  const domain = query['domain'];
+caddy.get('/tls', async (c) => {
+  const domain = c.req.query('domain');
   if (!domain) {
-    return error(400);
+    throw new HTTPException(400);
   }
 
   if (domain === env.USERSITE_CNAME_HOST) {
-    return '';
+    return c.body(null);
   }
 
   const siteCustomDomain = await db
@@ -23,8 +24,8 @@ caddy.get('/tls', async ({ query, error }) => {
     .then(first);
 
   if (!siteCustomDomain) {
-    return error(412);
+    throw new HTTPException(412);
   }
 
-  return '';
+  return c.body(null);
 });

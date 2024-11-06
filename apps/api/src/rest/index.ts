@@ -1,12 +1,12 @@
-import Elysia from 'elysia';
+import { Hono } from 'hono';
 import { caddy } from './caddy';
 import { healthz } from './healthz';
 import { opengraph } from './opengraph';
 import { widget } from './widget';
 
-export const elysia = new Elysia();
+export const hono = new Hono();
 
-elysia.use(caddy);
-elysia.use(healthz);
-elysia.use(opengraph);
-elysia.use(widget);
+hono.route('/caddy', caddy);
+hono.route('/healthz', healthz);
+hono.route('/opengraph', opengraph);
+hono.route('/widget', widget);

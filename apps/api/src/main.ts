@@ -2,15 +2,28 @@ import '@/instrument';
 import '@readable/lib/dayjs';
 import '@/jobs';
 
-import { cors } from '@elysiajs/cors';
-import { Elysia } from 'elysia';
+import { Hono } from 'hono';
+import { cors } from 'hono/cors';
 import { yoga } from '@/handler';
-import { elysia } from '@/rest';
+import { hono } from '@/rest';
 
-new Elysia()
-  .use(cors())
-  .use(elysia)
-  .use(yoga)
-  .listen({ port: 3000, idleTimeout: 0 }, (server) => {
-    console.log(`Listening on ${server.url}`);
-  });
+const app = new Hono();
+
+app.use(
+  '*',
+  cors({
+    origin: (origin) => origin,
+    credentials: true,
+  }),
+);
+
+app.route('/', hono);
+app.route('/graphql', yoga);
+
+const server = Bun.serve({
+  fetch: app.fetch,
+  port: 3000,
+  idleTimeout: 0,
+});
+
+console.log(`Listening on ${server.url}`);

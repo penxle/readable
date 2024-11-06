@@ -1,17 +1,18 @@
 import { renderAsync } from '@resvg/resvg-js';
 import { eq } from 'drizzle-orm';
-import Elysia from 'elysia';
+import { Hono } from 'hono';
+import { HTTPException } from 'hono/http-exception';
 import ky from 'ky';
 import satori from 'satori';
 import { db, first, Images, PageContents, Pages, Sites } from '@/db';
 
-export const opengraph = new Elysia({ prefix: '/opengraph' });
+export const opengraph = new Hono();
 
 const SUITMedium = await ky.get('https://cdn.rdbl.app/fonts/SUIT-Medium.otf').arrayBuffer();
 const SUITExtraBold = await ky.get('https://cdn.rdbl.app/fonts/SUIT-ExtraBold.otf').arrayBuffer();
 
-opengraph.get('/pages/:pageId', async (req) => {
-  const [pageId] = req.params.pageId.split('.');
+opengraph.get('/pages/:pageId', async (c) => {
+  const [pageId] = c.req.param('pageId').split('.');
 
   const page = await db
     .select({
@@ -30,7 +31,7 @@ opengraph.get('/pages/:pageId', async (req) => {
     .then(first);
 
   if (!page) {
-    return new Response(null, { status: 204 });
+    throw new HTTPException(204);
   }
 
   const svg = await satori(

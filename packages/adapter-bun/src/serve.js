@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { getClientAddress } from '@readable/lib';
+import { Hono } from 'hono';
 
 /**
  * @typedef {Object} ServeParams
@@ -18,68 +19,54 @@ export const serve = async ({ Server, manifest, prerendered }) => {
   const sveltekit = new Server(manifest);
   await sveltekit.init({ env: process.env });
 
-  Bun.serve({
-    port: 3000,
-    fetch: async (request, server) => {
-      const url = new URL(request.url);
+  const app = new Hono();
 
-      if (url.pathname === '/healthz') {
-        return new Response(JSON.stringify({ '*': true }), {
-          headers: {
-            'content-type': 'application/json',
-            'cache-control': 'public, max-age=0, must-revalidate',
-          },
-        });
-      }
+  app.get('/healthz', (c) => c.json({ '*': true }));
 
-      const relativePath = url.pathname.slice(1);
-      if (manifest.assets.has(relativePath) || relativePath.startsWith(manifest.appPath)) {
-        const immutable = relativePath.startsWith(`${manifest.appPath}/immutable`);
-        const filePath = path.join(basePath, 'client', relativePath);
+  app.all('*', async (c) => {
+    const relativePath = c.req.path.slice(1);
+    if (manifest.assets.has(relativePath) || relativePath.startsWith(manifest.appPath)) {
+      const immutable = relativePath.startsWith(`${manifest.appPath}/immutable`);
+      const filePath = path.join(basePath, 'client', relativePath);
+      const file = Bun.file(filePath);
 
-        const file = Bun.file(filePath);
-        const buffer = await file.arrayBuffer();
-
-        return new Response(buffer, {
-          headers: {
-            'cache-control': immutable ? 'public, max-age=31536000, immutable' : 'public, max-age=0, must-revalidate',
-            'content-type': file.type,
-            'content-length': file.size,
-          },
-        });
-      }
-
-      if (url.pathname in prerendered) {
-        const filePath = path.join(basePath, 'client', prerendered[url.pathname]);
-
-        const file = Bun.file(filePath);
-        const buffer = await file.arrayBuffer();
-
-        return new Response(buffer, {
-          headers: {
-            'cache-control': 'public, max-age=0, must-revalidate',
-            'content-type': file.type,
-            'content-length': file.size,
-          },
-        });
-      }
-
-      const protocol = request.headers.get('x-forwarded-proto') ?? 'https';
-      const host = request.headers.get('host') ?? process.env.HTTP_HOST;
-
-      const effectiveRequest = new Request(`${protocol}://${host}${url.pathname}${url.search}`, request);
-
-      const response = await sveltekit.respond(effectiveRequest, {
-        getClientAddress: () => {
-          return getClientAddress(request, server);
+      return new Response(file, {
+        headers: {
+          'cache-control': immutable ? 'public, max-age=31536000, immutable' : 'public, max-age=0, must-revalidate',
+          'content-type': file.type,
+          'content-length': file.size,
         },
       });
+    }
 
-      if (response.headers.get('cache-control') === null) {
-        response.headers.set('cache-control', 'private, no-cache');
-      }
+    if (c.req.path in prerendered) {
+      const filePath = path.join(basePath, 'client', prerendered[c.req.path]);
+      const file = Bun.file(filePath);
 
-      return response;
-    },
+      return new Response(file, {
+        headers: {
+          'cache-control': 'public, max-age=0, must-revalidate',
+          'content-type': file.type,
+          'content-length': file.size,
+        },
+      });
+    }
+
+    const response = await sveltekit.respond(c.req.raw, {
+      getClientAddress: () => {
+        return getClientAddress(c);
+      },
+    });
+
+    if (response.headers.get('cache-control') === null) {
+      response.headers.set('cache-control', 'private, no-cache');
+    }
+
+    return response;
+  });
+
+  Bun.serve({
+    fetch: app.fetch,
+    port: 3000,
   });
 };
