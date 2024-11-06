@@ -60,8 +60,6 @@
   });
 
   onMount(() => {
-    update();
-
     editor.on('transaction', update);
 
     return () => {

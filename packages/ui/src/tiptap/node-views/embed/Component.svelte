@@ -28,8 +28,8 @@
   });
 
   $effect(() => {
-    if (pickerOpened && inputEl) {
-      inputEl.focus();
+    if (pickerOpened) {
+      inputEl?.focus();
     }
   });
 

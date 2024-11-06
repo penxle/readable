@@ -69,11 +69,9 @@
   );
 
   $effect(() => {
-    if (pickerEl) {
-      pickerEl.querySelector('[aria-pressed="true"]')?.scrollIntoView({
-        block: 'center',
-      });
-    }
+    pickerEl?.querySelector('[aria-pressed="true"]')?.scrollIntoView({
+      block: 'center',
+    });
   });
 </script>
 

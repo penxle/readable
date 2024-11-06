@@ -15,7 +15,7 @@
   import { createMutationForm } from '@readable/ui/forms';
   import { toast } from '@readable/ui/notification';
   import mixpanel from 'mixpanel-browser';
-  import { onMount } from 'svelte';
+  import { untrack } from 'svelte';
   import { z } from 'zod';
   import { dataSchemas } from '@/schemas';
   import CheckIcon from '~icons/lucide/check';
@@ -35,7 +35,6 @@
 
   let hostCopied = $state(false);
   let valueCopied = $state(false);
-  let verifying = $state(false);
 
   let unsubscribe = $state<() => void>();
 
@@ -75,12 +74,6 @@
     }
   `);
 
-  onMount(() => {
-    return () => {
-      unsubscribe?.();
-    };
-  });
-
   const { form, isValid, setInitialValues, context } = createMutationForm({
     mutation: graphql(`
       mutation SiteSettingsDomainPage_SetSiteCustomDomain_Mutation($input: SetSiteCustomDomainInput!) {
@@ -96,7 +89,7 @@
       domain: dataSchemas.site.domain,
     }),
     onSuccess: async () => {
-      await query.refetch();
+      query.refetch();
       open = true;
       mixpanel.track('site:custom-domain:set');
     },
@@ -122,32 +115,31 @@
     }
   `);
 
+  siteCustomDomainValidationStream.on('data', ({ siteCustomDomainValidationStream }) => {
+    if (siteCustomDomainValidationStream.state === 'ACTIVE') {
+      open = false;
+      unsubscribe = undefined;
+      mixpanel.track('site:custom-domain:validation:success');
+    }
+  });
+
   const verifyStream = () => {
     if ($query.site.customDomain?.id) {
-      verifying = true;
       unsubscribe = siteCustomDomainValidationStream.subscribe({
-        siteCustomDomainId: $query.site.customDomain?.id,
+        siteCustomDomainId: $query.site.customDomain.id,
       });
       mixpanel.track('site:custom-domain:validation:start');
     }
   };
 
-  $effect(() => {
-    setInitialValues({ siteId: $query.site.id, domain: $query.site.customDomain?.domain ?? '' });
-  });
+  setInitialValues({ siteId: $query.site.id, domain: $query.site.customDomain?.domain ?? '' });
 
   $effect(() => {
-    if (verifying && $query.site.customDomain?.state === 'ACTIVE') {
-      open = false;
-      verifying = false;
-      unsubscribe?.();
-      mixpanel.track('site:custom-domain:validation:success');
-    }
-  });
-
-  $effect(() => {
-    if (open === false && unsubscribe) {
-      unsubscribe?.();
+    if (open === false) {
+      untrack(() => {
+        unsubscribe?.();
+        unsubscribe = undefined;
+      });
     }
   });
 </script>
@@ -397,6 +389,6 @@
       </div>
     </dl>
 
-    <Button loading={verifying} onclick={verifyStream} size="lg" type="button">DNS 레코드 확인</Button>
+    <Button loading={!!unsubscribe} onclick={verifyStream} size="lg" type="button">DNS 레코드 확인</Button>
   </div>
 </TitledModal>

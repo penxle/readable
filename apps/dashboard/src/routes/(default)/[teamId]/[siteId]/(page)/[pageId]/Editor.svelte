@@ -205,7 +205,7 @@
   });
 
   awareness.on('update', async (states: { added: number[]; updated: number[]; removed: number[] }, origin: unknown) => {
-    if (origin === 'remote') {
+    if (origin === 'remote' || !$query) {
       return;
     }
 
@@ -232,6 +232,10 @@
   });
 
   const forceSync = async () => {
+    if (!$query) {
+      return;
+    }
+
     const clientStateVector = Y.encodeStateVector(doc);
 
     const results = await syncPageContent({

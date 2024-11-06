@@ -17,16 +17,14 @@
 
   type Props = {
     $query: UserMenu_query;
-    teamId?: string | undefined;
+    teamId?: string;
   };
 
-  let { $query: _query, teamId = undefined }: Props = $props();
+  let { $query: _query, teamId }: Props = $props();
 
-  let openUserSettingModal = $state(false);
-
-  $effect(() => {
+  let openUserSettingModal = $derived.by(() => {
     const tab = $page.url.searchParams.get('tab');
-    openUserSettingModal = !!tab && (tab === 'settings/personal' || tab.startsWith('settings/team'));
+    return !!tab && (tab === 'settings/personal' || tab.startsWith('settings/team'));
   });
 
   const query = fragment(

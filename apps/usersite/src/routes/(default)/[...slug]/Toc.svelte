@@ -103,9 +103,8 @@
   };
 
   const defaultIndent = 12;
-  let indents = $state<number[]>([]);
 
-  $effect(() => {
+  const indents = $derived.by(() => {
     if (headings.length > 1) {
       let currentIndent = defaultIndent;
       let prevLevel = headings[0]?.level;
@@ -119,8 +118,10 @@
         prevLevel = item.level;
       }
 
-      indents = newIndents;
+      return newIndents;
     }
+
+    return [];
   });
 
   onMount(() => {

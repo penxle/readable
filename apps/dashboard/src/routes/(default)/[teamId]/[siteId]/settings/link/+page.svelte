@@ -80,12 +80,10 @@
     },
   });
 
-  $effect(() => {
-    setInitialValues({
-      siteId: $query.site.id,
-      label: $query.site.headerLink?.label ?? '',
-      url: $query.site.headerLink?.url ?? '',
-    });
+  setInitialValues({
+    siteId: $query.site.id,
+    label: $query.site.headerLink?.label ?? '',
+    url: $query.site.headerLink?.url ?? '',
   });
 </script>
 

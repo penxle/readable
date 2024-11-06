@@ -22,9 +22,7 @@
 
   let { open = $bindable() }: Props = $props();
 
-  const site = getContext<{
-    id: string;
-  }>('site');
+  const site = getContext<{ id: string }>('site');
 
   let lastQuery: string | null = $state(null);
   let loading = $state(false);

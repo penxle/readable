@@ -1,11 +1,8 @@
 <script lang="ts">
-  import { createBubbler, run, stopPropagation } from 'svelte/legacy';
-
-  const bubble = createBubbler();
   import { Readability } from '@mozilla/readability';
   import stringHash from '@sindresorhus/string-hash';
   import stringify from 'fast-json-stable-stringify';
-  import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import { fly, scale } from 'svelte/transition';
   import IconX from '~icons/lucide/x';
   import { css } from '$styled-system/css';
@@ -118,11 +115,13 @@
     };
   });
 
-  const pages = $derived.by(() => response?.pages.filter((page) => page.score >= 0.8));
+  const pages = $derived(response?.pages.filter((page) => page.score >= 0.8));
 
-  run(() => {
+  $effect(() => {
     if (open) {
-      observe();
+      untrack(() => {
+        observe();
+      });
     }
   });
 </script>
@@ -150,7 +149,7 @@
       pointerEvents: 'auto',
     })}
     onclick={() => (open = !open)}
-    onpointerdown={stopPropagation(bubble('pointerdown'))}
+    onpointerdown={(e) => e.stopPropagation()}
     type="button"
     transition:fly={{ y: 5 }}
   >
@@ -210,7 +209,7 @@
         boxShadow: 'emphasize',
         pointerEvents: 'auto',
       })}
-      onpointerdown={stopPropagation(bubble('pointerdown'))}
+      onpointerdown={(e) => e.stopPropagation()}
       transition:fly={{ y: 5 }}
     >
       <div class={css({ textStyle: '14b' })}>관련 문서</div>

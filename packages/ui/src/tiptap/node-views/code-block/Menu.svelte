@@ -26,8 +26,8 @@
   let selectedIndex = $state<number | null>(null);
 
   $effect(() => {
-    if (open && inputElem) {
-      inputElem.focus();
+    if (open) {
+      inputElem?.focus();
     }
   });
 

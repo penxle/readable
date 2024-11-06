@@ -60,11 +60,6 @@
   const classes = $derived(recipe.raw({ size }));
 
   let selectedValue = $state(defaultValue ?? items[0].value);
-
-  $effect(() => {
-    onselect?.(selectedValue);
-  });
-
   const selectedIndex = $derived(items.findIndex((item) => item.value === selectedValue));
 </script>
 
@@ -88,7 +83,10 @@
     <button
       class={css(classes.button)}
       aria-selected={selectedValue === item.value}
-      onclick={() => (selectedValue = item.value)}
+      onclick={() => {
+        selectedValue = item.value;
+        onselect?.(selectedValue);
+      }}
       role="tab"
       type="button"
     >

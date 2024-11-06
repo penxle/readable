@@ -33,10 +33,8 @@
     },
   });
 
-  $effect(() => {
-    setInitialValues({
-      email: $page.url.searchParams.get('email') ?? '',
-    });
+  setInitialValues({
+    email: $page.url.searchParams.get('email') ?? '',
   });
 
   let sent = $state(false);

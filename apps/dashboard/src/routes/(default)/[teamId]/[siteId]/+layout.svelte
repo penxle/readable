@@ -3,7 +3,7 @@
   import { flex } from '@readable/styled-system/patterns';
   import { Icon } from '@readable/ui/components';
   import mixpanel from 'mixpanel-browser';
-  import { onDestroy, setContext, untrack } from 'svelte';
+  import { setContext } from 'svelte';
   import MousePointerClickIcon from '~icons/lucide/mouse-pointer-click';
   import { page } from '$app/stores';
   import { graphql } from '$graphql';
@@ -58,25 +58,19 @@
     }
   `);
 
-  let unsubscribe: (() => void) | null = $state(null);
-
   $effect(() => {
-    untrack(() => {
-      unsubscribe?.();
-    });
-
-    unsubscribe = siteUpdateStream.subscribe({
+    const unsubscribe = siteUpdateStream.subscribe({
       siteId: $query.site.id,
     });
 
     mixpanel.register({
       site_id: $query.site.id,
     });
-  });
 
-  onDestroy(() => {
-    mixpanel.unregister('site_id');
-    unsubscribe?.();
+    return () => {
+      unsubscribe();
+      mixpanel.unregister('site_id');
+    };
   });
 
   setContext('site', $query.site);

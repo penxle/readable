@@ -1,7 +1,6 @@
 <script lang="ts">
   import { flex } from '@readable/styled-system/patterns';
   import mixpanel from 'mixpanel-browser';
-  import { onDestroy, untrack } from 'svelte';
   import { PlanId } from '@/const';
   import { graphql } from '$graphql';
   import {
@@ -71,25 +70,19 @@
     isPro.set($query.team.plan.plan.id === PlanId.PRO);
   });
 
-  let unsubscribe: (() => void) | null = $state(null);
-
   $effect(() => {
-    untrack(() => {
-      unsubscribe?.();
-    });
-
-    unsubscribe = teamUpdateStream.subscribe({
+    const unsubscribe = teamUpdateStream.subscribe({
       teamId: $query.team.id,
     });
 
     mixpanel.register({
       team_id: $query.team.id,
     });
-  });
 
-  onDestroy(() => {
-    mixpanel.unregister('team_id');
-    unsubscribe?.();
+    return () => {
+      unsubscribe();
+      mixpanel.unregister('team_id');
+    };
   });
 </script>
 

@@ -150,24 +150,20 @@
     },
   });
 
-  $effect(() => {
-    setInitialValues({
-      siteId: $query.site.id,
-      name: $query.site.name,
-      slug: $query.site.slug,
-      themeColor: $query.site.themeColor,
-      logoId: $query.site.logo?.id,
-    });
+  setInitialValues({
+    siteId: $query.site.id,
+    name: $query.site.name,
+    slug: $query.site.slug,
+    themeColor: $query.site.themeColor,
+    logoId: $query.site.logo?.id,
   });
 
-  $effect(() => {
-    setSlugInitialValues({
-      siteId: $query.site.id,
-      name: $query.site.name,
-      slug: $query.site.slug,
-      themeColor: $query.site.themeColor,
-      logoId: $query.site.logo?.id,
-    });
+  setSlugInitialValues({
+    siteId: $query.site.id,
+    name: $query.site.name,
+    slug: $query.site.slug,
+    themeColor: $query.site.themeColor,
+    logoId: $query.site.logo?.id,
   });
 </script>
 

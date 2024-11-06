@@ -80,9 +80,7 @@
     },
   });
 
-  $effect(() => {
-    setInitialValues({ avatarId: $query.team.avatar.id, name: $query.team.name, teamId: $query.team.id });
-  });
+  setInitialValues({ avatarId: $query.team.avatar.id, name: $query.team.name, teamId: $query.team.id });
 
   let deleteTeamOpen = $state(false);
 

@@ -10,7 +10,7 @@
 
   let { domOutputSpec, ...rest }: Props = $props();
 
-  let element = $state<VElement>();
+  const element = $derived.by(() => createElementFromSpec(domOutputSpec));
 
   function createElementFromSpec(spec: DOMOutputSpec): VElement {
     const [tag, attrs, ...children] = spec as [string, Record<string, string>, ...DOMOutputSpec[]];
@@ -32,18 +32,8 @@
 
     return el;
   }
-
-  $effect(() => {
-    if (domOutputSpec) {
-      element = createElementFromSpec(domOutputSpec);
-    }
-  });
-
-  const tag = $derived(element ? (element.tagName.toLowerCase() as keyof HTMLElementTagNameMap) : undefined);
 </script>
 
-{#if element}
-  <svelte:element this={tag} {...element.attributes} {...rest}>
-    {@html element.innerHTML}
-  </svelte:element>
-{/if}
+<svelte:element this={element.tagName} {...element.attributes} {...rest}>
+  {@html element.innerHTML}
+</svelte:element>

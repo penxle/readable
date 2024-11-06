@@ -41,26 +41,16 @@
 
   let { entity, open = $bindable() }: Props = $props();
 
-  function getPrecedingPath(entity: Entity) {
+  const precedingPath = $derived.by(() => {
     if (entity.__typename === 'Category') {
       return '/';
     } else {
       // NOTE: maxDepth = 2
       return entity.parent ? `/${entity.category.slug}/${entity.parent.slug}/` : `/${entity.category.slug}/`;
     }
-  }
-
-  let precedingPath = $state('');
-
-  $effect(() => {
-    if (open) {
-      precedingPath = getPrecedingPath(entity);
-    }
   });
 
-  const site = getContext<{
-    url: string;
-  }>('site');
+  const site = getContext<{ url: string }>('site');
 
   const {
     form: updateCategorySlugForm,

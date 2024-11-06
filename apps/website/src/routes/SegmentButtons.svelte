@@ -9,17 +9,12 @@
       label: string;
       value: string;
     }[];
-    onselect: (value: string) => void;
+    onselect?: (value: string) => void;
   };
 
   let { variant = 'default', defaultValue, items = [], onselect }: Props = $props();
 
   let selectedValue = $state(defaultValue ?? items[0].value);
-
-  $effect(() => {
-    onselect(selectedValue);
-  });
-
   const selectedIndex = $derived(items.findIndex((item) => item.value === selectedValue));
 </script>
 
@@ -69,7 +64,10 @@
         },
         variant === 'white' && selectedValue === item.value && { color: 'text.primary' },
       )}
-      onclick={() => (selectedValue = item.value)}
+      onclick={() => {
+        selectedValue = item.value;
+        onselect?.(selectedValue);
+      }}
       type="button"
     >
       {item.label}

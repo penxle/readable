@@ -18,8 +18,8 @@
     onaction,
     title: titleText,
     content: contentText,
-    action: actionText,
-    cancel: cancelText,
+    action: actionText = '확인',
+    cancel: cancelText = '취소',
     variant = 'danger',
   }: Props = $props();
 </script>

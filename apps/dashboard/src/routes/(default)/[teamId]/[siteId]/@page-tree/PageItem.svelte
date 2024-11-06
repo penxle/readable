@@ -29,7 +29,7 @@
     onpointerdown: (e: PointerEvent, item: PageData | CategoryData) => void;
     registerNode: (node: HTMLElement, item: (PageData | CategoryData) & { depth: number }) => void;
     getPageUrl: (page: PageData) => string;
-  } & Omit<ComponentProps<typeof PageList>, 'depth' | 'items' | 'openState' | 'parent'>;
+  } & Omit<ComponentProps<typeof PageList>, 'depth' | 'items' | 'openState' | 'parent' | 'registerNode'>;
 
   let { depth, item, openState = $bindable(), onpointerdown, registerNode, getPageUrl, ...rest }: Props = $props();
 
@@ -42,10 +42,12 @@
   let inputEl = $state<HTMLInputElement>();
 
   $effect(() => {
-    registerNode(elem, {
-      ...item,
-      depth,
-    });
+    if (elem) {
+      registerNode(elem, {
+        ...item,
+        depth,
+      });
+    }
   });
 
   const childrenListProps = $derived({

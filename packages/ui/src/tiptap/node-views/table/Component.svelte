@@ -24,24 +24,19 @@
 
   const { colgroup, tableWidth, tableMinWidth } = $derived(createColGroup(node, extension.options.cellMinWidth));
 
-  let cols = $state<['col', Record<string, string>][]>([]);
-
-  $effect(() => {
-    cols = (colgroup?.slice(2) as ['col', Record<string, string>][]) ?? [];
-  });
+  const cols = $derived((colgroup?.slice(2) as ['col', Record<string, string>][]) ?? []);
 
   let _colElems = $state<HTMLElement[]>([]);
   const colElems = $derived(_colElems.filter(Boolean)); // 열 삭제에 대응
 
-  let hasSpan = $state(false);
-
-  $effect(() => {
-    hasSpan = false;
+  const hasSpan = $derived.by(() => {
     node.descendants((node) => {
       if (node.type.name === 'tableCell' && (node.attrs.colspan > 1 || node.attrs.rowspan > 1)) {
-        hasSpan = true;
+        return true;
       }
     });
+
+    return false;
   });
 
   let rowElems = $state<HTMLElement[]>([]);

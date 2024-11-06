@@ -10,11 +10,6 @@
   let { defaultValue = 'MONTHLY', onselect }: Props = $props();
 
   let selectedValue = $state(defaultValue);
-
-  $effect(() => {
-    onselect?.(selectedValue);
-  });
-
   const selectedIndex = $derived(selectedValue === 'MONTHLY' ? 0 : 1);
 
   const length = 2;
@@ -55,7 +50,10 @@
       },
     })}
     aria-selected={selectedValue === 'MONTHLY'}
-    onclick={() => (selectedValue = 'MONTHLY')}
+    onclick={() => {
+      selectedValue = 'MONTHLY';
+      onselect?.(selectedValue);
+    }}
     role="tab"
     type="button"
   >
@@ -73,7 +71,10 @@
       },
     })}
     aria-selected={selectedValue === 'YEARLY'}
-    onclick={() => (selectedValue = 'YEARLY')}
+    onclick={() => {
+      selectedValue = 'YEARLY';
+      onselect?.(selectedValue);
+    }}
     role="tab"
     type="button"
   >
