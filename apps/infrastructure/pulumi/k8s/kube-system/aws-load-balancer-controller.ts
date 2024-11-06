@@ -20,7 +20,7 @@ const role = new aws.iam.Role('aws-load-balancer-controller@eks', {
 // spell-checker:disable
 new aws.iam.RolePolicy('aws-load-balancer-controller@eks', {
   role: role.name,
-  policy: JSON.stringify({
+  policy: {
     Version: '2012-10-17',
     Statement: [
       {
@@ -227,7 +227,7 @@ new aws.iam.RolePolicy('aws-load-balancer-controller@eks', {
         Resource: '*',
       },
     ],
-  }),
+  },
 });
 // spell-checker:enable
 

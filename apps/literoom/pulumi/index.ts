@@ -45,19 +45,17 @@ const accessPoint = new aws.s3.AccessPoint('usercontents', {
 
 new aws.s3control.AccessPointPolicy('usercontents', {
   accessPointArn: accessPoint.arn,
-  policy: accessPoint.arn.apply((v) =>
-    JSON.stringify({
-      Version: '2012-10-17',
-      Statement: [
-        {
-          Effect: 'Allow',
-          Principal: { Service: 'cloudfront.amazonaws.com' },
-          Action: 's3:*',
-          Resource: [v, `${v}/object/*`],
-        },
-      ],
-    }),
-  ),
+  policy: pulumi.jsonStringify({
+    Version: '2012-10-17',
+    Statement: [
+      {
+        Effect: 'Allow',
+        Principal: { Service: 'cloudfront.amazonaws.com' },
+        Action: 's3:*',
+        Resource: [accessPoint.arn, pulumi.interpolate`${accessPoint.arn}/object/*`],
+      },
+    ],
+  }),
 });
 
 const objectLambdaAccessPoint = new aws.s3control.ObjectLambdaAccessPoint('usercontents-literoom', {
@@ -79,19 +77,17 @@ const objectLambdaAccessPoint = new aws.s3control.ObjectLambdaAccessPoint('userc
 
 new aws.s3control.ObjectLambdaAccessPointPolicy('usercontents-literoom', {
   name: 'usercontents-literoom',
-  policy: objectLambdaAccessPoint.arn.apply((v) =>
-    JSON.stringify({
-      Version: '2012-10-17',
-      Statement: [
-        {
-          Effect: 'Allow',
-          Principal: { Service: 'cloudfront.amazonaws.com' },
-          Action: 's3-object-lambda:Get*',
-          Resource: v,
-        },
-      ],
-    }),
-  ),
+  policy: pulumi.jsonStringify({
+    Version: '2012-10-17',
+    Statement: [
+      {
+        Effect: 'Allow',
+        Principal: { Service: 'cloudfront.amazonaws.com' },
+        Action: 's3-object-lambda:Get*',
+        Resource: objectLambdaAccessPoint.arn,
+      },
+    ],
+  }),
 });
 
 new aws.iam.RolePolicy('literoom@lambda', {
