@@ -3,14 +3,16 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "build": "NODE_ENV=production pandacss codegen && vite build",
-    "codegen": "pandacss codegen",
+    "build": "vite build",
+    "codegen": "svelte-kit sync",
     "dev": "NODE_ENV=development bun --watch src/server.ts",
-    "lint:svelte": "svelte-check --fail-on-warnings"
+    "lint:svelte": "svelte-check --fail-on-warnings",
+    "up": "NODE_ENV=production turbo run build && pulumi up -s readable/prod -f"
   },
   "dependencies": {
     "@mozilla/readability": "^0.5.0",
     "@readable/styled-system": "workspace:*",
+    "@readable/ui": "workspace:*",
     "@sindresorhus/string-hash": "^2.0.0",
     "fast-json-stable-stringify": "^2.1.0"
   },
@@ -20,6 +22,7 @@
     "@pulumi/aws": "^6.57.0",
     "@pulumi/pulumi": "^3.137.0",
     "@readable/tsconfig": "workspace:*",
+    "@sveltejs/kit": "^2.7.5",
     "@sveltejs/vite-plugin-svelte": "^4.0.0",
     "@types/bun": "^1.1.13",
     "svelte": "^5.1.9",

@@ -1,14 +1,14 @@
 <script lang="ts">
   import { Readability } from '@mozilla/readability';
+  import { css } from '@readable/styled-system/css';
+  import { center, flex } from '@readable/styled-system/patterns';
+  import { token } from '@readable/styled-system/tokens';
+  import { Icon } from '@readable/ui/components';
   import stringHash from '@sindresorhus/string-hash';
   import stringify from 'fast-json-stable-stringify';
   import { onMount, untrack } from 'svelte';
   import { fly, scale } from 'svelte/transition';
   import IconX from '~icons/lucide/x';
-  import { css } from '$styled-system/css';
-  import { center, flex } from '$styled-system/patterns';
-  import { token } from '$styled-system/tokens';
-  import { Icon } from './components';
 
   const siteId = (document.currentScript as HTMLScriptElement).dataset.siteId;
   const themeColor = token('colors.neutral.100');
