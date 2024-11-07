@@ -20,6 +20,7 @@ import {
 import { PageState, SiteCustomDomainState, SiteState } from '@/enums';
 import { env } from '@/env';
 import * as langchain from '@/external/langchain';
+import { ask } from '@/llms/chat';
 import { keywordSearchPrompt } from '@/prompt/widget';
 import { publicProcedure, router } from './trpc';
 
@@ -177,5 +178,15 @@ export const widgetRouter = router({
           score: result.pages.find((p) => p.id === page.id)!.score,
         })),
       };
+    }),
+
+  chat: widgetProcedure
+    .input(z.object({ threadId: z.string(), question: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      return await ask({
+        threadId: input.threadId,
+        siteId: ctx.site.id,
+        question: input.question,
+      });
     }),
 });
