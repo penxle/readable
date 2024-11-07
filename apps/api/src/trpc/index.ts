@@ -13,6 +13,7 @@ trpc.use(
   '*',
   trpcServer({
     router: appRouter,
+    allowMethodOverride: true,
   }),
 );
 
