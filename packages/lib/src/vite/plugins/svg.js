@@ -8,7 +8,7 @@ import { optimize } from 'svgo';
 export const svg = () => ({
   name: 'svg',
 
-  transform: async (_, id, transformOptions) => {
+  transform: async (_, id, options) => {
     if (!id.endsWith('.svg?component')) {
       return;
     }
@@ -28,12 +28,13 @@ export const svg = () => ({
       ],
     });
 
-    const svg = data.replace(/<svg/, '<svg {...$$$$props}');
+    const svg = data.replace(/<svg/, '<script>let props = $props();</script><svg {...props}');
 
     const { js } = compile(svg, {
       filename,
       namespace: 'svg',
-      generate: transformOptions?.ssr ? 'server' : 'client',
+      generate: options?.ssr ? 'ssr' : 'dom',
+      hydratable: true,
     });
 
     return js;

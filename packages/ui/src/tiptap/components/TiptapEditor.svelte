@@ -86,9 +86,6 @@
           }
         },
       },
-      onTransaction: ({ editor: editor_ }) => {
-        editor = editor_;
-      },
     });
 
     oninitialize?.();

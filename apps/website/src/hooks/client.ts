@@ -1,1 +1,1 @@
-export { handleError } from './common';
+import './common';

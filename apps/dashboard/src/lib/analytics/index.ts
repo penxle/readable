@@ -1,1 +1,1 @@
-export * from './mixpanel';
+import './mixpanel';

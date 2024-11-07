@@ -15,7 +15,6 @@
     "@readable/lib": "workspace:*",
     "@readable/styled-system": "workspace:*",
     "@readable/ui": "workspace:*",
-    "@sentry/sveltekit": "^8.37.0",
     "dayjs": "^1.11.13",
     "nanoid": "^5.0.8",
     "query-string": "^9.1.1",

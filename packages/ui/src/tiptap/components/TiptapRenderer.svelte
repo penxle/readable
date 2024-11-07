@@ -2,6 +2,7 @@
   import { css, cx } from '@readable/styled-system/css';
   import { Editor } from '@tiptap/core';
   import { onMount } from 'svelte';
+  import { browser } from '$app/environment';
   import { TableOfContents } from '../extensions/table-of-contents';
   import { renderHTML } from '../lib/html';
   import { Embed } from '../node-views/embed';
@@ -22,9 +23,8 @@
   let { style, content, editor = $bindable(), ontocupdate }: Props = $props();
 
   let element = $state<HTMLElement>();
-  let loaded = $state(false);
 
-  const html = $derived(renderHTML(content, [...basicExtensions, Embed, Image, InlineImage, File]));
+  const html = $derived(browser ? null : renderHTML(content, [...basicExtensions, Embed, Image, InlineImage, File]));
 
   onMount(() => {
     editor = new Editor({
@@ -48,14 +48,6 @@
       editorProps: {
         attributes: { class: css(style) },
       },
-
-      onBeforeCreate: () => {
-        loaded = true;
-      },
-
-      onTransaction: ({ editor: editor_ }) => {
-        editor = editor_;
-      },
     });
 
     return () => {
@@ -66,7 +58,7 @@
 </script>
 
 <svelte:head>
-  {@html html.head}
+  {@html html?.head}
 </svelte:head>
 
 <article
@@ -79,9 +71,9 @@
     wordBreak: 'break-all',
   })}
 >
-  {#if !loaded}
+  {#if !browser}
     <div class={cx('ProseMirror', css(style))}>
-      {@html html.body}
+      {@html html?.body}
     </div>
   {/if}
 </article>
