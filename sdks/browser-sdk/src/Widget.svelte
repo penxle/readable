@@ -2,12 +2,16 @@
   import { Readability } from '@mozilla/readability';
   import { css } from '@readable/styled-system/css';
   import { center, flex } from '@readable/styled-system/patterns';
-  import { Icon } from '@readable/ui/components';
+  import { Icon, Img } from '@readable/ui/components';
+  import { getAccessibleTextColor, hexToRgb } from '@readable/ui/utils';
   import stringHash from '@sindresorhus/string-hash';
   import stringify from 'fast-json-stable-stringify';
   import { onMount, untrack } from 'svelte';
   import { fly, scale } from 'svelte/transition';
   import IconX from '~icons/lucide/x';
+  import ReadableLogo from './assets/readable-logo.svg';
+  import Sparkle from './assets/Sparkle.svelte';
+  import SparkleSmall from './assets/SparkleSmall.svelte';
   import { trpc } from './trpc';
   import type { TRPCOutput } from './trpc';
 
@@ -186,56 +190,128 @@
   </button>
 
   {#if open}
-    <div
-      class={flex({
-        direction: 'column',
-        gap: '4px',
-        position: 'fixed',
-        bottom: '92px',
-        right: '32px',
-        borderRadius: '16px',
-        paddingX: '24px',
-        paddingY: '16px',
-        width: '320px',
-        height: '160px',
-        // height: '480px',
-        textStyle: '14m',
-        color: 'neutral.80',
-        backgroundColor: 'white',
-        boxShadow: 'emphasize',
-        pointerEvents: 'auto',
-      })}
-      onpointerdown={(e) => e.stopPropagation()}
-      transition:fly={{ y: 5 }}
-    >
-      <div class={css({ textStyle: '14b' })}>관련 문서</div>
-      {#if loadingCount > 0}
-        현재 페이지에서 가장 <br />
-        도움이 될 문서를 찾고 있어요...
-      {:else if response && pages}
-        {#each pages as page, idx (idx)}
-          <div>
-            <a
-              class={css({
-                textDecoration: 'underline',
-                textUnderlineOffset: '4px',
-                _hover: {
-                  color: 'neutral.100',
-                },
+    <div style:--widget-theme-color={site.themeColor} class={css({ display: 'contents' })}>
+      <div
+        class={flex({
+          direction: 'column',
+          gap: '4px',
+          position: 'fixed',
+          bottom: '92px',
+          right: '32px',
+          borderRadius: '12px',
+          overflow: 'hidden',
+          width: '384px',
+          textStyle: '14m',
+          color: 'neutral.90',
+          backgroundColor: 'white',
+          boxShadow: 'heavy',
+          pointerEvents: 'auto',
+        })}
+        onpointerdown={(e) => e.stopPropagation()}
+        transition:fly={{ y: 5 }}
+      >
+        <div
+          class={center({
+            flexDirection: 'column',
+            height: '150px',
+            gap: '16px',
+            bgGradient: 'to-b',
+            gradientFrom: '[var(--widget-theme-color)/60]',
+            gradientTo: '[var(--widget-theme-color)/100]',
+          })}
+        >
+          {#if site.logoUrl}
+            <Img
+              style={css.raw({
+                size: '56px',
               })}
-              href={`${site.url}/go/${page.id}`}
-              rel="noopener noreferrer"
-              target="_blank"
-            >
-              {page.title}
-            </a>
+              alt={site.name}
+              size={64}
+              url={site.logoUrl}
+            />
+          {/if}
+          <h1
+            style:color={getAccessibleTextColor(hexToRgb(site.themeColor))}
+            class={css({
+              textStyle: '16eb',
+            })}
+          >
+            리더블 도움센터
+          </h1>
+        </div>
+        {#if loadingCount > 0}
+          <div class={center({ flexDirection: 'column', paddingY: '40px', gap: '20px' })}>
+            <Sparkle />
+            <p class={css({ textStyle: '14b' })}>현재 페이지에서 가장 도움이 될 문서를 찾고 있어요...</p>
+          </div>
+        {:else if response && pages}
+          <div class={flex({ flexDirection: 'column', gap: '12px', paddingX: '16px', paddingY: '20px' })}>
+            {#if pages.length > 0}
+              <h2 class={flex({ alignItems: 'center', gap: '6px' })}>
+                <SparkleSmall />
+                <span class={css({ textStyle: '16b' })}>현재 페이지와 연관된 문서를 찾았어요.</span>
+              </h2>
+
+              <ul
+                class={flex({
+                  flexDirection: 'column',
+                  gap: '4px',
+                  marginLeft: '20px',
+                  paddingLeft: '20px',
+                  listStyle: 'disc',
+                  textStyle: '14m',
+                  color: 'neutral.80',
+                })}
+              >
+                {#each pages as page, idx (idx)}
+                  <li>
+                    <a
+                      class={css({
+                        textDecoration: 'underline',
+                        textUnderlineOffset: '4px',
+                        _hover: {
+                          color: 'neutral.100',
+                        },
+                      })}
+                      href={`${site.url}/go/${page.id}`}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    >
+                      {page.title}
+                    </a>
+                  </li>
+                {/each}
+              </ul>
+            {:else}
+              <div class={flex({ gap: '6px' })}>
+                <SparkleSmall />
+                <div class={flex({ flexDirection: 'column', gap: '4px' })}>
+                  <p class={css({ textStyle: '16b' })}>현재 페이지와 연관된 문서를 찾지 못했어요.</p>
+                  <p class={css({ textStyle: '14m', color: 'neutral.80' })}>
+                    도움센터 문서를 이용하시거나, 문의를 남겨보세요.
+                  </p>
+                </div>
+              </div>
+            {/if}
           </div>
         {:else}
-          결과 없음
-        {/each}
-      {:else}
-        결과 없음
-      {/if}
+          <div class={flex({ gap: '6px' })}>
+            <SparkleSmall />
+            <div class={flex({ flexDirection: 'column', gap: '4px' })}>
+              <p class={css({ textStyle: '16b' })}>현재 페이지와 연관된 문서를 찾지 못했어요.</p>
+              <p class={css({ textStyle: '14m', color: 'neutral.80' })}>
+                도움센터 문서를 이용하시거나, 문의를 남겨보세요.
+              </p>
+            </div>
+          </div>
+        {/if}
+
+        <div class={center({ paddingTop: '8px', paddingBottom: '16px' })}>
+          <a href="https://rdbl.io" rel="noopener noreferrer" target="_blank">
+            <img alt="Readable" src={ReadableLogo} />
+          </a>
+        </div>
+      </div>
     </div>
   {/if}
 </div>
