@@ -2,7 +2,6 @@
   import { Readability } from '@mozilla/readability';
   import { css } from '@readable/styled-system/css';
   import { center, flex } from '@readable/styled-system/patterns';
-  import { token } from '@readable/styled-system/tokens';
   import { Icon } from '@readable/ui/components';
   import stringHash from '@sindresorhus/string-hash';
   import stringify from 'fast-json-stable-stringify';
@@ -12,9 +11,11 @@
   import { trpc } from './trpc';
   import type { TRPCOutput } from './trpc';
 
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const siteId = (document.currentScript as HTMLScriptElement).dataset.siteId!;
-  const themeColor = token('colors.neutral.100');
+  type Props = {
+    site: TRPCOutput['widget']['site'];
+  };
+
+  let { site }: Props = $props();
 
   let popoverEl: HTMLDivElement;
   let open = $state(false);
@@ -82,7 +83,7 @@
       lastHash = hash;
 
       response = await trpc.widget.findRelatedPages.query({
-        siteId,
+        siteId: site.id,
         keywords,
         text,
       });
@@ -150,7 +151,7 @@
   >
     {#if open}
       <div
-        style:--widget-theme-color={themeColor}
+        style:--widget-theme-color={site.themeColor}
         class={center({
           position: 'absolute',
           inset: '0',
@@ -166,7 +167,7 @@
       </div>
     {:else}
       <div
-        style:--widget-theme-color={themeColor}
+        style:--widget-theme-color={site.themeColor}
         class={center({
           position: 'absolute',
           inset: '0',
@@ -222,7 +223,7 @@
                   color: 'neutral.100',
                 },
               })}
-              href={`${response.site.url}/go/${page.id}`}
+              href={`${site.url}/go/${page.id}`}
               rel="noopener noreferrer"
               target="_blank"
             >

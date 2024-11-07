@@ -6,8 +6,18 @@ import { and, asc, cosineDistance, eq, inArray } from 'drizzle-orm';
 import stringify from 'fast-json-stable-stringify';
 import { z } from 'zod';
 import { redis } from '@/cache';
-import { db, first, PageContentChunks, PageContents, Pages, Sites } from '@/db';
-import { PageState, SiteState } from '@/enums';
+import {
+  db,
+  first,
+  firstOrThrow,
+  Images,
+  PageContentChunks,
+  PageContents,
+  Pages,
+  SiteCustomDomains,
+  Sites,
+} from '@/db';
+import { PageState, SiteCustomDomainState, SiteState } from '@/enums';
 import { env } from '@/env';
 import * as langchain from '@/external/langchain';
 import { keywordSearchPrompt } from '@/prompt/widget';
@@ -38,6 +48,34 @@ const widgetProcedure = publicProcedure
   });
 
 export const widgetRouter = router({
+  site: widgetProcedure.query(async ({ ctx }) => {
+    const customDomain = await db
+      .select({
+        domain: SiteCustomDomains.domain,
+      })
+      .from(SiteCustomDomains)
+      .where(and(eq(SiteCustomDomains.siteId, ctx.site.id), eq(SiteCustomDomains.state, SiteCustomDomainState.ACTIVE)))
+      .then(first);
+
+    const logo = ctx.site.logoId
+      ? await db
+          .select({
+            path: Images.path,
+          })
+          .from(Images)
+          .where(eq(Images.id, ctx.site.logoId))
+          .then(firstOrThrow)
+      : null;
+
+    return {
+      id: ctx.site.id,
+      name: ctx.site.name,
+      themeColor: ctx.site.themeColor,
+      url: customDomain ? `https://${customDomain.domain}` : `https://${ctx.site.slug}.${env.USERSITE_DEFAULT_HOST}`,
+      logoUrl: logo ? `${env.PUBLIC_USERCONTENTS_URL}/images/${logo.path}` : null,
+    };
+  }),
+
   findRelatedPages: widgetProcedure
     .input(
       z.object({
@@ -46,8 +84,6 @@ export const widgetRouter = router({
       }),
     )
     .query(async ({ input, ctx }) => {
-      const siteUrl = `https://${ctx.site.slug}.${env.USERSITE_DEFAULT_HOST}`;
-
       const hash = stringHash(
         stringify({
           keywords: input.keywords,
@@ -63,9 +99,9 @@ export const widgetRouter = router({
         await Bun.sleep(1000);
         result = JSON.parse(cached);
       } else {
-        const queryVector = await langchain.embeddings.embedQuery(input.keywords.join(' '));
+        const vector = await langchain.embeddings.embedQuery(input.keywords.join(' '));
+        const distance = cosineDistance(PageContentChunks.vector, vector);
 
-        const distance = cosineDistance(PageContentChunks.vector, queryVector);
         const chunks = await db
           .select({
             id: Pages.id,
@@ -82,7 +118,6 @@ export const widgetRouter = router({
 
         if (chunks.length === 0) {
           return {
-            site: { id: ctx.site.id, name: ctx.site.name, url: siteUrl },
             pages: [],
           };
         }
@@ -135,9 +170,9 @@ export const widgetRouter = router({
       );
 
       return {
-        site: { id: ctx.site.id, name: ctx.site.name, url: siteUrl },
         pages: sortedResultPages.map((page) => ({
-          ...page,
+          id: page.id,
+          title: page.title ?? '(제목 없음)',
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           score: result.pages.find((p) => p.id === page.id)!.score,
         })),

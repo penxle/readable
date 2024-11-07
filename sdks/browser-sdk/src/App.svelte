@@ -1,16 +1,16 @@
 <svelte:options customElement={{ tag: 'rdbl-widget' }} />
 
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { trpc } from './trpc';
   import Widget from './Widget.svelte';
 
-  let loaded = $state(false);
+  type Props = {
+    'site-id': string;
+  };
 
-  onMount(() => {
-    loaded = true;
-  });
+  let { 'site-id': siteId }: Props = $props();
 </script>
 
-{#if loaded}
-  <Widget />
-{/if}
+{#await trpc.widget.site.query({ siteId }) then site}
+  <Widget {site} />
+{/await}
