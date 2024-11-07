@@ -3,9 +3,6 @@
   import { flex } from '@readable/styled-system/patterns';
   import { createFloatingActions } from '@readable/ui/actions';
   import { NodeView, NodeViewContentEditable } from '@readable/ui/tiptap';
-  import twitterEmojis from 'emoji-datasource-twitter/emoji.json';
-  import { matchSorter } from 'match-sorter';
-  import { HorizontalDivider } from '../../../components';
   import Emoji from './Emoji.svelte';
   import type { NodeViewProps } from '@readable/ui/tiptap';
 
@@ -13,44 +10,7 @@
 
   let { node, editor, updateAttributes }: Props = $props();
 
-  const presetEmojiNames = ['exclamation', 'pushpin', 'bulb', 'loudspeaker', ''];
-
-  const emojis = [
-    ...twitterEmojis,
-    {
-      name: '',
-      short_name: '',
-      short_names: [''],
-      has_img_twitter: true,
-      sort_order: 0,
-      sheet_x: -1,
-      sheet_y: -1,
-    },
-  ]
-    .filter((emoji) => emoji.has_img_twitter)
-    .toSorted((a, b) => {
-      if (presetEmojiNames.includes(a.short_name) && presetEmojiNames.includes(b.short_name)) {
-        return presetEmojiNames.indexOf(a.short_name) - presetEmojiNames.indexOf(b.short_name);
-      }
-
-      if (presetEmojiNames.includes(a.short_name) && !presetEmojiNames.includes(b.short_name)) {
-        return -1;
-      }
-
-      if (presetEmojiNames.includes(b.short_name) && !presetEmojiNames.includes(a.short_name)) {
-        return 1;
-      }
-
-      return a.sort_order - b.sort_order;
-    });
-
-  const findEmoji = (name: string) => {
-    return emojis.find((e) => e.short_name === name || e.short_names.includes(name));
-  };
-
   let emojiPickerOpened = $state(false);
-  let pickerEl = $state<HTMLDivElement>();
-  let searchKeyword = $state('');
 
   const { anchor, floating } = createFloatingActions({
     placement: 'bottom-end',
@@ -58,20 +18,6 @@
     onClickOutside: () => {
       emojiPickerOpened = false;
     },
-  });
-
-  const emoji = $derived(findEmoji(node.attrs.emoji));
-  const filteredEmojis = $derived(
-    matchSorter(emojis, searchKeyword, {
-      keys: ['name', 'short_name', 'short_names', 'text', 'texts'],
-      sorter: (items) => items,
-    }),
-  );
-
-  $effect(() => {
-    pickerEl?.querySelector('[aria-pressed="true"]')?.scrollIntoView({
-      block: 'center',
-    });
   });
 </script>
 
@@ -120,8 +66,8 @@
       }}
       use:anchor
     >
-      {#if emoji?.short_name}
-        <Emoji style={css.raw({ size: '20px' })} {emoji} />
+      {#if node.attrs.emoji}
+        <Emoji style={css.raw({ size: '20px' })} emoji={node.attrs.emoji} />
       {/if}
     </svelte:element>
 
@@ -140,43 +86,13 @@
         })}
         use:floating
       >
-        <input
-          class={css({ textStyle: '14m', padding: '6px' })}
-          placeholder="검색..."
-          type="text"
-          bind:value={searchKeyword}
-        />
-
-        <HorizontalDivider />
-
-        <div bind:this={pickerEl} class={flex({ gap: '6px', flexWrap: 'wrap', overflowY: 'auto' })}>
-          {#each filteredEmojis as emoji (emoji.short_name)}
-            <button
-              class={flex({
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: '2px',
-                size: '28px',
-                _pressed: {
-                  backgroundColor: 'gray.1000/8',
-                },
-                _hover: {
-                  backgroundColor: 'gray.1000/8',
-                },
-              })}
-              aria-label={emoji.name}
-              aria-pressed={emoji.short_name === node.attrs.emoji}
-              onclick={() => {
-                updateAttributes({ emoji: emoji.short_name });
-                emojiPickerOpened = false;
-              }}
-              title={emoji.name}
-              type="button"
-            >
-              <Emoji style={css.raw({ size: '20px' })} {emoji} />
-            </button>
-          {/each}
-        </div>
+        {#await import('./Picker.svelte') then { default: Picker }}
+          <Picker
+            onselect={(emoji) => updateAttributes({ emoji })}
+            selectedEmoji={node.attrs.emoji}
+            bind:open={emojiPickerOpened}
+          />
+        {/await}
       </div>
     {/if}
     <div class={css({ flexGrow: 1, paddingTop: '2px' })}>
