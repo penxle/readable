@@ -97,6 +97,8 @@
 <svelte:head>
   {#if $query.publicSite.logo}
     <link href={`${$query.publicSite.logo.url}?s=32&f=png`} rel="icon" sizes="32x32" type="image/png" />
+  {:else}
+    <link href="data:image/x-icon;," rel="icon" type="image/x-icon" />
   {/if}
 </svelte:head>
 
