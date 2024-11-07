@@ -47,16 +47,7 @@
       overflow: 'hidden',
     })}
   >
-    <img
-      bind:this={imgEl}
-      class={css(style)}
-      {alt}
-      loading="lazy"
-      onload={() => (loaded = true)}
-      {sizes}
-      {src}
-      {srcset}
-    />
+    <img bind:this={imgEl} class={css(style)} {alt} onload={() => (loaded = true)} {sizes} {src} {srcset} />
 
     {#if !loaded}
       <img

@@ -27,7 +27,7 @@ export const serve = async ({ Server, manifest, prerendered }) => {
     const relativePath = c.req.path.slice(1);
     if (manifest.assets.has(relativePath) || relativePath.startsWith(manifest.appPath)) {
       const immutable = relativePath.startsWith(`${manifest.appPath}/immutable`);
-      const filePath = path.join(basePath, 'client', relativePath);
+      const filePath = path.join(basePath, 'assets', relativePath);
       const file = Bun.file(filePath);
 
       return new Response(file, {
@@ -40,7 +40,7 @@ export const serve = async ({ Server, manifest, prerendered }) => {
     }
 
     if (c.req.path in prerendered) {
-      const filePath = path.join(basePath, 'client', prerendered[c.req.path]);
+      const filePath = path.join(basePath, 'assets', prerendered[c.req.path]);
       const file = Bun.file(filePath);
 
       return new Response(file, {

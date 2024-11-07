@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { build } from 'tsup';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -11,27 +12,34 @@ export const bun = () => {
   return {
     name: '@readable/adapter-bun',
     adapt: async (builder) => {
+      const tmp = builder.getBuildDirectory('adapter-bun');
       const out = 'dist';
+
+      builder.rimraf(tmp);
+      builder.rimraf(out);
+
+      builder.mkdirp(tmp);
+      builder.mkdirp(out);
 
       const prerendered = {};
       for (const [p, { file }] of builder.prerendered.pages.entries()) {
         prerendered[p] = file;
       }
 
-      builder.rimraf(out);
-      builder.mkdirp(out);
+      builder.log.info('Copying assets');
+      builder.writeClient(path.join(out, 'assets'));
+      builder.writePrerendered(path.join(out, 'assets'));
 
-      builder.writeServer(path.join(out, 'server'));
-      builder.writeClient(path.join(out, 'client'));
-      builder.writePrerendered(path.join(out, 'client'));
+      builder.log.info('Building server');
+      builder.writeServer(path.join(tmp, 'server'));
 
       await fs.appendFile(
-        path.join(out, 'server/manifest.js'),
+        path.join(tmp, 'server/manifest.js'),
         `export const prerendered = ${JSON.stringify(prerendered)};`,
       );
 
       await fs.writeFile(
-        path.join(out, 'index.js'),
+        path.join(tmp, 'index.js'),
         `
           import { serve } from './serve.js';
           import { Server } from './server/index.js';
@@ -41,7 +49,21 @@ export const bun = () => {
         `,
       );
 
-      builder.copy(path.join(__dirname, 'serve.js'), path.join(out, 'serve.js'));
+      builder.copy(path.join(__dirname, 'serve.js'), path.join(tmp, 'serve.js'));
+
+      await build({
+        entry: [path.join(tmp, 'index.js')],
+        outDir: out,
+
+        format: 'esm',
+        target: 'esnext',
+
+        noExternal: [/.*/],
+
+        esbuildOptions: (options) => {
+          options.chunkNames = 'chunks/[name]-[hash]';
+        },
+      });
     },
   };
 };

@@ -26,7 +26,7 @@ const site = new readable.Site('usersite', {
   image: {
     name: '637423633734.dkr.ecr.ap-northeast-2.amazonaws.com/readable',
     digest: config.require('digest'),
-    command: ['bun', 'run', 'apps/usersite/dist/index.js'],
+    command: ['bun', 'run', 'apps/usersite/index.js'],
   },
 
   resources: {

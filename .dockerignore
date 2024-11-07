@@ -1,8 +1,9 @@
 .DS_Store
 
-node_modules/
-dist/
-.turbo/
+node_modules
+dist
+.turbo
+.svelte-kit
 
 .env.local
 
