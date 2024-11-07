@@ -95,10 +95,16 @@
       overflow: 'hidden',
     })}
   >
+    <img
+      style:aspect-ratio={ratio}
+      class={css({ objectFit: 'cover' }, style)}
+      {alt}
+      loading="lazy"
+      src={placeholderUrl}
+    />
     {#if loaded}
-      <div bind:this={contentEl} style:aspect-ratio={ratio} in:fade={{ duration: 200 }}></div>
+      <div bind:this={contentEl} class={css({ position: 'absolute', inset: '0' })} in:fade={{ duration: 200 }}></div>
     {:else}
-      <img style:aspect-ratio={ratio} class={css(style)} {alt} loading="lazy" src={placeholderUrl} />
       <div class={center({ position: 'absolute', inset: '0' })}>
         <RingSpinner style={css.raw({ size: '20px' })} />
       </div>
