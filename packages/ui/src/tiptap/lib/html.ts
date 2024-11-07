@@ -5,10 +5,17 @@ import type { Extensions, JSONContent } from '@tiptap/core';
 export const renderHTML = (content: JSONContent, extensions: Extensions) => {
   const html = generateHTML(content, extensions);
 
-  return handleHTML(html, (document) => {
+  let head = '';
+
+  const body = handleHTML(html, (document) => {
     const nodeViewWrappers = document.querySelectorAll('node-view');
 
     for (const nodeViewWrapper of nodeViewWrappers) {
+      const nodeViewHead = nodeViewWrapper.dataset.head;
+      if (nodeViewHead) {
+        head += nodeViewHead;
+      }
+
       const nodeViewContent = parseHTML(nodeViewWrapper.dataset.html ?? '');
       const nodeView = nodeViewContent.querySelector('[data-node-view]');
 
@@ -26,4 +33,6 @@ export const renderHTML = (content: JSONContent, extensions: Extensions) => {
       nodeViewWrapper.replaceWith(nodeView);
     }
   });
+
+  return { head, body };
 };

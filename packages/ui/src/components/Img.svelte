@@ -86,6 +86,12 @@
   });
 </script>
 
+<svelte:head>
+  {#if placeholderUrl}
+    <link as="image" href={src} imagesizes={sizes} imagesrcset={srcset} rel="preload" />
+  {/if}
+</svelte:head>
+
 {#if placeholderUrl}
   <div
     bind:this={containerEl}

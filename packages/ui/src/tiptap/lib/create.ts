@@ -39,7 +39,7 @@ export const extendNodeToNodeView = <Options = any, Storage = any>(
 
         return node.isLeaf ? ['node-view', attributes] : ['node-view', attributes, 0];
       } else {
-        const { body } = render(component, {
+        const { head, body } = render(component, {
           props: {
             node,
             // @ts-expect-error Type mismatch -- fix this
@@ -49,8 +49,8 @@ export const extendNodeToNodeView = <Options = any, Storage = any>(
         });
 
         return node.isLeaf
-          ? ['node-view', { 'data-html': body }]
-          : ['node-view', { 'data-html': body }, ['node-view-content-editable', 0]];
+          ? ['node-view', { 'data-head': head, 'data-html': body }]
+          : ['node-view', { 'data-head': head, 'data-html': body }, ['node-view-content-editable', 0]];
       }
     },
 

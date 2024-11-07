@@ -65,6 +65,10 @@
   });
 </script>
 
+<svelte:head>
+  {@html html.head}
+</svelte:head>
+
 <article
   bind:this={element}
   class={css({
@@ -77,7 +81,7 @@
 >
   {#if !loaded}
     <div class={cx('ProseMirror', css(style))}>
-      {@html html}
+      {@html html.body}
     </div>
   {/if}
 </article>
