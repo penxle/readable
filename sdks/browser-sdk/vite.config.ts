@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import icons from 'unplugin-icons/vite';
 import { defineConfig } from 'vite';
@@ -10,6 +11,11 @@ export default defineConfig({
       compiler: 'svelte',
     }),
   ],
+  resolve: {
+    alias: {
+      '@': path.resolve(import.meta.dirname, '../../apps/api/src'),
+    },
+  },
   build: {
     target: 'es2020',
     lib: {
