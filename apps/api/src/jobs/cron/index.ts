@@ -8,7 +8,7 @@ import { TestCron } from './test';
 
 const crons = [TestCron];
 
-const _crons = crons.map((cron) => Cron(cron.pattern, { paused: true, timezone: 'Asia/Seoul' }, cron.fn));
+const _crons = crons.map((cron) => new Cron(cron.pattern, { paused: true, timezone: 'Asia/Seoul' }, cron.fn));
 
 const key = stringHash(dev ? `jobs:cron:${nanoid()}` : `jobs:cron:${env.PUBLIC_PULUMI_STACK}`);
 

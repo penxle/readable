@@ -1,8 +1,8 @@
-import { Errors, PortOneApi } from '@portone/server-sdk';
+import { Errors, PortOneClient } from '@portone/server-sdk';
 import { match, P } from 'ts-pattern';
 import { env } from '@/env';
 
-export const client = PortOneApi(env.PORTONE_API_KEY);
+export const client = PortOneClient(env.PORTONE_API_KEY);
 
 type PortOneSuccessResult<T> = { status: 'succeeded' } & T;
 type PortOneFailureResult = { status: 'failed'; code: string; message: string };
@@ -27,8 +27,9 @@ export const issueBillingKey = async (params: IssueBillingKeyParams): Promise<Is
   try {
     const {
       billingKeyInfo: { billingKey },
-    } = await client.issueBillingKey(
-      {
+    } = await client.payment.billingKey.issueBillingKey({
+      channelKey: env.PORTONE_CHANNEL_KEY,
+      method: {
         card: {
           credential: {
             number: params.cardNumber,
@@ -39,15 +40,12 @@ export const issueBillingKey = async (params: IssueBillingKeyParams): Promise<Is
           },
         },
       },
-      {
-        channelKey: env.PORTONE_CHANNEL_KEY,
-        customer: {
-          id: params.customerId,
-        },
+      customer: {
+        id: params.customerId,
       },
-    );
+    });
 
-    const resp = await client.getBillingKey(billingKey);
+    const resp = await client.payment.billingKey.getBillingKeyInfo(billingKey);
 
     if (!resp || resp.status !== 'ISSUED' || resp.methods?.[0].type !== 'BillingKeyPaymentMethodCard') {
       throw new Error('Failed to issue billing key');
@@ -74,7 +72,7 @@ type DeleteBillingKeyParams = {
 type DeleteBillingKeyResult = PortOneResult<unknown>;
 export const deleteBillingKey = async (params: DeleteBillingKeyParams): Promise<DeleteBillingKeyResult> => {
   try {
-    await client.deleteBillingKey(params.billingKey);
+    await client.payment.billingKey.deleteBillingKey(params.billingKey);
 
     return makeSuccessResult({});
   } catch (err) {
@@ -93,7 +91,8 @@ type MakePaymentParams = {
 type MakePaymentResult = PortOneResult<{ approvalNumber: string; receiptUrl: string }>;
 export const makePayment = async (params: MakePaymentParams): Promise<MakePaymentResult> => {
   try {
-    await client.payWithBillingKey(params.paymentId, {
+    await client.payment.payWithBillingKey({
+      paymentId: params.paymentId,
       billingKey: params.billingKey,
       orderName: params.orderName,
       amount: { total: params.amount },
@@ -104,7 +103,7 @@ export const makePayment = async (params: MakePaymentParams): Promise<MakePaymen
       },
     });
 
-    const resp = await client.getPayment(params.paymentId);
+    const resp = await client.payment.getPayment(params.paymentId);
 
     if (!resp || resp.status !== 'PAID' || resp.method?.type !== 'PaymentMethodCard') {
       throw new Error('Failed to make payment');
@@ -129,18 +128,19 @@ type CancelPaymentParams = {
 type CancelPaymentResult = PortOneResult<{ receiptUrl: string }>;
 export const cancelPayment = async (params: CancelPaymentParams): Promise<CancelPaymentResult> => {
   try {
-    const resp = await client.cancelPayment(params.paymentId, {
+    const resp = await client.payment.cancelPayment({
+      paymentId: params.paymentId,
       reason: params.reason,
       amount: params.amount,
     });
 
-    if (resp.status !== 'SUCCEEDED') {
+    if (resp.cancellation.status !== 'SUCCEEDED') {
       throw new Error('Failed to refund payment');
     }
 
     /* eslint-disable @typescript-eslint/no-non-null-assertion */
     return makeSuccessResult({
-      receiptUrl: resp.receiptUrl!,
+      receiptUrl: resp.cancellation.receiptUrl!,
     });
     /* eslint-enable @typescript-eslint/no-non-null-assertion */
   } catch (err) {

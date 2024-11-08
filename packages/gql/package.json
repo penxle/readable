@@ -22,7 +22,7 @@
   "devDependencies": {
     "@readable/tsconfig": "workspace:*",
     "@sindresorhus/string-hash": "^2.0.0",
-    "@sveltejs/kit": "^2.7.5",
+    "@sveltejs/kit": "^2.8.0",
     "fast-glob": "^3.3.2",
     "fast-json-stable-stringify": "^2.1.0",
     "graphql": "^16.9.0",
@@ -31,7 +31,7 @@
     "recast": "^0.23.9",
     "remeda": "^2.16.0",
     "rxjs": "^7.8.1",
-    "svelte": "^5.1.9",
+    "svelte": "^5.1.12",
     "ts-pattern": "^5.5.0",
     "tsup": "^8.3.5",
     "typescript": "^5.6.3",
