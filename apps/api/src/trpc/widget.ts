@@ -16,6 +16,7 @@ import {
   Pages,
   SiteCustomDomains,
   Sites,
+  SiteWidgets,
 } from '@/db';
 import { PageState, SiteCustomDomainState, SiteState } from '@/enums';
 import { env } from '@/env';
@@ -78,12 +79,21 @@ export const widgetRouter = router({
           .then(firstOrThrow)
       : null;
 
+    const widget = await db
+      .select({ outLink: SiteWidgets.outLink })
+      .from(SiteWidgets)
+      .where(eq(SiteWidgets.siteId, ctx.site.id))
+      .then(first);
+
     return {
       id: ctx.site.id,
       name: ctx.site.name,
       themeColor: ctx.site.themeColor,
       url: customDomain ? `https://${customDomain.domain}` : `https://${ctx.site.slug}.${env.USERSITE_DEFAULT_HOST}`,
       logoUrl: logo ? `${env.PUBLIC_USERCONTENTS_URL}/images/${logo.path}` : null,
+      widget: {
+        outLink: widget?.outLink,
+      },
     };
   }),
 

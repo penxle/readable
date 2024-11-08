@@ -491,6 +491,20 @@ export const SiteHeaderLinks = pgTable('site_header_links', {
     .default(sql`now()`),
 });
 
+export const SiteWidgets = pgTable('site_widgets', {
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => createDbId('SWGT')),
+  siteId: text('site_id')
+    .notNull()
+    .unique()
+    .references(() => Sites.id, { onUpdate: 'cascade', onDelete: 'restrict' }),
+  outLink: text('out_link'),
+  createdAt: datetime('created_at')
+    .notNull()
+    .default(sql`now()`),
+});
+
 export const Teams = pgTable(
   'teams',
   {

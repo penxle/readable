@@ -252,6 +252,7 @@ type Mutation {
   updatePageView(input: UpdatePageViewInput!): Boolean!
   updatePaymentMethod(input: UpdatePaymentMethodInput!): PaymentMethod!
   updateSite(input: UpdateSiteInput!): Site!
+  updateSiteWidget(input: UpdateSiteWidgetInput!): SiteWidget!
   updateTeam(input: UpdateTeamInput!): Team!
   updateTeamMemberRole(input: UpdateTeamMemberRoleInput!): TeamMember!
   updateUser(input: UpdateUserInput!): User!
@@ -474,6 +475,7 @@ type PublicSite implements ISite {
   themeColor: String!
   url: String!
   whitelabelEnabled: Boolean!
+  widget: SiteWidget
 }
 
 input PublishPageInput {
@@ -605,6 +607,11 @@ enum SiteState {
 }
 
 union SiteUpdateStreamPayload = Page | Site
+
+type SiteWidget {
+  id: ID!
+  outLink: String
+}
 
 type Subscription {
   pageContentCommentUpdateStream(pageId: ID!): Page!
@@ -755,6 +762,11 @@ input UpdateSiteInput {
   siteId: ID!
   slug: String!
   themeColor: String!
+}
+
+input UpdateSiteWidgetInput {
+  outLink: String
+  siteId: ID!
 }
 
 input UpdateTeamInput {

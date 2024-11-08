@@ -59,6 +59,7 @@ export const Site = createObjectRef('Site', T.Sites);
 export const SiteAddon = createObjectRef('SiteAddon', T.SiteAddons);
 export const SiteCustomDomain = createObjectRef('SiteCustomDomain', T.SiteCustomDomains);
 export const SiteHeaderLink = createObjectRef('SiteHeaderLink', T.SiteHeaderLinks);
+export const SiteWidget = createObjectRef('SiteWidget', T.SiteWidgets);
 export const Team = createObjectRef('Team', T.Teams);
 export const TeamPlan = createObjectRef('TeamPlan', T.TeamPlans);
 export const TeamMember = createObjectRef('TeamMember', T.TeamMembers);

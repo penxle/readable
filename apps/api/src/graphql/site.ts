@@ -19,6 +19,7 @@ import {
   SiteCustomDomains,
   SiteHeaderLinks,
   Sites,
+  SiteWidgets,
 } from '@/db';
 import {
   CategoryState,
@@ -53,6 +54,7 @@ import {
   SiteAddon,
   SiteCustomDomain,
   SiteHeaderLink,
+  SiteWidget,
   Team,
 } from './objects';
 
@@ -290,6 +292,24 @@ PublicSite.implement({
           .then(first);
       },
     }),
+
+    widget: t.field({
+      type: SiteWidget,
+      nullable: true,
+      resolve: async (site, _, ctx) => {
+        const widgetAvailability = await getTeamPlanRule({
+          teamId: site.teamId,
+          rule: 'widget',
+          ctx,
+        });
+
+        if (!widgetAvailability) {
+          return null;
+        }
+
+        return await db.select().from(SiteWidgets).where(eq(SiteWidgets.siteId, site.id)).then(first);
+      },
+    }),
   }),
 });
 
@@ -313,6 +333,13 @@ SiteHeaderLink.implement({
     state: t.expose('state', { type: SiteHeaderLinkState }),
     label: t.exposeString('label'),
     url: t.exposeString('url'),
+  }),
+});
+
+SiteWidget.implement({
+  fields: (t) => ({
+    id: t.exposeID('id'),
+    outLink: t.exposeString('outLink', { nullable: true }),
   }),
 });
 
@@ -731,6 +758,50 @@ builder.mutationFields((t) => ({
       await invalidateSiteCache(site.id);
 
       return siteHeaderLink;
+    },
+  }),
+
+  updateSiteWidget: t.withAuth({ session: true }).fieldWithInput({
+    type: SiteWidget,
+    input: {
+      siteId: t.input.id(),
+      outLink: t.input.string({ required: false, validate: { url: true } }),
+    },
+    resolve: async (_, { input }, ctx) => {
+      await assertSitePermission({
+        siteId: input.siteId,
+        userId: ctx.session.userId,
+        role: TeamMemberRole.ADMIN,
+      });
+
+      await assertTeamRestriction({
+        siteId: input.siteId,
+        type: TeamRestrictionType.DASHBOARD_WRITE,
+      });
+
+      const site = await db
+        .select({ teamId: Sites.teamId })
+        .from(Sites)
+        .where(eq(Sites.id, input.siteId))
+        .then(firstOrThrow);
+
+      await assertTeamPlanRule({
+        teamId: site.teamId,
+        rule: 'widget',
+      });
+
+      return await db
+        .insert(SiteWidgets)
+        .values({
+          siteId: input.siteId,
+          outLink: input.outLink ?? null,
+        })
+        .onConflictDoUpdate({
+          target: [SiteWidgets.siteId],
+          set: { outLink: input.outLink },
+        })
+        .returning()
+        .then(firstOrThrow);
     },
   }),
 
