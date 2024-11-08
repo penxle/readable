@@ -328,7 +328,7 @@
                 textStyle: '16eb',
               })}
             >
-              리더블 도움센터
+              {site.name}
             </h1>
           </div>
         {/if}
