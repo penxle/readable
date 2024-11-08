@@ -36,7 +36,7 @@ type ChunkState = {
   chunk: Chunk;
 };
 
-const translate = async (state: GraphState): Promise<Partial<GraphState>> => {
+const transform = async (state: GraphState): Promise<Partial<GraphState>> => {
   if (state.conversation.length === 0) {
     return {
       question: state.question,
@@ -44,23 +44,24 @@ const translate = async (state: GraphState): Promise<Partial<GraphState>> => {
   }
 
   const chain = RunnableSequence.from([
-    ChatPromptTemplate.fromTemplate(`Generate a question that a user would ask based on the following conversation and a new user question.
+    ChatPromptTemplate.fromTemplate(`You are a interpreter that may (or may not) transform a input after assessing the input text and the previous conversation.
 A previous conversation:\n\`\`\`\n{conversation}\n\`\`\`
-User newly asked:\n\`\`\`\n{question}\n\`\`\`
+An input text:\n\`\`\`\n{input}\n\`\`\`
 
-Formulate a question a user would ask as they intended to. Only print the question, no other text.
-A User intended to ask:`),
+If the input text contains keyword(s) or semantic meaning related to the previous conversation, transform the input text into a question based on the previous conversation.
+Otherwise, return the input text as it is.`),
     langchain.model,
     new StringOutputParser(),
   ]);
 
   const question = await chain.invoke({
     conversation: state.conversation,
-    question: state.question,
+    input: state.question,
   });
 
   return {
     question,
+    answer: '',
   };
 };
 
@@ -157,14 +158,14 @@ const store = (state: typeof GraphState.State): Partial<GraphState> => {
 };
 
 const workflow = new StateGraph(GraphState)
-  .addNode('translate', translate)
+  .addNode('transform', transform)
   .addNode('retrieve', retrieve)
   .addNode('choose', choose)
   .addNode('generate', generate)
   .addNode('store', store);
 
-workflow.addEdge(START, 'translate');
-workflow.addEdge('translate', 'retrieve');
+workflow.addEdge(START, 'transform');
+workflow.addEdge('transform', 'retrieve');
 workflow.addConditionalEdges('retrieve', (state) =>
   state.retrievedChunks.map((chunk) => new Send('choose', { question: state.question, chunk })),
 );
@@ -182,10 +183,10 @@ type AskParams = {
 };
 
 export const ask = async (params: AskParams): Promise<string | null> => {
-  const output = await app.invoke(
+  const { answer } = await app.invoke(
     { question: params.question, siteId: params.siteId },
     { configurable: { thread_id: params.threadId } },
   );
 
-  return output.answer ?? null;
+  return answer?.length ? answer : null;
 };
