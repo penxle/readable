@@ -462,10 +462,10 @@
           </div>
         {/if}
 
-        <div class={flex({ flexDirection: 'column', gap: '8px', paddingX: '16px' })}>
+        <div class={flex({ flexDirection: 'column', gap: '8px', paddingX: '16px', pointerEvents: 'none' })}>
           <div class={flex({ gap: '6px' })}>
             <Button
-              style={css.raw({ gap: '4px', borderRadius: '16px' })}
+              style={css.raw({ gap: '4px', borderRadius: '16px', pointerEvents: 'auto' })}
               href={site.url}
               rel="noopener noreferrer"
               size="sm"
@@ -480,7 +480,7 @@
           <FormProvider context={chatFormContext} form={chatForm}>
             <TextInput
               name="question"
-              style={css.raw({ borderRadius: '[20px]' })}
+              style={css.raw({ borderRadius: '[20px]', pointerEvents: 'auto' })}
               placeholder="무엇이든 검색하거나 물어보세요."
             >
               {#snippet rightItem()}
