@@ -5,6 +5,7 @@ function createPgEnum<T extends string>(enumName: string, obj: Record<string, T>
   return pgEnum(enumName, Object.values(obj) as [T, ...T[]]);
 }
 
+export const _AiChatMessageRole = createPgEnum('_ai_chat_message_role', E.AiChatMessageRole);
 export const _BillingCycle = createPgEnum('_billing_cycle', E.BillingCycle);
 export const _CategoryState = createPgEnum('_category_state', E.CategoryState);
 export const _JobState = createPgEnum('_job_state', E.JobState);

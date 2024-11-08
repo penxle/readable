@@ -1,3 +1,9 @@
+export type AiChatMessageRole = keyof typeof AiChatMessageRole;
+export const AiChatMessageRole = {
+  USER: 'USER',
+  ASSISTANT: 'ASSISTANT',
+} as const;
+
 export type BillingCycle = keyof typeof BillingCycle;
 export const BillingCycle = {
   MONTHLY: 'MONTHLY',

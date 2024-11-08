@@ -23,6 +23,32 @@ export const Addons = pgTable('addons', {
     .default(sql`now()`),
 });
 
+export const AiChatSessions = pgTable('ai_chat_sessions', {
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => createDbId('AICS')),
+  siteId: text('site_id')
+    .notNull()
+    .references(() => Sites.id, { onUpdate: 'cascade', onDelete: 'restrict' }),
+  createdAt: datetime('created_at')
+    .notNull()
+    .default(sql`now()`),
+});
+
+export const AiChatMessages = pgTable('ai_chat_messages', {
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => createDbId('AICM', { length: 'long' })),
+  sessionId: text('session_id')
+    .notNull()
+    .references(() => AiChatSessions.id, { onUpdate: 'cascade', onDelete: 'restrict' }),
+  role: E._AiChatMessageRole('role').notNull(),
+  content: text('content').notNull(),
+  createdAt: datetime('created_at')
+    .notNull()
+    .default(sql`now()`),
+});
+
 export const Categories = pgTable(
   'categories',
   {

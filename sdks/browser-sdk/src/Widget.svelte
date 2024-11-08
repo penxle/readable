@@ -7,7 +7,6 @@
   import { getAccessibleTextColor, hexToRgb } from '@readable/ui/utils';
   import stringHash from '@sindresorhus/string-hash';
   import stringify from 'fast-json-stable-stringify';
-  import { nanoid } from 'nanoid';
   import { onMount, tick, untrack } from 'svelte';
   import { fly, scale } from 'svelte/transition';
   import { z } from 'zod';
@@ -104,7 +103,7 @@
     }
   };
 
-  let chatThreadId = $state('');
+  let chatSessionId = $state('');
   let chatHistory = $state<
     {
       question: string;
@@ -126,7 +125,8 @@
     }),
     mutation: async ({ question }) => {
       if (chatHistory.length === 0) {
-        chatThreadId = nanoid();
+        const resp = await trpc.widget.chat.new.mutate({ siteId: site.id });
+        chatSessionId = resp.sessionId;
       }
 
       chatHistory.push({ question });
@@ -137,10 +137,10 @@
         chatHistoryEl?.scrollTo({ top: chatHistoryEl.scrollHeight });
       });
 
-      const answer = await trpc.widget.chat.mutate({
+      const answer = await trpc.widget.chat.message.mutate({
         siteId: site.id,
-        question,
-        threadId: chatThreadId,
+        sessionId: chatSessionId,
+        message: question,
       });
 
       chatHistory[chatHistory.length - 1] = { question, answer };

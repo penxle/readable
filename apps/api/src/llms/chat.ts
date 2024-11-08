@@ -1,7 +1,7 @@
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { RunnableSequence } from '@langchain/core/runnables';
-import { Annotation, END, MemorySaver, Send, START, StateGraph } from '@langchain/langgraph';
+import { Annotation, END, Send, START, StateGraph } from '@langchain/langgraph';
 import { and, cosineDistance, desc, eq, gte, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { db, PageContentChunks, PageContents, Pages } from '@/db';
@@ -14,9 +14,9 @@ type Chunk = {
   text: string;
 };
 
-type IO = {
-  question: string;
-  answer: string;
+type Message = {
+  role: 'USER' | 'ASSISTANT';
+  content: string;
 };
 
 const GraphState = Annotation.Root({
@@ -24,10 +24,10 @@ const GraphState = Annotation.Root({
   question: Annotation<string>(),
 
   retrievedChunks: Annotation<Chunk[]>(),
-  chosenChunks: Annotation<Chunk[]>({ reducer: (s, u) => (u.length > 0 ? [...s, ...u] : []), default: () => [] }),
+  chosenChunks: Annotation<Chunk[]>({ reducer: (s, u) => [...s, ...u], default: () => [] }),
 
   answer: Annotation<string>(),
-  conversation: Annotation<IO[]>({ reducer: (s, u) => [...s, ...u], default: () => [] }),
+  conversation: Annotation<Message[]>(),
 });
 
 type GraphState = typeof GraphState.State;
@@ -61,7 +61,6 @@ Otherwise, return the input text as it is.`),
 
   return {
     question,
-    answer: '',
   };
 };
 
@@ -85,7 +84,6 @@ const retrieve = async (state: GraphState): Promise<Partial<GraphState>> => {
 
   return {
     retrievedChunks,
-    chosenChunks: [],
   };
 };
 
@@ -151,18 +149,11 @@ The answer:`),
   };
 };
 
-const store = (state: typeof GraphState.State): Partial<GraphState> => {
-  return {
-    conversation: [{ question: state.question, answer: state.answer }],
-  };
-};
-
 const workflow = new StateGraph(GraphState)
   .addNode('transform', transform)
   .addNode('retrieve', retrieve)
   .addNode('choose', choose)
-  .addNode('generate', generate)
-  .addNode('store', store);
+  .addNode('generate', generate);
 
 workflow.addEdge(START, 'transform');
 workflow.addEdge('transform', 'retrieve');
@@ -170,23 +161,22 @@ workflow.addConditionalEdges('retrieve', (state) =>
   state.retrievedChunks.map((chunk) => new Send('choose', { question: state.question, chunk })),
 );
 workflow.addConditionalEdges('choose', (state) => (state.chosenChunks.length > 0 ? 'generate' : END));
-workflow.addEdge('generate', 'store');
-workflow.addEdge('store', END);
+workflow.addEdge('generate', END);
 
-const saver = new MemorySaver();
-const app = workflow.compile({ checkpointer: saver });
+const app = workflow.compile();
 
 type AskParams = {
-  threadId: string;
   siteId: string;
-  question: string;
+  message: string;
+  conversation: Message[];
 };
 
 export const ask = async (params: AskParams): Promise<string | null> => {
-  const { answer } = await app.invoke(
-    { question: params.question, siteId: params.siteId },
-    { configurable: { thread_id: params.threadId } },
-  );
+  const { answer } = await app.invoke({
+    siteId: params.siteId,
+    question: params.message,
+    conversation: params.conversation,
+  });
 
   return answer?.length ? answer : null;
 };

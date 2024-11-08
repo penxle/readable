@@ -7,6 +7,8 @@ import stringify from 'fast-json-stable-stringify';
 import { z } from 'zod';
 import { redis } from '@/cache';
 import {
+  AiChatMessages,
+  AiChatSessions,
   db,
   first,
   firstOrThrow,
@@ -18,7 +20,7 @@ import {
   Sites,
   SiteWidgets,
 } from '@/db';
-import { PageState, SiteCustomDomainState, SiteState } from '@/enums';
+import { AiChatMessageRole, PageState, SiteCustomDomainState, SiteState } from '@/enums';
 import { env } from '@/env';
 import * as langchain from '@/external/langchain';
 import { ask } from '@/llms/chat';
@@ -200,13 +202,49 @@ export const widgetRouter = router({
       };
     }),
 
-  chat: widgetProcedure
-    .input(z.object({ threadId: z.string(), question: z.string() }))
-    .mutation(async ({ input, ctx }) => {
-      return await ask({
-        threadId: input.threadId,
-        siteId: ctx.site.id,
-        question: input.question,
-      });
+  chat: {
+    new: widgetProcedure.mutation(async ({ ctx }) => {
+      const session = await db
+        .insert(AiChatSessions)
+        .values({ siteId: ctx.site.id })
+        .returning({ id: AiChatSessions.id })
+        .then(firstOrThrow);
+
+      return {
+        sessionId: session.id,
+      };
     }),
+
+    message: widgetProcedure
+      .input(z.object({ sessionId: z.string(), message: z.string() }))
+      .mutation(async ({ input, ctx }) => {
+        await db.insert(AiChatMessages).values({
+          sessionId: input.sessionId,
+          role: AiChatMessageRole.USER,
+          content: input.message,
+        });
+
+        const conversation = await db
+          .select({ role: AiChatMessages.role, content: AiChatMessages.content })
+          .from(AiChatMessages)
+          .where(eq(AiChatMessages.sessionId, input.sessionId))
+          .orderBy(asc(AiChatMessages.createdAt));
+
+        const answer = await ask({
+          siteId: ctx.site.id,
+          message: input.message,
+          conversation,
+        });
+
+        if (answer) {
+          await db.insert(AiChatMessages).values({
+            sessionId: input.sessionId,
+            role: AiChatMessageRole.ASSISTANT,
+            content: answer,
+          });
+        }
+
+        return answer;
+      }),
+  },
 });

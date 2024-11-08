@@ -10,6 +10,11 @@ type Addon {
   name: String!
 }
 
+enum AiChatMessageRole {
+  ASSISTANT
+  USER
+}
+
 input AuthorizeEmailInput {
   code: String!
 }
