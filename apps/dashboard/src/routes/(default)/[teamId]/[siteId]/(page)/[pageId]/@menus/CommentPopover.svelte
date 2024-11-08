@@ -7,6 +7,7 @@
   import { onMount } from 'svelte';
   import ArrowUpIcon from '~icons/lucide/arrow-up';
   import CircleCheckBigIcon from '~icons/lucide/circle-check-big';
+  import XIcon from '~icons/lucide/x';
   import { fragment, graphql } from '$graphql';
   import { Img } from '$lib/components';
   import type { Editor } from '@tiptap/core';
@@ -138,22 +139,41 @@
     <div class={flex({ align: 'center', justify: 'space-between' })}>
       <p class={css({ textStyle: '14sb' })}>댓글</p>
 
-      <Tooltip message="해결하기" offset={6} placement="top">
-        <button
-          class={center({
-            flex: 'none',
-            marginRight: '-2px',
-            borderRadius: '4px',
-            size: '24px',
-            color: 'text.tertiary',
-            _hover: { backgroundColor: 'neutral.20' },
-          })}
-          onclick={onResolve}
-          type="button"
-        >
-          <Icon icon={CircleCheckBigIcon} size={16} />
-        </button>
-      </Tooltip>
+      <div class={flex({ align: 'center', gap: '8px' })}>
+        <Tooltip message="해결하기" offset={6} placement="top">
+          <button
+            class={center({
+              flex: 'none',
+              marginRight: '-2px',
+              borderRadius: '4px',
+              size: '24px',
+              color: 'text.tertiary',
+              _hover: { backgroundColor: 'neutral.20' },
+            })}
+            onclick={onResolve}
+            type="button"
+          >
+            <Icon icon={CircleCheckBigIcon} size={16} />
+          </button>
+        </Tooltip>
+
+        <Tooltip message="닫기" offset={6} placement="top">
+          <button
+            class={center({
+              flex: 'none',
+              marginRight: '-2px',
+              borderRadius: '4px',
+              size: '24px',
+              color: 'text.tertiary',
+              _hover: { backgroundColor: 'neutral.20' },
+            })}
+            onclick={onclose}
+            type="button"
+          >
+            <Icon icon={XIcon} size={18} />
+          </button>
+        </Tooltip>
+      </div>
     </div>
   {/if}
 
