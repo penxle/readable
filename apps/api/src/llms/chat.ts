@@ -180,11 +180,11 @@ type AskParams = {
   question: string;
 };
 
-export const ask = async (params: AskParams) => {
+export const ask = async (params: AskParams): Promise<string | null> => {
   const output = await app.invoke(
     { question: params.question, siteId: params.siteId },
     { configurable: { thread_id: params.threadId } },
   );
 
-  return output.answer;
+  return output.answer ?? null;
 };
