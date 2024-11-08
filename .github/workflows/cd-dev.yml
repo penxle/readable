@@ -45,7 +45,7 @@ jobs:
           tags: type=raw,value=latest
 
       - name: Build image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         id: build
         with:
           push: true
@@ -55,8 +55,8 @@ jobs:
             TURBO_TOKEN=${{ env.TURBO_TOKEN }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=637423633734.dkr.ecr.ap-northeast-2.amazonaws.com/readable:cache
-          cache-to: type=registry,ref=637423633734.dkr.ecr.ap-northeast-2.amazonaws.com/readable:cache,mode=max,image-manifest=true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           provenance: false
 
   deploy:
@@ -103,7 +103,7 @@ jobs:
         run: aws eks update-kubeconfig --name readable
 
       - name: Apply infrastructure
-        uses: pulumi/actions@v5
+        uses: pulumi/actions@v6
         with:
           command: up
           work-dir: apps/${{ matrix.app }}
