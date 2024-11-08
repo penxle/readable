@@ -4,6 +4,7 @@ import { MarkdownTextSplitter, RecursiveCharacterTextSplitter } from 'langchain/
 
 export const model = new ChatAnthropic({
   model: 'claude-3-5-haiku-latest',
+  temperature: 0,
 });
 
 export const embeddings = new VoyageEmbeddings({

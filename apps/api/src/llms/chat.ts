@@ -24,7 +24,7 @@ const GraphState = Annotation.Root({
   question: Annotation<string>(),
 
   retrievedChunks: Annotation<Chunk[]>(),
-  chosenChunks: Annotation<Chunk[]>({ reducer: (s, u) => [...s, ...u], default: () => [] }),
+  chosenChunks: Annotation<Chunk[]>({ reducer: (s, u) => (u.length > 0 ? [...s, ...u] : []), default: () => [] }),
 
   answer: Annotation<string>(),
   conversation: Annotation<IO[]>({ reducer: (s, u) => [...s, ...u], default: () => [] }),
@@ -84,6 +84,7 @@ const retrieve = async (state: GraphState): Promise<Partial<GraphState>> => {
 
   return {
     retrievedChunks,
+    chosenChunks: [],
   };
 };
 
