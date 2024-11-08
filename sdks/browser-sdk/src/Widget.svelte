@@ -1,19 +1,82 @@
 <script lang="ts">
   import { Readability } from '@mozilla/readability';
-  import { css } from '@readable/styled-system/css';
+  import { css, cx } from '@readable/styled-system/css';
   import { center, flex } from '@readable/styled-system/patterns';
-  import { Icon, Img } from '@readable/ui/components';
+  import { Button, FormProvider, Icon, Img, TextInput } from '@readable/ui/components';
+  import { createMutationForm } from '@readable/ui/forms';
   import { getAccessibleTextColor, hexToRgb } from '@readable/ui/utils';
   import stringHash from '@sindresorhus/string-hash';
   import stringify from 'fast-json-stable-stringify';
-  import { onMount, untrack } from 'svelte';
+  import { nanoid } from 'nanoid';
+  import { onMount, tick, untrack } from 'svelte';
   import { fly, scale } from 'svelte/transition';
+  import SvelteMarkdown from 'svelte-markdown';
+  import { z } from 'zod';
+  import ArrowUpIcon from '~icons/lucide/arrow-up';
+  import BookOpenTextIcon from '~icons/lucide/book-open-text';
+  import ChevronLeftIcon from '~icons/lucide/chevron-left';
   import IconX from '~icons/lucide/x';
+  import AiLoading from './assets/AiLoading.svelte';
   import ReadableLogo from './assets/readable-logo.svg';
   import Sparkle from './assets/Sparkle.svelte';
   import SparkleSmall from './assets/SparkleSmall.svelte';
   import { trpc } from './trpc';
   import type { TRPCOutput } from './trpc';
+
+  // NOTE: p, em, strong, ul, ol, li 이외에는 AI 출력에서 발견하지 못함
+  const markdownStyles = css({
+    '& p:not(:last-child)': {
+      marginBottom: '16px',
+      lineHeight: '[1.6]',
+    },
+    '& em': {
+      fontStyle: 'italic',
+    },
+    '& strong': {
+      fontWeight: 'bold',
+    },
+    '& a': {
+      // TODO: 본문 인라인 링크 스타일 적용
+      textDecoration: 'underline',
+    },
+    '& del': {
+      textDecoration: 'line-through',
+    },
+    '& code': {
+      // TODO: 본문 인라인 코드 스타일 적용
+      fontFamily: 'mono',
+      backgroundColor: 'neutral.30/70',
+      paddingX: '4px',
+      paddingY: '2px',
+      borderRadius: '4px',
+      fontSize: '[0.9em]',
+    },
+    '& ul, & ol': {
+      marginBottom: '16px',
+      paddingLeft: '24px',
+    },
+    '& ul': {
+      listStyleType: 'disc',
+    },
+    '& ol': {
+      listStyleType: 'decimal',
+    },
+    '& li': {
+      marginBottom: '8px',
+    },
+    '& h1, & h2, & h3, & h4, & h5, & h6': {
+      fontWeight: 'bold',
+      marginTop: '24px',
+      marginBottom: '16px',
+      lineHeight: '[1.25]',
+    },
+    '& h1': { fontSize: '[2em]' },
+    '& h2': { fontSize: '[1.5em]' },
+    '& h3': { fontSize: '[1.25em]' },
+    '& h4': { fontSize: '[1em]' },
+    '& h5': { fontSize: '[0.875em]' },
+    '& h6': { fontSize: '[0.85em]' },
+  });
 
   type Props = {
     site: TRPCOutput['widget']['site'];
@@ -95,6 +158,59 @@
       loadingCount -= 1;
     }
   };
+
+  let chatThreadId = $state('');
+  let chatHistory = $state<
+    {
+      question: string;
+      answer?: string | null;
+    }[]
+  >([]);
+
+  let chatHistoryEl = $state<HTMLDivElement | undefined>(undefined);
+
+  const {
+    form: chatForm,
+    context: chatFormContext,
+    data: chatFormData,
+    isSubmitting: chatFormIsSubmitting,
+    resetField: chatFormResetField,
+  } = createMutationForm({
+    schema: z.object({
+      question: z.string(),
+    }),
+    mutation: async ({ question }) => {
+      if (chatHistory.length === 0) {
+        chatThreadId = nanoid();
+      }
+
+      chatHistory = [...chatHistory, { question }];
+
+      chatFormResetField('question');
+
+      tick().then(() => {
+        chatHistoryEl?.scrollTo({ top: chatHistoryEl.scrollHeight });
+      });
+
+      const answer = await trpc.widget.chat.mutate({
+        siteId: site.id,
+        question,
+        threadId: chatThreadId,
+      });
+
+      chatHistory = [...chatHistory.slice(0, -1), { question, answer }];
+
+      tick().then(() => {
+        const questions = chatHistoryEl?.querySelectorAll('.question-bubble');
+        if (questions) {
+          questions.item(questions.length - 1)?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+          });
+        }
+      });
+    },
+  });
 
   onMount(() => {
     popoverEl.showPopover();
@@ -194,7 +310,6 @@
       <div
         class={flex({
           direction: 'column',
-          gap: '4px',
           position: 'fixed',
           bottom: '92px',
           right: '32px',
@@ -210,37 +325,125 @@
         onpointerdown={(e) => e.stopPropagation()}
         transition:fly={{ y: 5 }}
       >
-        <div
-          class={center({
-            flexDirection: 'column',
-            height: '150px',
-            gap: '16px',
-            bgGradient: 'to-b',
-            gradientFrom: '[var(--widget-theme-color)/60]',
-            gradientTo: '[var(--widget-theme-color)/100]',
-          })}
-        >
-          {#if site.logoUrl}
-            <Img
-              style={css.raw({
-                size: '56px',
-              })}
-              alt={site.name}
-              size={64}
-              url={site.logoUrl}
-            />
-          {/if}
-          <h1
-            style:color={getAccessibleTextColor(hexToRgb(site.themeColor))}
-            class={css({
-              textStyle: '16eb',
+        {#if chatHistory.length > 0}
+          <div
+            class={flex({
+              gap: '4px',
+              height: '48px',
+              alignItems: 'center',
+              paddingX: '4px',
+              borderBottomWidth: '1px',
+              borderBottomColor: 'border.primary',
             })}
           >
-            리더블 도움센터
-          </h1>
-        </div>
-        {#if loadingCount > 0}
-          <div class={center({ flexDirection: 'column', paddingY: '40px', gap: '20px' })}>
+            <button
+              class={center({
+                padding: '6px',
+                borderRadius: 'full',
+                _hover: {
+                  backgroundColor: 'neutral.20',
+                },
+              })}
+              onclick={() => (chatHistory = [])}
+              type="button"
+            >
+              <Icon icon={ChevronLeftIcon} size={20} />
+            </button>
+            <h1 class={css({ textStyle: '14b' })}>
+              {site.name} AI 검색
+            </h1>
+          </div>
+        {:else}
+          <div
+            class={center({
+              flexDirection: 'column',
+              height: '150px',
+              gap: '16px',
+              bgGradient: 'to-b',
+              gradientFrom: '[var(--widget-theme-color)/60]',
+              gradientTo: '[var(--widget-theme-color)/100]',
+              flexShrink: 0,
+            })}
+          >
+            {#if site.logoUrl}
+              <Img
+                style={css.raw({
+                  size: '56px',
+                  borderRadius: '8px',
+                  borderWidth: '1px',
+                  borderColor: 'border.image',
+                })}
+                alt=""
+                size={64}
+                url={site.logoUrl}
+              />
+            {/if}
+            <h1
+              style:color={getAccessibleTextColor(hexToRgb(site.themeColor))}
+              class={css({
+                textStyle: '16eb',
+              })}
+            >
+              리더블 도움센터
+            </h1>
+          </div>
+        {/if}
+        {#if chatHistory.length > 0}
+          <div
+            bind:this={chatHistoryEl}
+            class={flex({
+              flexDirection: 'column',
+              gap: '12px',
+              paddingX: '16px',
+              paddingY: '20px',
+              overflow: 'auto',
+              minHeight: '170px',
+              maxHeight: '512px',
+              marginBottom: '-40px',
+              paddingBottom: '60px',
+            })}
+          >
+            {#each chatHistory as chat, idx ([idx, chat.answer])}
+              <div class={flex({ justifyContent: 'flex-end', paddingLeft: '40px' })}>
+                <p
+                  class={cx(
+                    'question-bubble',
+                    css({
+                      paddingX: '12px',
+                      paddingY: '8px',
+                      backgroundColor: 'neutral.20',
+                      textStyle: '14m',
+                      borderRadius: '[18px]',
+                    }),
+                  )}
+                >
+                  {chat.question}
+                </p>
+              </div>
+              {#if chat.answer}
+                <div class={flex({ justifyContent: 'flex-start', gap: '12px' })}>
+                  <SparkleSmall />
+                  <p class={cx(markdownStyles, css({ textStyle: '14m' }))}>
+                    <SvelteMarkdown source={chat.answer} />
+                  </p>
+                </div>
+              {:else if chat.answer === null}
+                <div class={flex({ justifyContent: 'flex-start', gap: '12px' })}>
+                  <SparkleSmall />
+                  <p class={css({ textStyle: '14m' })}>
+                    "{chat.question}"과 연관된 내용을 찾지 못했어요.
+                  </p>
+                </div>
+              {:else}
+                <div class={flex({ justifyContent: 'flex-start', gap: '12px' })}>
+                  <SparkleSmall />
+                  <AiLoading />
+                </div>
+              {/if}
+            {/each}
+          </div>
+        {:else if loadingCount > 0}
+          <div class={center({ flexDirection: 'column', paddingY: '20px', gap: '20px' })}>
             <Sparkle />
             <p class={css({ textStyle: '14b' })}>현재 페이지에서 가장 도움이 될 문서를 찾고 있어요...</p>
           </div>
@@ -306,6 +509,39 @@
           </div>
         {/if}
 
+        <div class={flex({ flexDirection: 'column', gap: '8px', paddingX: '16px' })}>
+          <div class={flex({ gap: '6px' })}>
+            <Button
+              style={css.raw({ gap: '4px', borderRadius: '16px' })}
+              href={site.url}
+              size="sm"
+              type="link"
+              variant="secondary"
+            >
+              <Icon icon={BookOpenTextIcon} size={16} />
+              <span class={css({ textStyle: '14b' })}>{site.name}</span>
+            </Button>
+          </div>
+          <FormProvider context={chatFormContext} form={chatForm}>
+            <TextInput
+              name="question"
+              style={css.raw({ borderRadius: '[20px]' })}
+              placeholder="무엇이든 검색하거나 물어보세요."
+            >
+              {#snippet rightItem()}
+                <Button
+                  style={css.raw({ marginRight: '-8px', borderRadius: 'full', padding: '4px', size: '24px' })}
+                  disabled={!$chatFormData.question || $chatFormIsSubmitting}
+                  size="sm"
+                  type="submit"
+                  variant="secondary"
+                >
+                  <Icon icon={ArrowUpIcon} size={16} />
+                </Button>
+              {/snippet}
+            </TextInput>
+          </FormProvider>
+        </div>
         <div class={center({ paddingTop: '8px', paddingBottom: '16px' })}>
           <a href="https://rdbl.io" rel="noopener noreferrer" target="_blank">
             <img alt="Readable" src={ReadableLogo} />

@@ -15,6 +15,7 @@
     rightIcon?: Component;
     hidden?: boolean;
     leftItem?: Snippet;
+    rightItem?: Snippet;
   } & RecipeVariantProps<typeof recipe> &
     Omit<HTMLInputAttributes, 'class' | 'style' | 'size'>;
 
@@ -28,6 +29,7 @@
     rightIcon,
     hidden = false,
     leftItem,
+    rightItem,
     ...rest
   }: Props = $props();
 
@@ -129,6 +131,12 @@
   {#if rightIcon}
     <div class={flex({ align: 'center', marginLeft: '20px' })}>
       <Icon icon={rightIcon} size={18} />
+    </div>
+  {/if}
+
+  {#if rightItem}
+    <div class={css({ marginLeft: '8px' })}>
+      {@render rightItem()}
     </div>
   {/if}
 </label>
