@@ -258,8 +258,9 @@
           bottom: '92px',
           right: '32px',
           borderRadius: '12px',
-          overflow: 'hidden',
+          overflow: 'auto',
           width: '384px',
+          maxHeight: '[calc(100vh - 184px)]',
           textStyle: '14m',
           color: 'neutral.90',
           backgroundColor: 'white',
@@ -272,6 +273,7 @@
         {#if chatHistory.length > 0}
           <div
             class={flex({
+              flexShrink: 0,
               gap: '4px',
               height: '48px',
               alignItems: 'center',
