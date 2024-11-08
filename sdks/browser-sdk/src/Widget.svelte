@@ -296,7 +296,7 @@
               <Icon icon={ChevronLeftIcon} size={20} />
             </button>
             <h1 class={css({ textStyle: '14b' })}>
-              {site.name} AI 검색
+              {site.name} AI 문의
             </h1>
           </div>
         {:else}
@@ -481,7 +481,7 @@
             <TextInput
               name="question"
               style={css.raw({ borderRadius: '[20px]', pointerEvents: 'auto' })}
-              placeholder="무엇이든 검색하거나 물어보세요."
+              placeholder={chatHistory.length > 0 ? '추가 문의하기' : '무엇이든 물어보세요'}
             >
               {#snippet rightItem()}
                 <Button
