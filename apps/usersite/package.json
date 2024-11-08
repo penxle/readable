@@ -30,7 +30,6 @@
     "svelte": "^5.1.12",
     "svelte-check": "^4.0.5",
     "svelte-gestures": "^5.0.6",
-    "svelte-markdown": "^0.4.1",
     "svelte-preprocess": "^6.0.3",
     "tsx": "^4.19.2",
     "typescript": "^5.6.3",

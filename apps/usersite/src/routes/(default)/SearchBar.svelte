@@ -1,10 +1,9 @@
 <script lang="ts">
-  import { css, cx } from '@readable/styled-system/css';
+  import { css } from '@readable/styled-system/css';
   import { center, flex } from '@readable/styled-system/patterns';
-  import { HorizontalDivider, Icon } from '@readable/ui/components';
+  import { HorizontalDivider, Icon, MarkdownRenderer } from '@readable/ui/components';
   import * as R from 'remeda';
   import { getContext, tick } from 'svelte';
-  import SvelteMarkdown from 'svelte-markdown';
   import ChevronLeftIcon from '~icons/lucide/chevron-left';
   import CircleXIcon from '~icons/lucide/circle-x';
   import MoveLeftIcon from '~icons/lucide/move-left';
@@ -19,61 +18,6 @@
 
   const searchBarOpen = getContext('searchBarOpen');
   const hasCmd = getContext('hasCmd');
-
-  // NOTE: p, em, strong, ul, ol, li 이외에는 AI 출력에서 발견하지 못함
-  const markdownStyles = css({
-    '& p:not(:last-child)': {
-      marginBottom: '16px',
-      lineHeight: '[1.6]',
-    },
-    '& em': {
-      fontStyle: 'italic',
-    },
-    '& strong': {
-      fontWeight: 'bold',
-    },
-    '& a': {
-      // TODO: 본문 인라인 링크 스타일 적용
-      textDecoration: 'underline',
-    },
-    '& del': {
-      textDecoration: 'line-through',
-    },
-    '& code': {
-      // TODO: 본문 인라인 코드 스타일 적용
-      fontFamily: 'mono',
-      backgroundColor: 'neutral.30/70',
-      paddingX: '4px',
-      paddingY: '2px',
-      borderRadius: '4px',
-      fontSize: '[0.9em]',
-    },
-    '& ul, & ol': {
-      marginBottom: '16px',
-      paddingLeft: '24px',
-    },
-    '& ul': {
-      listStyleType: 'disc',
-    },
-    '& ol': {
-      listStyleType: 'decimal',
-    },
-    '& li': {
-      marginBottom: '8px',
-    },
-    '& h1, & h2, & h3, & h4, & h5, & h6': {
-      fontWeight: 'bold',
-      marginTop: '24px',
-      marginBottom: '16px',
-      lineHeight: '[1.25]',
-    },
-    '& h1': { fontSize: '[2em]' },
-    '& h2': { fontSize: '[1.5em]' },
-    '& h3': { fontSize: '[1.25em]' },
-    '& h4': { fontSize: '[1em]' },
-    '& h5': { fontSize: '[0.875em]' },
-    '& h6': { fontSize: '[0.85em]' },
-  });
 
   let searchQuery = $state($page.url.searchParams.get('q') ?? '');
   if ($page.url.searchParams.get('q')?.length) {
@@ -618,9 +562,7 @@
           >
             <AiIcon />
             <div class={flex({ flexDirection: 'column', gap: '24px' })}>
-              <p class={cx(css({ textStyle: '16r' }), markdownStyles)}>
-                <SvelteMarkdown source={aiSearchResult.answer} />
-              </p>
+              <MarkdownRenderer style={css.raw({ textStyle: '16r' })} source={aiSearchResult.answer} />
               {#if aiSearchResult.pages.length > 0}
                 <HorizontalDivider />
                 <div>
