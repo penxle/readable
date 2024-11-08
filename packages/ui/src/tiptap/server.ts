@@ -148,3 +148,5 @@ const extensions = [
 export const serverExtensions = withNodeId(extensions);
 
 export const schema = getSchema(serverExtensions);
+
+export * from './markdown';

@@ -1,4 +1,5 @@
-import { schema } from '@readable/ui/tiptap/server';
+import { markdownSerializer, schema } from '@readable/ui/tiptap/server';
+import { Node } from '@tiptap/pm/model';
 import dayjs from 'dayjs';
 import { and, desc, eq, gt, sql } from 'drizzle-orm';
 import * as R from 'remeda';
@@ -160,7 +161,7 @@ export const PageSummarizeJob = defineJob('page:summarize', async (pageId: strin
   const page = await db
     .select({
       title: PageContents.title,
-      text: PageContents.text,
+      content: PageContents.content,
     })
     .from(Pages)
     .innerJoin(PageContents, eq(Pages.id, PageContents.pageId))
@@ -171,8 +172,10 @@ export const PageSummarizeJob = defineJob('page:summarize', async (pageId: strin
     return;
   }
 
-  const content = `${page.title}\n${page.text}`.replaceAll(/\s+/g, ' ');
-  const splits = await langchain.textSplitter.splitText(content);
+  const node = Node.fromJSON(schema, page.content);
+  const markdown = markdownSerializer.serialize(node, { tightLists: true });
+
+  const splits = await langchain.markdownSplitter.splitText(markdown);
   const vectors = await langchain.embeddings.embedDocuments(splits);
 
   await db.transaction(async (tx) => {
