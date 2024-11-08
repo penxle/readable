@@ -128,7 +128,7 @@
         chatThreadId = nanoid();
       }
 
-      chatHistory = [...chatHistory, { question }];
+      chatHistory.push({ question });
 
       chatFormResetField('question');
 
@@ -142,7 +142,7 @@
         threadId: chatThreadId,
       });
 
-      chatHistory = [...chatHistory.slice(0, -1), { question, answer }];
+      chatHistory[chatHistory.length - 1] = { question, answer };
 
       tick().then(() => {
         const questions = chatHistoryEl?.querySelectorAll('.question-bubble');
@@ -347,7 +347,7 @@
               paddingBottom: '60px',
             })}
           >
-            {#each chatHistory as chat, idx ([idx, chat.answer])}
+            {#each chatHistory as chat, idx (idx)}
               <div class={flex({ justifyContent: 'flex-end', paddingLeft: '40px' })}>
                 <p
                   class={cx(
@@ -360,6 +360,7 @@
                       borderRadius: '[18px]',
                     }),
                   )}
+                  in:fly|global={{ y: 10 }}
                 >
                   {chat.question}
                 </p>
