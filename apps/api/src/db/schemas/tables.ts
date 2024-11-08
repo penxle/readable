@@ -42,10 +42,7 @@ export const Categories = pgTable(
       .notNull()
       .default(sql`now()`),
   },
-  (t) => ({
-    siteIdSlugUniq: unique().on(t.siteId, t.slug),
-    siteIdOrderUniq: unique().on(t.siteId, t.order),
-  }),
+  (t) => [unique().on(t.siteId, t.slug), unique().on(t.siteId, t.order)],
 );
 
 export const Embeds = pgTable('embeds', {
@@ -112,9 +109,7 @@ export const Jobs = pgTable(
       .notNull()
       .default(sql`now()`),
   },
-  (t) => ({
-    laneStateCreatedAtIdx: index().on(t.lane, t.state, t.createdAt),
-  }),
+  (t) => [index().on(t.lane, t.state, t.createdAt)],
 );
 
 export const Pages = pgTable(
@@ -139,11 +134,11 @@ export const Pages = pgTable(
       .notNull()
       .default(sql`now()`),
   },
-  (t) => ({
-    siteIdStateIdx: index().on(t.siteId, t.state),
-    siteIdCategoryIdParentIdSlugUniq: unique().on(t.siteId, t.categoryId, t.parentId, t.slug).nullsNotDistinct(),
-    siteIdCategoryIdParentIdOrderUniq: unique().on(t.siteId, t.categoryId, t.parentId, t.order).nullsNotDistinct(),
-  }),
+  (t) => [
+    index().on(t.siteId, t.state),
+    unique().on(t.siteId, t.categoryId, t.parentId, t.slug).nullsNotDistinct(),
+    unique().on(t.siteId, t.categoryId, t.parentId, t.order).nullsNotDistinct(),
+  ],
 );
 
 export const PageContents = pgTable(
@@ -169,9 +164,7 @@ export const PageContents = pgTable(
       .notNull()
       .default(sql`now()`),
   },
-  (t) => ({
-    pageIdCreatedAtIdx: index().on(t.pageId, t.createdAt),
-  }),
+  (t) => [index().on(t.pageId, t.createdAt)],
 );
 
 export const PageContentChunks = pgTable(
@@ -189,9 +182,7 @@ export const PageContentChunks = pgTable(
       .notNull()
       .default(sql`now()`),
   },
-  (t) => ({
-    vectorCosineSimilarityIdx: index('vector_cosine_similarity_idx').using('hnsw', t.vector.op('vector_cosine_ops')),
-  }),
+  (t) => [index('vector_cosine_similarity_idx').using('hnsw', t.vector.op('vector_cosine_ops'))],
 );
 
 export const PageContentContributors = pgTable(
@@ -213,10 +204,7 @@ export const PageContentContributors = pgTable(
       .notNull()
       .default(sql`now()`),
   },
-  (t) => ({
-    pageIdUserIdUniq: unique().on(t.pageId, t.userId),
-    pageIdUpdatedAtIdx: index().on(t.pageId, t.updatedAt),
-  }),
+  (t) => [unique().on(t.pageId, t.userId), index().on(t.pageId, t.updatedAt)],
 );
 
 export const PageContentComments = pgTable('page_content_comments', {
@@ -251,9 +239,7 @@ export const PageContentSnapshots = pgTable(
       .notNull()
       .default(sql`now()`),
   },
-  (t) => ({
-    pageIdCreatedAtIdx: index().on(t.pageId, t.createdAt),
-  }),
+  (t) => [index().on(t.pageId, t.createdAt)],
 );
 
 export const PageContentStates = pgTable('page_content_states', {
@@ -313,9 +299,7 @@ export const PageViews = pgTable(
       .notNull()
       .default(sql`now()`),
   },
-  (t) => ({
-    pageIdDeviceIdCreatedAtIdx: index().on(t.pageId, t.deviceId, t.createdAt),
-  }),
+  (t) => [index().on(t.pageId, t.deviceId, t.createdAt)],
 );
 
 export const PaymentInvoices = pgTable('payment_invoices', {
@@ -365,11 +349,11 @@ export const PaymentMethods = pgTable(
       .notNull()
       .default(sql`now()`),
   },
-  (t) => ({
-    teamIdUniqIdx: uniqueIndex()
+  (t) => [
+    uniqueIndex()
       .on(t.teamId)
       .where(sql`${t.state} = 'ACTIVE'`),
-  }),
+  ],
 );
 
 export const PaymentRecords = pgTable('payment_records', {
@@ -422,13 +406,13 @@ export const Sites = pgTable(
       .notNull()
       .default(sql`now()`),
   },
-  (t) => ({
-    slugStateIdx: index().on(t.slug, t.state),
-    slugUniqIdx: uniqueIndex()
+  (t) => [
+    index().on(t.slug, t.state),
+    uniqueIndex()
       .on(t.slug)
       .where(sql`${t.state} = 'ACTIVE'`),
-    teamIdStateIdx: index().on(t.teamId, t.state),
-  }),
+    index().on(t.teamId, t.state),
+  ],
 );
 
 export const SiteAddons = pgTable(
@@ -447,9 +431,7 @@ export const SiteAddons = pgTable(
       .notNull()
       .default(sql`now()`),
   },
-  (t) => ({
-    siteIdAddonIdUniq: unique().on(t.siteId, t.addonId),
-  }),
+  (t) => [unique().on(t.siteId, t.addonId)],
 );
 
 export const SiteCustomDomains = pgTable(
@@ -467,12 +449,12 @@ export const SiteCustomDomains = pgTable(
       .notNull()
       .default(sql`now()`),
   },
-  (t) => ({
-    domainStateIdx: index().on(t.domain, t.state),
-    domainUniqIdx: uniqueIndex()
+  (t) => [
+    index().on(t.domain, t.state),
+    uniqueIndex()
       .on(t.domain)
       .where(sql`${t.state} = 'ACTIVE'`),
-  }),
+  ],
 );
 
 export const SiteHeaderLinks = pgTable('site_header_links', {
@@ -520,9 +502,7 @@ export const Teams = pgTable(
       .notNull()
       .default(sql`now()`),
   },
-  (t) => ({
-    stateIdx: index().on(t.state),
-  }),
+  (t) => [index().on(t.state)],
 );
 
 export const TeamMembers = pgTable(
@@ -542,10 +522,7 @@ export const TeamMembers = pgTable(
       .notNull()
       .default(sql`now()`),
   },
-  (t) => ({
-    userIdTeamIdUniq: unique().on(t.userId, t.teamId),
-    teamIdUserIdRoleIdx: index().on(t.teamId, t.userId, t.role),
-  }),
+  (t) => [unique().on(t.userId, t.teamId), index().on(t.teamId, t.userId, t.role)],
 );
 
 export const TeamMemberInvitations = pgTable(
@@ -563,9 +540,7 @@ export const TeamMemberInvitations = pgTable(
       .default(sql`now()`),
     expiresAt: datetime('expires_at').notNull(),
   },
-  (t) => ({
-    teamIdEmailUniq: unique().on(t.teamId, t.email),
-  }),
+  (t) => [unique().on(t.teamId, t.email)],
 );
 
 export const TeamPlans = pgTable('team_plans', {
@@ -620,12 +595,12 @@ export const Users = pgTable(
       .notNull()
       .default(sql`now()`),
   },
-  (t) => ({
-    emailStateIdx: index().on(t.email, t.state),
-    emailUniqIdx: uniqueIndex()
+  (t) => [
+    index().on(t.email, t.state),
+    uniqueIndex()
       .on(t.email)
       .where(sql`${t.state} = 'ACTIVE'`),
-  }),
+  ],
 );
 
 export const UserSessions = pgTable(
@@ -641,9 +616,7 @@ export const UserSessions = pgTable(
       .notNull()
       .default(sql`now()`),
   },
-  (t) => ({
-    userIdIdx: index().on(t.userId),
-  }),
+  (t) => [index().on(t.userId)],
 );
 
 export const UserSingleSignOns = pgTable(
@@ -663,7 +636,5 @@ export const UserSingleSignOns = pgTable(
       .notNull()
       .default(sql`now()`),
   },
-  (t) => ({
-    providerPrincipalUniq: unique().on(t.provider, t.principal),
-  }),
+  (t) => [unique().on(t.provider, t.principal)],
 );
