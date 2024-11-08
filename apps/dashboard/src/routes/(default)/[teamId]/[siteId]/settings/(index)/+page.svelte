@@ -14,6 +14,7 @@
   import { toast } from '@readable/ui/notification';
   import mixpanel from 'mixpanel-browser';
   import { z } from 'zod';
+  import { ReadableError } from '@/errors';
   import { dataSchemas } from '@/schemas';
   import InfoIcon from '~icons/lucide/info';
   import TriangleAlertIcon from '~icons/lucide/triangle-alert';
@@ -115,19 +116,25 @@
         content: '사이트 주소가 변경되면 기존 주소로는 접근할 수 없습니다',
         action: '변경',
         onaction: async () => {
-          await updateSite({
-            siteId: $query.site.id,
-            name: $query.site.name,
-            slug,
-            themeColor: $query.site.themeColor,
-            logoId: $query.site.logo?.id,
-          });
+          try {
+            await updateSite({
+              siteId: $query.site.id,
+              name: $query.site.name,
+              slug,
+              themeColor: $query.site.themeColor,
+              logoId: $query.site.logo?.id,
+            });
 
-          setSlugFormIsDirty(false);
-          toast.success('사이트 주소가 변경되었습니다');
-          mixpanel.track('site:update', {
-            fields: ['slug'],
-          });
+            setSlugFormIsDirty(false);
+            toast.success('사이트 주소가 변경되었습니다');
+            mixpanel.track('site:update', {
+              fields: ['slug'],
+            });
+          } catch (err) {
+            if (err instanceof ReadableError && err.message === 'site_slug_exists') {
+              toast.error('이미 존재하는 사이트 주소입니다');
+            }
+          }
         },
         variant: 'primary',
       });
