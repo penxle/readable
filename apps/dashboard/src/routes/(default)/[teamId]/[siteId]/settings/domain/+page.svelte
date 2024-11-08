@@ -17,6 +17,7 @@
   import mixpanel from 'mixpanel-browser';
   import { untrack } from 'svelte';
   import { z } from 'zod';
+  import { ReadableError } from '@/errors';
   import { dataSchemas } from '@/schemas';
   import CheckIcon from '~icons/lucide/check';
   import CircleCheckIcon from '~icons/lucide/circle-check';
@@ -74,7 +75,7 @@
     }
   `);
 
-  const { form, isValid, setInitialValues, context } = createMutationForm({
+  const { form, isValid, setInitialValues, context, setErrors } = createMutationForm({
     mutation: graphql(`
       mutation SiteSettingsDomainPage_SetSiteCustomDomain_Mutation($input: SetSiteCustomDomainInput!) {
         setSiteCustomDomain(input: $input) {
@@ -92,6 +93,14 @@
       query.refetch();
       open = true;
       mixpanel.track('site:custom-domain:set');
+    },
+    onError: (err) => {
+      if (err instanceof ReadableError && err.code === 'site_custom_domain_exists') {
+        setErrors({ domain: '이미 등록되어 있는 커스텀 도메인 주소입니다' });
+        return;
+      }
+
+      toast.error('알 수 없는 오류가 발생했습니다');
     },
   });
 

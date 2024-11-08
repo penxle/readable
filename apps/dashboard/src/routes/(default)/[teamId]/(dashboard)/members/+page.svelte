@@ -14,9 +14,9 @@
   } from '@readable/ui/components';
   import { createMutationForm } from '@readable/ui/forms';
   import { toast } from '@readable/ui/notification';
-  import { GraphQLError } from 'graphql';
   import mixpanel from 'mixpanel-browser';
   import { z } from 'zod';
+  import { ReadableError } from '@/errors';
   import { dataSchemas } from '@/schemas';
   import CheckIcon from '~icons/lucide/check';
   import ChevronDownIcon from '~icons/lucide/chevron-down';
@@ -116,11 +116,10 @@
       mixpanel.track('team:member:invitation:send');
     },
     onError: (e: unknown) => {
-      if (e instanceof GraphQLError) {
-        // FIXME: unexpected error
-        setErrors({ email: e.message });
+      if (e instanceof ReadableError && e.code === 'team_member_exists') {
+        setErrors({ email: '이미 팀에 존재하는 멤버입니다' });
       } else {
-        setErrors({ email: '알 수 없는 오류가 발생했습니다.' });
+        setErrors({ email: '알 수 없는 오류가 발생했습니다' });
       }
     },
   });

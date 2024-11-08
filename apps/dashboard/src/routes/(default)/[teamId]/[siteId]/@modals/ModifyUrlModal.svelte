@@ -75,7 +75,7 @@
       mixpanel.track('category:slug:update');
     },
     onError: (err) => {
-      if (err instanceof ReadableError && err.message === 'page_slug_exists') {
+      if (err instanceof ReadableError && err.message === 'category_slug_exists') {
         setCategorySlugErrors({ slug: '이미 존재하는 URL입니다' });
         return;
       }
