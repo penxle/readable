@@ -3,6 +3,7 @@
   import { flex } from '@readable/styled-system/patterns';
   import IconExternalLink from '~icons/lucide/external-link';
   import IconLink2 from '~icons/lucide/link-2';
+  import IconMessageCircleQuestion from '~icons/lucide/message-circle-question';
   import IconPaintbrushVertical from '~icons/lucide/paintbrush-vertical';
   import IconSettings from '~icons/lucide/settings';
   import { afterNavigate } from '$app/navigation';
@@ -35,6 +36,12 @@
       href: `/${data.props.teamId}/${data.props.siteId}/settings/link`,
       icon: IconExternalLink,
       selected: $page.url.pathname === `/${data.props.teamId}/${data.props.siteId}/settings/link`,
+    },
+    {
+      name: '위젯',
+      href: `/${data.props.teamId}/${data.props.siteId}/settings/widget`,
+      icon: IconMessageCircleQuestion,
+      selected: $page.url.pathname === `/${data.props.teamId}/${data.props.siteId}/settings/widget`,
     },
   ]);
 
