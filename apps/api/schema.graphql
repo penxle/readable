@@ -475,7 +475,6 @@ type PublicSite implements ISite {
   themeColor: String!
   url: String!
   whitelabelEnabled: Boolean!
-  widget: SiteWidget
 }
 
 input PublishPageInput {
@@ -565,6 +564,7 @@ type Site implements ISite {
   team: Team!
   themeColor: String!
   url: String!
+  widget: SiteWidget
 }
 
 type SiteAddon {

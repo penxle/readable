@@ -201,6 +201,24 @@ Site.implement({
         return await db.select().from(SiteHeaderLinks).where(eq(SiteHeaderLinks.siteId, site.id)).then(first);
       },
     }),
+
+    widget: t.field({
+      type: SiteWidget,
+      nullable: true,
+      resolve: async (site, _, ctx) => {
+        const widgetAvailability = await getTeamPlanRule({
+          teamId: site.teamId,
+          rule: 'widget',
+          ctx,
+        });
+
+        if (!widgetAvailability) {
+          return null;
+        }
+
+        return await db.select().from(SiteWidgets).where(eq(SiteWidgets.siteId, site.id)).then(first);
+      },
+    }),
   }),
 });
 
@@ -290,24 +308,6 @@ PublicSite.implement({
           .from(SiteHeaderLinks)
           .where(and(eq(SiteHeaderLinks.siteId, site.id), eq(SiteHeaderLinks.state, SiteHeaderLinkState.ACTIVE)))
           .then(first);
-      },
-    }),
-
-    widget: t.field({
-      type: SiteWidget,
-      nullable: true,
-      resolve: async (site, _, ctx) => {
-        const widgetAvailability = await getTeamPlanRule({
-          teamId: site.teamId,
-          rule: 'widget',
-          ctx,
-        });
-
-        if (!widgetAvailability) {
-          return null;
-        }
-
-        return await db.select().from(SiteWidgets).where(eq(SiteWidgets.siteId, site.id)).then(first);
       },
     }),
   }),
