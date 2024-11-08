@@ -51,7 +51,8 @@ export const assertTeamPlanRule = async <T extends keyof PlanRules>(params: GetP
   }
 
   switch (params.rule) {
-    case 'aiSearch': {
+    case 'aiSearch':
+    case 'widget': {
       if (!value) {
         throw new ReadableError({ code: 'feature_not_available' });
       }

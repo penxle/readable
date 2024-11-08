@@ -32,6 +32,7 @@ await db.transaction(async (tx) => {
       pageViewLimit: 100_000,
       themeColor: true,
       customDomain: true,
+      headerLink: true,
     },
     order: 2,
   });
@@ -41,12 +42,13 @@ await db.transaction(async (tx) => {
     name: 'Pro',
     fee: 19_000,
     rules: {
-      memberLimit: 10,
+      memberLimit: null,
       siteLimit: null,
       pageViewLimit: null,
       themeColor: true,
       customDomain: true,
       aiSearch: true,
+      widget: true,
       addonsAvailable: [AddonId.WHITELABEL],
     },
     order: 3,

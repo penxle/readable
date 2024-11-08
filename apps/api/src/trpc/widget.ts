@@ -22,6 +22,7 @@ import { env } from '@/env';
 import * as langchain from '@/external/langchain';
 import { ask } from '@/llms/chat';
 import { keywordSearchPrompt } from '@/prompt/widget';
+import { assertTeamPlanRule } from '@/utils/plan';
 import { publicProcedure, router } from './trpc';
 
 const widgetProcedure = publicProcedure
@@ -39,6 +40,15 @@ const widgetProcedure = publicProcedure
 
     if (!site) {
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Site not found' });
+    }
+
+    try {
+      await assertTeamPlanRule({
+        teamId: site.teamId,
+        rule: 'widget',
+      });
+    } catch {
+      throw new TRPCError({ code: 'FORBIDDEN', message: 'Feature not available' });
     }
 
     return next({

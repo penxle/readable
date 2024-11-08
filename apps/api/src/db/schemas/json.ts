@@ -7,6 +7,7 @@ export type PlanRules = {
   customDomain: boolean;
   aiSearch: boolean;
   headerLink: boolean;
+  widget: boolean;
   addonsAvailable: string[];
 };
 
@@ -19,5 +20,6 @@ export const defaultPlanRules: PlanRules = {
   customDomain: false,
   aiSearch: false,
   headerLink: false,
+  widget: false,
   addonsAvailable: [],
 };
