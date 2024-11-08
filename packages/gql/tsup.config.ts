@@ -6,4 +6,8 @@ export default defineConfig({
   },
   format: ['esm'],
   external: [/^\$/],
+
+  esbuildOptions: (options) => {
+    options.packages = 'external';
+  },
 });
