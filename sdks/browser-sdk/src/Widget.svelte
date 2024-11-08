@@ -14,6 +14,7 @@
   import ArrowUpIcon from '~icons/lucide/arrow-up';
   import BookOpenTextIcon from '~icons/lucide/book-open-text';
   import ChevronLeftIcon from '~icons/lucide/chevron-left';
+  import MessageCircleIcon from '~icons/lucide/message-circle';
   import IconX from '~icons/lucide/x';
   import AiLoading from './assets/AiLoading.svelte';
   import ReadableLogo from './assets/readable-logo.svg';
@@ -476,6 +477,20 @@
               <Icon icon={BookOpenTextIcon} size={16} />
               <span class={css({ textStyle: '14b' })}>{site.name}</span>
             </Button>
+            {#if site.widget.outLink}
+              <Button
+                style={css.raw({ gap: '4px', borderRadius: '16px', pointerEvents: 'auto' })}
+                href={site.widget.outLink}
+                rel="noopener noreferrer"
+                size="sm"
+                target="_blank"
+                type="link"
+                variant="secondary"
+              >
+                <Icon icon={MessageCircleIcon} size={16} />
+                <span class={css({ textStyle: '14b' })}>문의</span>
+              </Button>
+            {/if}
           </div>
           <FormProvider context={chatFormContext} form={chatForm}>
             <TextInput
