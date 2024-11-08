@@ -465,7 +465,9 @@
             <Button
               style={css.raw({ gap: '4px', borderRadius: '16px' })}
               href={site.url}
+              rel="noopener noreferrer"
               size="sm"
+              target="_blank"
               type="link"
               variant="secondary"
             >
