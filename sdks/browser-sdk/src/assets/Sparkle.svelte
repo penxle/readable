@@ -1,10 +1,30 @@
 <script lang="ts">
   import { css } from '@readable/styled-system/css';
+  import { onMount } from 'svelte';
+  import { linear } from 'svelte/easing';
+  import { tweened } from 'svelte/motion';
 
   let color = 'var(--widget-theme-color)';
+
+  let visible = true;
+  let duration = 250;
+  const opacity = tweened(1, {
+    duration,
+    easing: linear,
+  });
+
+  onMount(() => {
+    const interval = setInterval(() => {
+      opacity.set(visible ? 0.75 : 1);
+      visible = !visible;
+    }, duration);
+
+    return () => clearInterval(interval);
+  });
 </script>
 
 <svg
+  style:opacity={$opacity}
   class={css({
     flexShrink: 0,
   })}

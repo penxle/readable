@@ -391,7 +391,15 @@
             <p class={css({ textStyle: '14b' })}>현재 페이지에서 가장 도움이 될 문서를 찾고 있어요...</p>
           </div>
         {:else if response && pages}
-          <div class={flex({ flexDirection: 'column', gap: '12px', paddingX: '16px', paddingY: '20px' })}>
+          <div
+            class={flex({
+              flexDirection: 'column',
+              gap: '12px',
+              paddingX: '16px',
+              paddingTop: '20px',
+              paddingBottom: '40px',
+            })}
+          >
             {#if pages.length > 0}
               <h2 class={flex({ alignItems: 'center', gap: '6px' })}>
                 <SparkleSmall />
