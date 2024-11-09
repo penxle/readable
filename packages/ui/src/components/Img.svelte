@@ -2,6 +2,7 @@
   import { css } from '@readable/styled-system/css';
   import qs from 'query-string';
   import { base64 } from 'rfc4648';
+  import { onMount } from 'svelte';
   import { fade } from 'svelte/transition';
   import { thumbHashToDataURL } from 'thumbhash';
   import type { SystemStyleObject } from '@readable/styled-system/types';
@@ -21,6 +22,7 @@
 
   let { url, placeholder, ratio, alt, style, size, quality, progressive = false }: Props = $props();
 
+  let containerEl = $state<HTMLElement>();
   let imgEl = $state<HTMLImageElement>();
   let loaded = $state(false);
 
@@ -36,10 +38,45 @@
   const placeholderUrl = $derived(
     progressive && placeholder ? thumbHashToDataURL(base64.parse(placeholder)) : undefined,
   );
+
+  const load = () => {
+    if (!imgEl) {
+      return;
+    }
+
+    imgEl.src = src;
+    if (srcset) {
+      imgEl.srcset = srcset;
+    }
+
+    loaded = true;
+  };
+
+  onMount(() => {
+    if (!containerEl) {
+      return;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          load();
+          observer.disconnect();
+        }
+      });
+    });
+
+    observer.observe(containerEl);
+
+    return () => {
+      observer.disconnect();
+    };
+  });
 </script>
 
 {#if placeholderUrl}
   <div
+    bind:this={containerEl}
     style:aspect-ratio={ratio}
     class={css({
       position: 'relative',
@@ -47,11 +84,11 @@
       overflow: 'hidden',
     })}
   >
-    <img bind:this={imgEl} class={css(style)} {alt} onload={() => (loaded = true)} {sizes} {src} {srcset} />
+    <img bind:this={imgEl} class={css(style)} {alt} onload={() => (loaded = true)} {sizes} />
 
     {#if !loaded}
       <img
-        class={css({ position: 'absolute', inset: '0', size: 'full', objectFit: 'cover' })}
+        class={css(style, { position: 'absolute', inset: '0', size: 'full', objectFit: 'cover' })}
         {alt}
         loading="lazy"
         src={placeholderUrl}

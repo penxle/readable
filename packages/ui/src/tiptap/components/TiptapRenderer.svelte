@@ -2,7 +2,6 @@
   import { css, cx } from '@readable/styled-system/css';
   import { Editor } from '@tiptap/core';
   import { onMount } from 'svelte';
-  import { browser } from '$app/environment';
   import { TableOfContents } from '../extensions/table-of-contents';
   import { renderHTML } from '../lib/html';
   import { Embed } from '../node-views/embed';
@@ -24,11 +23,10 @@
 
   let element = $state<HTMLElement>();
 
-  const html = $derived(browser ? null : renderHTML(content, [...basicExtensions, Embed, Image, InlineImage, File]));
+  const html = $derived(renderHTML(content, [...basicExtensions, Embed, Image, InlineImage, File]));
 
   onMount(() => {
     editor = new Editor({
-      element,
       editable: false,
       content,
       extensions: [
@@ -48,6 +46,10 @@
       editorProps: {
         attributes: { class: css(style) },
       },
+
+      onCreate: ({ editor }) => {
+        element?.replaceWith(editor.view.dom);
+      },
     });
 
     return () => {
@@ -58,11 +60,10 @@
 </script>
 
 <svelte:head>
-  {@html html?.head}
+  {@html html.head}
 </svelte:head>
 
 <article
-  bind:this={element}
   class={css({
     display: 'contents',
     fontFamily: 'prose',
@@ -71,9 +72,9 @@
     wordBreak: 'break-all',
   })}
 >
-  {#if !browser}
-    <div class={cx('ProseMirror', css(style))}>
-      {@html html?.body}
-    </div>
-  {/if}
+  <div bind:this={element} class={cx('ProseMirror', css(style))}>
+    <!-- eslint-disable-next-line svelte/no-unused-svelte-ignore -->
+    <!-- svelte-ignore hydration_html_changed -->
+    {@html html.body}
+  </div>
 </article>
