@@ -15,39 +15,47 @@ async function* request<T extends $StoreSchema>(op: Operation<T>) {
 
   const fetch = context?.fetch ?? globalThis.fetch;
 
-  const response = await fetch(context.url, {
-    ...context.fetchOpts,
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...context.fetchOpts?.headers,
-    },
-    body: JSON.stringify({
-      operationName: name,
-      query: source,
-      variables,
-      extensions: context.extensions,
-    }),
-  });
+  try {
+    const response = await fetch(context.url, {
+      ...context.fetchOpts,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...context.fetchOpts?.headers,
+      },
+      body: JSON.stringify({
+        operationName: name,
+        query: source,
+        variables,
+        extensions: context.extensions,
+      }),
+    });
 
-  const body = (await response.json()) as {
-    data: T['$output'] | null;
-    errors?: unknown[];
-  };
+    const body = (await response.json()) as {
+      data: T['$output'] | null;
+      errors?: unknown[];
+    };
 
-  if (body.errors) {
+    if (body.errors) {
+      yield {
+        type: 'error' as const,
+        operation: op,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        errors: body.errors.map((v: any) => toGraphQLError(v)),
+      };
+    } else {
+      yield {
+        type: 'data' as const,
+        operation: op,
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        data: body.data!,
+      };
+    }
+  } catch (err) {
     yield {
       type: 'error' as const,
       operation: op,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      errors: body.errors.map((v: any) => toGraphQLError(v)),
-    };
-  } else {
-    yield {
-      type: 'data' as const,
-      operation: op,
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      data: body.data!,
+      errors: [new GraphQLError('Network error', { originalError: err as Error })],
     };
   }
 }
