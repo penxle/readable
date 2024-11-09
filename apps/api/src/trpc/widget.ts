@@ -230,7 +230,7 @@ export const widgetRouter = router({
           .where(eq(AiChatMessages.sessionId, input.sessionId))
           .orderBy(asc(AiChatMessages.createdAt));
 
-        const answer = await ask({
+        const { answer } = await ask({
           siteId: ctx.site.id,
           message: input.message,
           conversation,

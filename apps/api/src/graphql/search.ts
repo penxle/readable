@@ -1,14 +1,9 @@
-import { ChatPromptTemplate } from '@langchain/core/prompts';
-import { RunnableSequence } from '@langchain/core/runnables';
-import { and, asc, cosineDistance, eq } from 'drizzle-orm';
 import DOMPurify from 'isomorphic-dompurify';
-import { z } from 'zod';
+import * as R from 'remeda';
 import { builder } from '@/builder';
-import { db, PageContentChunks, Pages } from '@/db';
 import { PageState } from '@/enums';
 import { ReadableError } from '@/errors';
-import * as langchain from '@/external/langchain';
-import { keywordExtractionPrompt, naturalLanguageSearchPrompt } from '@/prompt/natural-language-search';
+import { ask } from '@/llms/chat';
 import { searchIndex } from '@/search';
 import { assertSitePermission } from '@/utils/permissions';
 import { assertTeamPlanRule } from '@/utils/plan';
@@ -27,28 +22,6 @@ const sanitizeHtmlOnlyEm = (dirty: string | undefined) => {
         ALLOWED_TAGS: ['em'],
       })
     : undefined;
-};
-
-type VectorSearchParams = {
-  query: string;
-  siteId: string;
-};
-
-const vectorSearch = async ({ query, siteId }: VectorSearchParams) => {
-  const queryVector = await langchain.embeddings.embedQuery(query);
-  const distance = cosineDistance(PageContentChunks.vector, queryVector);
-
-  return await db
-    .select({
-      id: Pages.id,
-      text: PageContentChunks.text,
-      distance,
-    })
-    .from(PageContentChunks)
-    .innerJoin(Pages, eq(Pages.id, PageContentChunks.pageId))
-    .where(and(eq(Pages.siteId, siteId), eq(Pages.state, PageState.PUBLISHED)))
-    .orderBy(asc(distance))
-    .limit(10);
 };
 
 const PageSearchHighlight = builder.objectRef<Partial<PageSearchData>>('PageSearchHighlight');
@@ -173,53 +146,12 @@ builder.queryFields((t) => ({
         rule: 'aiSearch',
       });
 
-      const chain1 = RunnableSequence.from([
-        ChatPromptTemplate.fromMessages([
-          ['system', keywordExtractionPrompt],
-          ['user', '{query}'],
-        ]),
-
-        langchain.model.withStructuredOutput(
-          z.object({
-            keyword: z.string(),
-          }),
-        ),
-      ]);
-
-      const { keyword } = await chain1.invoke({
-        query: args.query,
+      const { answer, chunks } = await ask({
+        siteId: ctx.site.id,
+        message: args.query,
       });
 
-      const pages = await vectorSearch({ query: keyword, siteId: ctx.site.id });
-
-      if (pages.length === 0) {
-        throw new ReadableError({
-          code: 'NOT_FOUND',
-        });
-      }
-
-      const chain2 = RunnableSequence.from([
-        ChatPromptTemplate.fromMessages([
-          ['system', naturalLanguageSearchPrompt],
-          ['user', '{context}'],
-          ['user', '{query}'],
-        ]),
-
-        langchain.model.withStructuredOutput(
-          z.object({
-            cannotAnswer: z.boolean(),
-            answer: z.string(),
-            references: z.array(z.string()),
-          }),
-        ),
-      ]);
-
-      const { cannotAnswer, answer, references } = await chain2.invoke({
-        context: pages,
-        query: args.query,
-      });
-
-      if (cannotAnswer) {
+      if (!answer) {
         throw new ReadableError({
           code: 'NOT_FOUND',
         });
@@ -227,7 +159,7 @@ builder.queryFields((t) => ({
 
       return {
         answer,
-        pageIds: references,
+        pageIds: R.unique(chunks.map((chunk) => chunk.id)),
       };
     },
   }),

@@ -126,8 +126,8 @@ export const markdownSerializer = new MarkdownSerializer(
       expelEnclosingWhitespace: true,
     },
     [Link.name]: {
-      open: '[',
-      close: ']',
+      open: '',
+      close: '',
       mixable: true,
     },
     [TextStyle.name]: {

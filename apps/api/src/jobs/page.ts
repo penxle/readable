@@ -175,13 +175,13 @@ export const PageSummarizeJob = defineJob('page:summarize', async (pageId: strin
   const node = Node.fromJSON(schema, page.content);
   const markdown = markdownSerializer.serialize(node, { tightLists: true });
 
-  const splits = await langchain.markdownSplitter.splitText(markdown);
-  const vectors = await langchain.embeddings.embedDocuments(splits);
+  const chunks = await langchain.textSplitter.splitText(markdown);
+  const vectors = await langchain.embeddings.embedDocuments(chunks);
 
   await db.transaction(async (tx) => {
     await tx.delete(PageContentChunks).where(eq(PageContentChunks.pageId, pageId));
 
-    for (const [index, text] of splits.entries()) {
+    for (const [index, text] of chunks.entries()) {
       await tx.insert(PageContentChunks).values({
         pageId,
         text,

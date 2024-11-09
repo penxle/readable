@@ -75,9 +75,9 @@ const retrieve = async (state: GraphState): Promise<Partial<GraphState>> => {
       text: PageContentChunks.text,
       similarity,
     })
-    .from(PageContentChunks)
-    .innerJoin(Pages, eq(Pages.id, PageContentChunks.pageId))
+    .from(Pages)
     .innerJoin(PageContents, eq(Pages.id, PageContents.pageId))
+    .innerJoin(PageContentChunks, eq(Pages.id, PageContentChunks.pageId))
     .where(and(eq(Pages.siteId, state.siteId), eq(Pages.state, PageState.PUBLISHED), gte(similarity, 0.25)))
     .orderBy(desc(similarity))
     .limit(5);
@@ -90,7 +90,7 @@ const retrieve = async (state: GraphState): Promise<Partial<GraphState>> => {
 const choose = async (state: ChunkState): Promise<Partial<GraphState>> => {
   const chain = RunnableSequence.from([
     ChatPromptTemplate.fromTemplate(`You are a grader assessing relevance of a retrieved text to a user question.
-Text:\n\`\`\`\n{chunk}\n\`\`\`
+Text:\n\`\`\`\n{text}\n\`\`\`
 Question:\n\`\`\`\n{question}\n\`\`\`
 
 If the text contains keyword(s) or semantic meaning related to the user question, grade it as relevant.
@@ -104,7 +104,7 @@ Give a binary score 'yes' or 'no' score to indicate whether the text is relevant
   ]);
 
   const grade = await chain.invoke({
-    chunk: state.chunk,
+    text: state.chunk,
     question: state.question,
   });
 
@@ -117,30 +117,18 @@ Give a binary score 'yes' or 'no' score to indicate whether the text is relevant
 
 const generate = async (state: GraphState): Promise<Partial<GraphState>> => {
   const chain = RunnableSequence.from([
-    ChatPromptTemplate.fromTemplate(`You are an expert AI assistant that primarily focuses on producing clear, reasonable responses that are helpful to the user.
-You always use the latest version of provided documents, and you are familiar with their latest content.
-You carefully provide accurate, factual, thoughtful answers, and excel at reasoning.
-
-TASK:
-- Answer the question based on the context.
-- You can reference the multiple documents to answer the question.
-
-MUST:
-- Use appropriate line breaks to make the answer more readable.
-- If necessary, use markdown to generate the answer.
-- Maintain a professional and accurate tone in your answer.
-- Do not use common knowledge to answer the question. Only use the information provided in the context.
-
-Context:\n\`\`\`\n{context}\n\`\`\`
+    ChatPromptTemplate.fromTemplate(`You are an expert AI assistant that produces clear, reasonable responses that are helpful to the user based on the documents.
+Documents:\n\`\`\`\n{documents}\n\`\`\`
 Question:\n\`\`\`\n{question}\n\`\`\`
 
-The answer:`),
+Do not use common knowledge to answer the question. Only use the information provided in the documents.
+Carefully provide accurate, factual, thoughtful answers, while using the same language as the question.`),
     langchain.model,
     new StringOutputParser(),
   ]);
 
   const answer = await chain.invoke({
-    context: state.chosenChunks,
+    documents: state.chosenChunks,
     question: state.question,
   });
 
@@ -168,15 +156,23 @@ const app = workflow.compile();
 type AskParams = {
   siteId: string;
   message: string;
-  conversation: Message[];
+  conversation?: Message[];
 };
 
-export const ask = async (params: AskParams): Promise<string | null> => {
-  const { answer } = await app.invoke({
+type AskResult = {
+  answer: string | null;
+  chunks: Chunk[];
+};
+
+export const ask = async (params: AskParams): Promise<AskResult> => {
+  const { answer, chosenChunks } = await app.invoke({
     siteId: params.siteId,
     question: params.message,
-    conversation: params.conversation,
+    conversation: params.conversation ?? [],
   });
 
-  return answer?.length ? answer : null;
+  return {
+    answer: answer?.length ? answer : null,
+    chunks: chosenChunks,
+  };
 };
