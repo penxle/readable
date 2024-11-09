@@ -2,7 +2,7 @@
   import { css } from '@readable/styled-system/css';
   import qs from 'query-string';
   import { base64 } from 'rfc4648';
-  import { onMount } from 'svelte';
+  import { tick } from 'svelte';
   import { fade } from 'svelte/transition';
   import { thumbHashToDataURL } from 'thumbhash';
   import type { SystemStyleObject } from '@readable/styled-system/types';
@@ -23,7 +23,8 @@
   let { url, placeholder, ratio, alt, style, size, quality, progressive = false }: Props = $props();
 
   let containerEl = $state<HTMLElement>();
-  let imgEl = $state<HTMLImageElement>();
+  let targetEl = $state<HTMLElement>();
+
   let loaded = $state(false);
 
   const src = $derived(qs.stringifyUrl({ url, query: { s: size === 'full' ? undefined : size, q: quality } }));
@@ -40,37 +41,39 @@
   );
 
   const load = () => {
-    if (!imgEl) {
-      return;
-    }
+    const imgEl = document.createElement('img');
 
-    imgEl.src = src;
-    if (srcset) {
+    imgEl.addEventListener('load', async () => {
+      loaded = true;
+      await tick();
+      targetEl?.append(imgEl);
+    });
+
+    if (srcset && sizes) {
+      imgEl.sizes = sizes;
       imgEl.srcset = srcset;
     }
 
-    loaded = true;
+    imgEl.className = css({ size: 'full', objectFit: 'cover' }, style);
+    imgEl.alt = alt;
+    imgEl.src = src;
   };
 
-  onMount(() => {
-    if (!containerEl) {
-      return;
-    }
-
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
+  $effect(() => {
+    if (containerEl) {
+      const observer = new IntersectionObserver((entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
           load();
           observer.disconnect();
         }
       });
-    });
 
-    observer.observe(containerEl);
+      observer.observe(containerEl);
 
-    return () => {
-      observer.disconnect();
-    };
+      return () => {
+        observer.disconnect();
+      };
+    }
   });
 </script>
 
@@ -84,16 +87,10 @@
       overflow: 'hidden',
     })}
   >
-    <img bind:this={imgEl} class={css(style)} {alt} onload={() => (loaded = true)} {sizes} />
+    <img class={css(style, { size: 'full', objectFit: 'cover' })} {alt} loading="lazy" src={placeholderUrl} />
 
-    {#if !loaded}
-      <img
-        class={css(style, { position: 'absolute', inset: '0', size: 'full', objectFit: 'cover' })}
-        {alt}
-        loading="lazy"
-        src={placeholderUrl}
-        out:fade={{ duration: 200 }}
-      />
+    {#if loaded}
+      <div bind:this={targetEl} class={css({ position: 'absolute', inset: '0' })} in:fade={{ duration: 200 }}></div>
     {/if}
   </div>
 {:else}
