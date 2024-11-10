@@ -14,4 +14,5 @@ export type Transaction = Database extends PgDatabase<infer T, infer U, infer V>
 
 export * from './schemas/id';
 export * from './schemas/tables';
+export * from './schemas/views';
 export * from './utils';

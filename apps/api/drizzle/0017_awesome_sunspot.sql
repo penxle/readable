@@ -1,0 +1,1 @@
+CREATE VIEW "public"."site_views" AS (select "sites"."id", "sites"."name", count(*) as "view_count" from "sites" inner join "pages" on "pages"."site_id" = "sites"."id" inner join "page_views" on "page_views"."page_id" = "pages"."id" group by "sites"."id" order by "view_count" desc);
