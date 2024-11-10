@@ -1,4 +1,5 @@
 import { createClient, errorExchange } from '@readable/gql';
+import { error } from '@sveltejs/kit';
 import { get } from 'svelte/store';
 import { ReadableError } from '@/errors';
 import { env } from '$env/dynamic/public';
@@ -23,10 +24,16 @@ export default createClient({
         return new ReadableError({
           code: error.extensions.code as string,
           message: error.message,
+          status: error.extensions.status as number,
         });
       }
 
       return error;
     }),
   ],
+  onError: (err) => {
+    if (err instanceof ReadableError) {
+      error(err.status, { message: err.message });
+    }
+  },
 });

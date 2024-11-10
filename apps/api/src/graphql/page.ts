@@ -502,7 +502,7 @@ builder.queryFields((t) => ({
         .otherwise(() => [null] as const);
 
       if (categorySlug === null) {
-        throw new ReadableError({ code: 'not_found' });
+        throw new ReadableError({ code: 'not_found', status: 404 });
       }
 
       const Pages2 = alias(Pages, 'p');

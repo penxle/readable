@@ -5,6 +5,7 @@ import { cacheExchange } from '../exchange/cache';
 import { composeExchanges } from '../exchange/compose';
 import { fetchExchange } from '../exchange/fetch';
 import { sseExchange } from '../exchange/sse';
+import type { LoadEvent } from '@sveltejs/kit';
 import type { Connectable } from 'rxjs';
 import type { Exchange, ExchangeIO, Operation, OperationResult } from '../exchange/types';
 import type { $StoreSchema, StoreSchema } from '../types';
@@ -15,9 +16,9 @@ export type GqlClient = {
   client: Client;
 };
 
-export const createClient = ({ url, headers, exchanges }: CreateClientParams) => {
+export const createClient = (params: CreateClientParams) => {
   return (): GqlClient => {
-    const client = new Client({ url, headers, exchanges });
+    const client = new Client(params);
 
     return {
       client,
@@ -29,6 +30,7 @@ type CreateClientParams = {
   url: string;
   headers?: () => Record<string, string>;
   exchanges?: Exchange[];
+  onError?: (error: unknown, event: LoadEvent) => void | Promise<void>;
 };
 
 type CreateOperationParams<T extends $StoreSchema> = {
@@ -51,15 +53,19 @@ class Client {
 
   private _cache: Cache;
 
+  private onError?: (error: unknown, event: LoadEvent) => void | Promise<void>;
+
   get cache() {
     return this._cache;
   }
 
-  constructor({ url, headers, exchanges }: CreateClientParams) {
+  constructor({ url, headers, exchanges, onError }: CreateClientParams) {
     this.url = url;
     this.headers = headers;
 
     this._cache = new Cache();
+
+    this.onError = onError;
 
     const composedExchange = composeExchanges([
       ...(exchanges ?? []),
@@ -118,5 +124,9 @@ class Client {
     );
 
     return result$ as Observable<OperationResult<T>>;
+  }
+
+  async handleError(error: unknown, event: LoadEvent) {
+    await this.onError?.(error, event);
   }
 }

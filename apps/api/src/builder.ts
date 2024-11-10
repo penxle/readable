@@ -43,7 +43,8 @@ export const builder = new SchemaBuilder<{
     }),
     treatErrorsAsUnauthorized: true,
     authorizeOnSubscribe: true,
-    unauthorizedError: (_, __, ___, result) => new ReadableError({ code: 'unauthorized', message: result.message }),
+    unauthorizedError: (_, __, ___, result) =>
+      new ReadableError({ code: 'unauthorized', message: result.message, status: 401 }),
   },
 
   withInput: {
@@ -53,7 +54,8 @@ export const builder = new SchemaBuilder<{
   },
 
   zod: {
-    validationError: (error) => new ReadableError({ code: 'validation_error', message: error.issues[0].message }),
+    validationError: (error) =>
+      new ReadableError({ code: 'validation_error', message: error.issues[0].message, status: 400 }),
   },
 });
 

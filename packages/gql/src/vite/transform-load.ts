@@ -71,6 +71,15 @@ export const transformLoadPlugin = (contextHolder: ContextHolder): Plugin => {
             }),
           ],
         }),
+        AST.b.importDeclaration.from({
+          source: AST.b.stringLiteral('@readable/gql/runtime'),
+          specifiers: [
+            AST.b.importSpecifier.from({
+              imported: AST.b.identifier('handleError'),
+              local: AST.b.identifier('__gql_handleError'),
+            }),
+          ],
+        }),
         ...queries.map((query) =>
           AST.b.importDeclaration.from({
             source: AST.b.stringLiteral(`$graphql/artifacts/operations/${query.name}`),
@@ -142,6 +151,14 @@ export const transformLoadPlugin = (contextHolder: ContextHolder): Plugin => {
                           ),
                         ]
                       : []),
+                    AST.b.expressionStatement(
+                      AST.b.awaitExpression(
+                        AST.b.callExpression.from({
+                          callee: AST.b.identifier('__gql_handleError'),
+                          arguments: [AST.b.identifier('error'), AST.b.identifier('event')],
+                        }),
+                      ),
+                    ),
                     AST.b.throwStatement(AST.b.identifier('error')),
                   ]),
                 }),
