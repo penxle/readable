@@ -63,7 +63,7 @@
     editor.on('transaction', update);
 
     return () => {
-      editor.off('transaction', update);
+      editor?.off('transaction', update);
     };
   });
 </script>

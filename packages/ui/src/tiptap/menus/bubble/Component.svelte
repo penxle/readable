@@ -174,8 +174,8 @@
     editor.on('selectionUpdate', updateSelectedNodeAndMarks);
 
     return () => {
-      editor.off('update', updateSelectedNodeAndMarks);
-      editor.off('selectionUpdate', updateSelectedNodeAndMarks);
+      editor?.off('update', updateSelectedNodeAndMarks);
+      editor?.off('selectionUpdate', updateSelectedNodeAndMarks);
     };
   });
 </script>
