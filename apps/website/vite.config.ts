@@ -20,4 +20,7 @@ export default defineConfig({
     port: 4000,
     strictPort: true,
   },
+  ssr: {
+    noExternal: ['felte'],
+  },
 });

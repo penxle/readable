@@ -11,7 +11,5 @@ export default defineConfig({
   outDir: 'dist/function',
   splitting: false,
 
-  esbuildOptions: (options) => {
-    options.packages = 'external';
-  },
+  external: [/^@aws-sdk\//, 'sharp'],
 });
