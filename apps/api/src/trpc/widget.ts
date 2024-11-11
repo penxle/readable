@@ -218,17 +218,17 @@ export const widgetRouter = router({
     message: widgetProcedure
       .input(z.object({ sessionId: z.string(), message: z.string() }))
       .mutation(async ({ input, ctx }) => {
-        await db.insert(AiChatMessages).values({
-          sessionId: input.sessionId,
-          role: AiChatMessageRole.USER,
-          content: input.message,
-        });
-
         const conversation = await db
           .select({ role: AiChatMessages.role, content: AiChatMessages.content })
           .from(AiChatMessages)
           .where(eq(AiChatMessages.sessionId, input.sessionId))
           .orderBy(asc(AiChatMessages.createdAt));
+
+        await db.insert(AiChatMessages).values({
+          sessionId: input.sessionId,
+          role: AiChatMessageRole.USER,
+          content: input.message,
+        });
 
         const { answer } = await ask({
           siteId: ctx.site.id,

@@ -122,7 +122,8 @@ Documents:\n\`\`\`\n{documents}\n\`\`\`
 Question:\n\`\`\`\n{question}\n\`\`\`
 
 Do not use common knowledge to answer the question. Only use the information provided in the documents.
-Carefully provide accurate, factual, thoughtful answers, while using the same language as the question.`),
+Answer in the same language as the question, even if the documents are in different languages.
+Carefully provide accurate, factual, thoughtful answers.`),
     langchain.model,
     new StringOutputParser(),
   ]);
