@@ -14,3 +14,7 @@ setup:
   - path: apps/website
     project: website
     config: dev_local
+
+  - path: sdks/browser-sdk
+    project: browser-sdk
+    config: dev_local

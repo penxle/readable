@@ -6,6 +6,7 @@
   import { createMutationForm } from '@readable/ui/forms';
   import { getAccessibleTextColor, hexToRgb } from '@readable/ui/utils';
   import stringHash from '@sindresorhus/string-hash';
+  import dayjs from 'dayjs';
   import stringify from 'fast-json-stable-stringify';
   import mixpanel from 'mixpanel-browser';
   import { onMount, tick, untrack } from 'svelte';
@@ -75,6 +76,8 @@
         return;
       }
 
+      const startedAt = dayjs();
+
       const elements = [...document.querySelectorAll(selectors.join(','))];
       const readability = new Readability(document.cloneNode(true) as Document);
       const article = readability.parse();
@@ -99,7 +102,12 @@
         keywords,
         text,
       });
-      mixpanel.track('widget:related-pages:find');
+
+      const duration = dayjs().diff(startedAt, 'seconds', true);
+
+      mixpanel.track('widget:lookup', {
+        duration,
+      });
     } finally {
       loadingCount -= 1;
     }
@@ -129,7 +137,6 @@
       if (chatHistory.length === 0) {
         const resp = await trpc.widget.chat.new.mutate({ siteId: site.id });
         chatSessionId = resp.sessionId;
-        mixpanel.track('widget:chat:start');
       }
 
       chatHistory.push({ question });
@@ -140,12 +147,20 @@
         chatHistoryEl?.scrollTo({ top: chatHistoryEl.scrollHeight });
       });
 
+      const startedAt = dayjs();
+
       const answer = await trpc.widget.chat.message.mutate({
         siteId: site.id,
         sessionId: chatSessionId,
         message: question,
       });
-      mixpanel.track('widget:chat:message');
+
+      const duration = dayjs().diff(startedAt, 'seconds', true);
+
+      mixpanel.track('widget:chat:message', {
+        session_id: chatSessionId,
+        duration,
+      });
 
       chatHistory[chatHistory.length - 1] = { question, answer };
 
