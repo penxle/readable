@@ -95,7 +95,7 @@
       enterprise: CheckIcon,
     },
     {
-      title: '콘텐츠 최신화(예정)',
+      title: '콘텐츠 최신화 (Beta)',
       starter: '',
       lite: '',
       pro: '무제한',
@@ -137,16 +137,6 @@
       enterprise: CheckIcon,
     },
   ];
-
-  const addOns = $derived([
-    {
-      title: '화이트 라벨링',
-      starter: '',
-      lite: '',
-      pro: `${$selectedPlanCycle === 'YEARLY' ? '15,400' : '22,000'}원/사이트/월`,
-      enterprise: CheckIcon,
-    },
-  ]);
 </script>
 
 <Helmet title="플랜" trailing={$query.team.name} />
@@ -168,7 +158,7 @@
     <table class={css({ width: 'full', borderSpacing: '0' })}>
       <thead>
         <tr>
-          <th class={css({ width: '128px' })}></th>
+          <th class={css({ width: '135px' })}></th>
           <th></th>
           <th>
             <div class={css({ position: 'relative', marginBottom: '10px' })}>
@@ -384,41 +374,6 @@
                 {premium.enterprise}
               {:else}
                 <Icon icon={premium.enterprise} size={14} />
-              {/if}
-            </td>
-          </tr>
-        {/each}
-        <tr>
-          <td>&nbsp;</td>
-          <td></td>
-          <td></td>
-          <td class={css({ backgroundColor: 'neutral.10' })}></td>
-          <td></td>
-        </tr>
-        <tr class={css({ '& > td': { borderBottomWidth: '1px' } })}>
-          <td class={css({ textStyle: '13sb' })}>Add-on</td>
-          <td></td>
-          <td></td>
-          <td class={css({ backgroundColor: 'neutral.10' })}></td>
-          <td></td>
-        </tr>
-        {#each addOns as addOn (addOn.title)}
-          <tr class={css({ '& > td': { borderBottomWidth: '1px', textStyle: '13r' } })}>
-            <td>{addOn.title}</td>
-            <td>{addOn.starter}</td>
-            <td>{addOn.lite}</td>
-            <td class={css({ backgroundColor: 'neutral.10' })}>
-              {#if typeof addOn.pro === 'string'}
-                {addOn.pro}
-              {:else}
-                <Icon icon={addOn.pro} size={14} />
-              {/if}
-            </td>
-            <td>
-              {#if typeof addOn.enterprise === 'string'}
-                {addOn.enterprise}
-              {:else}
-                <Icon icon={addOn.enterprise} size={14} />
               {/if}
             </td>
           </tr>

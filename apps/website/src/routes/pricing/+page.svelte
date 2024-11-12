@@ -17,7 +17,6 @@
   import RefreshCwIcon from '~icons/lucide/refresh-cw';
   import SearchIcon from '~icons/lucide/search';
   import SettingsIcon from '~icons/lucide/settings';
-  import TagIcon from '~icons/lucide/tag';
   import UserCogIcon from '~icons/lucide/user-cog';
   import UserRoundIcon from '~icons/lucide/user-round';
   import UsersRoundIcon from '~icons/lucide/users-round';
@@ -38,15 +37,10 @@
     tooltipMessage?: string;
   };
 
-  type AddOn = Feature & {
-    price?: string;
-  };
-
   type Plan = {
     name: string;
     price: string;
     features: Feature[];
-    addOns?: AddOn[];
   };
 
   const plans: Plan[] = $derived([
@@ -94,15 +88,7 @@
         { icon: PaintbrushIcon, feature: '브랜딩' },
         { icon: LinkIcon, feature: '커스텀 도메인' },
         { icon: UserCogIcon, feature: '멤버 권한 관리' },
-        { icon: RefreshCwIcon, feature: '콘텐츠 최신화 (예정)' },
-      ],
-      addOns: [
-        {
-          icon: TagIcon,
-          feature: '화이트 라벨링 애드온',
-          price: `${selectedPrice === 'yearly' ? '15,400' : '22,000'}원/사이트/월`,
-          tooltipMessage: '사이트에 보이는 리더블 워터마크(Made with Readable)를 제거할 수 있습니다',
-        },
+        { icon: RefreshCwIcon, feature: '콘텐츠 최신화 (Beta)' },
       ],
     },
     {
@@ -284,24 +270,6 @@
               {/if}
             </div>
           {/each}
-
-          {#if plan.addOns}
-            <HorizontalDivider />
-
-            {#each plan.addOns as addOn (addOn.feature)}
-              <div class={flex({ align: 'center', justify: 'space-between', color: 'text.tertiary' })}>
-                <div class={flex({ align: 'center', gap: '6px' })}>
-                  <Icon icon={addOn.icon} size={14} />
-                  <span>{addOn.feature}</span>
-                  <Tooltip message={addOn.tooltipMessage} placement="top">
-                    <Icon icon={CircleHelpIcon} size={12} />
-                  </Tooltip>
-                </div>
-
-                <span>{addOn.price}</span>
-              </div>
-            {/each}
-          {/if}
         </div>
 
         {#if plan.name === 'Enterprise'}
