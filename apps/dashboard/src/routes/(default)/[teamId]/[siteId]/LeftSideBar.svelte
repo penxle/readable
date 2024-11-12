@@ -1,14 +1,12 @@
 <script lang="ts">
   import { css } from '@readable/styled-system/css';
   import { flex } from '@readable/styled-system/patterns';
-  import { Button } from '@readable/ui/components';
   import { toast } from '@readable/ui/notification';
   import mixpanel from 'mixpanel-browser';
   import { ReadableError } from '@/errors';
   import { goto } from '$app/navigation';
   import { fragment, graphql } from '$graphql';
   import { editingCategoryId, treeOpenState } from '$lib/svelte/stores/ui';
-  import FindOutdatedsModal from './@modals/FindOutdatedsModal.svelte';
   import { PageList } from './@page-tree';
   import type { LeftSideBar_site } from '$graphql';
   import type { CategoryData, PageData } from './@page-tree/types';
@@ -171,11 +169,7 @@
       }
     }
   `);
-
-  let findOutdatedsModalOpen = $state(false);
 </script>
-
-<FindOutdatedsModal bind:open={findOutdatedsModalOpen} />
 
 <aside
   class={flex({
@@ -192,14 +186,6 @@
     overflowY: 'auto',
   })}
 >
-  <Button
-    style={css.raw({ margin: '20px', marginBottom: '0' })}
-    onclick={() => (findOutdatedsModalOpen = true)}
-    variant="secondary"
-  >
-    콘텐츠 최신화
-  </Button>
-
   <nav class={flex({ flex: '1', flexDirection: 'column', overflow: 'auto' })}>
     <div
       class={css({

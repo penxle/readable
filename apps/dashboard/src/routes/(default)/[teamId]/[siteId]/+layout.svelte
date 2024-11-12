@@ -5,11 +5,15 @@
   import mixpanel from 'mixpanel-browser';
   import { setContext } from 'svelte';
   import MousePointerClickIcon from '~icons/lucide/mouse-pointer-click';
+  import WandSparklesIcon from '~icons/lucide/wand-sparkles';
   import { page } from '$app/stores';
   import { graphql } from '$graphql';
   import { Tabs } from '$lib/components';
+  import FindOutdatedsModal from './@modals/FindOutdatedsModal.svelte';
 
   let { children } = $props();
+
+  let findOutdatedsModalOpen = $state(false);
 
   const query = graphql(`
     query SiteLayout_Query($siteId: ID!) {
@@ -108,26 +112,62 @@
       ]}
     />
 
-    <a
-      class={flex({
-        align: 'center',
-        gap: '6px',
-        borderWidth: '1px',
-        borderColor: 'border.secondary',
-        borderRadius: '4px',
-        paddingX: '8px',
-        paddingY: '4px',
-        color: 'text.tertiary',
-        textStyle: '14sb',
-        backgroundColor: { base: 'neutral.10', _hover: 'neutral.20', _pressed: 'neutral.30' },
-      })}
-      href={$query.site.url}
-      rel="noopener noreferrer"
-      target="_blank"
-    >
-      <Icon icon={MousePointerClickIcon} />
-      사이트 바로가기
-    </a>
+    <div class={flex({ align: 'center', gap: '8px' })}>
+      <button
+        class={flex({
+          align: 'center',
+          gap: '6px',
+          borderWidth: '1px',
+          borderColor: 'border.secondary',
+          borderRadius: '4px',
+          paddingX: '8px',
+          paddingY: '4px',
+          color: 'text.tertiary',
+          textStyle: '14sb',
+          backgroundColor: { base: 'neutral.10', _hover: 'neutral.20', _pressed: 'neutral.30' },
+        })}
+        onclick={() => (findOutdatedsModalOpen = true)}
+        type="button"
+      >
+        <Icon icon={WandSparklesIcon} />
+        <span>콘텐츠 최신화</span>
+        <div
+          class={flex({
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: 'full',
+            paddingX: '7px',
+            paddingY: '2px',
+            color: 'text.secondary',
+            textStyle: '11b',
+            backgroundColor: 'neutral.30',
+          })}
+        >
+          Beta
+        </div>
+      </button>
+
+      <a
+        class={flex({
+          align: 'center',
+          gap: '6px',
+          borderWidth: '1px',
+          borderColor: 'border.secondary',
+          borderRadius: '4px',
+          paddingX: '8px',
+          paddingY: '4px',
+          color: 'text.tertiary',
+          textStyle: '14sb',
+          backgroundColor: { base: 'neutral.10', _hover: 'neutral.20', _pressed: 'neutral.30' },
+        })}
+        href={$query.site.url}
+        rel="noopener noreferrer"
+        target="_blank"
+      >
+        <Icon icon={MousePointerClickIcon} />
+        사이트 바로가기
+      </a>
+    </div>
   </nav>
 
   <div
@@ -139,3 +179,5 @@
     {@render children()}
   </div>
 </div>
+
+<FindOutdatedsModal bind:open={findOutdatedsModalOpen} />
