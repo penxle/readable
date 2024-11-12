@@ -99,7 +99,7 @@ export const widgetRouter = router({
     };
   }),
 
-  findRelatedPages: widgetProcedure
+  lookup: widgetProcedure
     .input(
       z.object({
         keywords: z.array(z.string()),

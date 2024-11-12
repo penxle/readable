@@ -3,11 +3,11 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "build": "doppler run -c prod -- vite build",
+    "build": "vite build",
     "codegen": "svelte-kit sync",
     "dev": "NODE_ENV=development doppler run -- bun --watch src/server.ts",
     "lint:svelte": "svelte-check --fail-on-warnings",
-    "up": "NODE_ENV=production turbo run build && pulumi up -s readable/prod -f"
+    "up": "NODE_ENV=production doppler run -c prod -- turbo run build && pulumi up -s readable/prod -f"
   },
   "devDependencies": {
     "@iconify-json/lucide": "^1.2.12",

@@ -48,7 +48,7 @@
   let loadingCount = $state(0);
   let lastHash = 0;
 
-  let response = $state<TRPCOutput['widget']['findRelatedPages']>();
+  let response = $state<TRPCOutput['widget']['lookup']>();
 
   let lastTopLayerElement: HTMLElement | null = null;
   let topLayerElements: HTMLElement[] = [];
@@ -97,7 +97,7 @@
 
       lastHash = hash;
 
-      response = await trpc.widget.findRelatedPages.query({
+      response = await trpc.widget.lookup.query({
         siteId: site.id,
         keywords,
         text,
