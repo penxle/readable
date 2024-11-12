@@ -6,7 +6,6 @@
   import { toast } from '@readable/ui/notification';
   import mixpanel from 'mixpanel-browser';
   import { z } from 'zod';
-  import { dataSchemas } from '@/schemas';
   import CheckIcon from '~icons/lucide/check';
   import CopyIcon from '~icons/lucide/copy';
   import ExternalLinkIcon from '~icons/lucide/external-link';
@@ -42,16 +41,24 @@
   const { form, isDirty, setIsDirty, setInitialValues, context } = createMutationForm({
     schema: z.object({
       siteId: z.string(),
-      outLink: dataSchemas.url,
+      outLink: z
+        .string()
+        .trim()
+        .refine((val) => val === '' || z.string().url().safeParse(val).success, { message: '잘못된 URL이에요' }),
     }),
     mutation: async ({ siteId, outLink }) => {
-      await updateSiteWidget({ siteId, outLink });
+      return await updateSiteWidget({ siteId, outLink: outLink === '' ? null : outLink });
     },
-    onSuccess: () => {
+    onSuccess: async ({ outLink }) => {
       setIsDirty(false);
-      toast.success('문의 페이지 링크가 변경되었습니다');
 
-      mixpanel.track('site:widget:update');
+      if (outLink) {
+        toast.success('문의 페이지 링크가 변경되었습니다');
+        mixpanel.track('site:widget:update');
+      } else {
+        toast.success('문의 페이지 링크가 해제되었습니다');
+        mixpanel.track('site:widget:delete');
+      }
     },
   });
 
