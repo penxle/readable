@@ -7,6 +7,7 @@
   import { getAccessibleTextColor, hexToRgb } from '@readable/ui/utils';
   import stringHash from '@sindresorhus/string-hash';
   import stringify from 'fast-json-stable-stringify';
+  import mixpanel from 'mixpanel-browser';
   import { onMount, tick, untrack } from 'svelte';
   import { fly, scale } from 'svelte/transition';
   import { z } from 'zod';
@@ -98,6 +99,7 @@
         keywords,
         text,
       });
+      mixpanel.track('widget:related-pages:find');
     } finally {
       loadingCount -= 1;
     }
@@ -127,6 +129,7 @@
       if (chatHistory.length === 0) {
         const resp = await trpc.widget.chat.new.mutate({ siteId: site.id });
         chatSessionId = resp.sessionId;
+        mixpanel.track('widget:chat:start');
       }
 
       chatHistory.push({ question });
@@ -142,6 +145,7 @@
         sessionId: chatSessionId,
         message: question,
       });
+      mixpanel.track('widget:chat:message');
 
       chatHistory[chatHistory.length - 1] = { question, answer };
 
