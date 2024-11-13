@@ -2,9 +2,8 @@
   import { Readability } from '@mozilla/readability';
   import { css, cx } from '@readable/styled-system/css';
   import { center, flex } from '@readable/styled-system/patterns';
-  import { Button, FormProvider, Icon, Img, MarkdownRenderer, TextInput } from '@readable/ui/components';
+  import { Button, FormProvider, Icon, MarkdownRenderer } from '@readable/ui/components';
   import { createMutationForm } from '@readable/ui/forms';
-  import { getAccessibleTextColor, hexToRgb } from '@readable/ui/utils';
   import stringHash from '@sindresorhus/string-hash';
   import dayjs from 'dayjs';
   import stringify from 'fast-json-stable-stringify';
@@ -12,14 +11,17 @@
   import { onMount, tick, untrack } from 'svelte';
   import { fly, scale } from 'svelte/transition';
   import { z } from 'zod';
+  import ArrowLeftIcon from '~icons/lucide/arrow-left';
+  import IconArrowRight from '~icons/lucide/arrow-right';
   import ArrowUpIcon from '~icons/lucide/arrow-up';
   import BookOpenTextIcon from '~icons/lucide/book-open-text';
-  import ChevronLeftIcon from '~icons/lucide/chevron-left';
+  import IconEllipsis from '~icons/lucide/ellipsis';
   import MessageCircleIcon from '~icons/lucide/message-circle';
   import IconX from '~icons/lucide/x';
   import AiLoading from './assets/AiLoading.svelte';
   import ReadableLogo from './assets/readable-logo.svg';
   import Sparkle from './assets/Sparkle.svelte';
+  import Sparkles from './assets/Sparkles.svelte';
   import SparkleSmall from './assets/SparkleSmall.svelte';
   import { trpc } from './trpc';
   import type { TRPCOutput } from './trpc';
@@ -32,6 +34,7 @@
 
   let popoverEl: HTMLDivElement;
   let open = $state(false);
+  let expanded = $state(false);
 
   const selectors = [
     'title',
@@ -48,7 +51,7 @@
   let loadingCount = $state(0);
   let lastHash = 0;
 
-  let response = $state<TRPCOutput['widget']['pages']['lookup']>();
+  let response = $state<TRPCOutput['widget']['lookup']>();
 
   let lastTopLayerElement: HTMLElement | null = null;
   let topLayerElements: HTMLElement[] = [];
@@ -97,7 +100,7 @@
 
       lastHash = hash;
 
-      response = await trpc.widget.pages.lookup.query({
+      response = await trpc.widget.lookup.query({
         siteId: site.id,
         keywords,
         text,
@@ -105,7 +108,7 @@
 
       const duration = dayjs().diff(startedAt, 'seconds', true);
 
-      mixpanel.track('widget:pages:lookup', {
+      mixpanel.track('widget:lookup', {
         duration,
       });
     } finally {
@@ -195,6 +198,8 @@
     };
   });
 
+  const pages = $derived(response?.pages.filter((page) => page.score >= 0.8));
+
   $effect(() => {
     if (open) {
       untrack(() => {
@@ -220,10 +225,10 @@
   <button
     class={css({
       position: 'absolute',
-      bottom: '32px',
-      right: '32px',
+      bottom: '20px',
+      right: '20px',
       display: 'block',
-      size: '48px',
+      size: '40px',
       pointerEvents: 'auto',
     })}
     onclick={() => (open = !open)}
@@ -231,40 +236,25 @@
     type="button"
     transition:fly={{ y: 5 }}
   >
-    {#if open}
-      <div
-        style:--widget-theme-color={site.themeColor}
-        class={center({
-          position: 'absolute',
-          inset: '0',
-          size: 'full',
-          color: 'neutral.30',
-          backgroundColor: 'neutral.80',
-          borderRadius: 'full',
-          boxShadow: '[0px 8px 32px 0px token(colors.neutral.100/10)]',
-        })}
-        transition:scale={{ start: 0.8 }}
-      >
-        <Icon icon={IconX} size={24} />
-      </div>
-    {:else}
-      <div
-        style:--widget-theme-color={site.themeColor}
-        class={center({
-          position: 'absolute',
-          inset: '0',
-          size: 'full',
-          color: 'neutral.0',
-          backgroundColor: '[var(--widget-theme-color)]',
-          borderRadius: 'full',
-          textStyle: '24eb',
-          boxShadow: '[0px 8px 32px 0px token(colors.neutral.100/10)]',
-        })}
-        transition:scale={{ start: 0.8 }}
-      >
-        ?
-      </div>
-    {/if}
+    <div
+      style:--widget-theme-color={site.themeColor}
+      class={center({
+        position: 'absolute',
+        inset: '0',
+        size: 'full',
+        color: 'neutral.0',
+        background: '[linear-gradient(160deg, var(--widget-theme-color) 9.28%, var(--widget-theme-color) 75%)]', // TODO: hue
+        borderRadius: 'full',
+        boxShadow: 'strong',
+      })}
+      transition:scale={{ start: 0.8 }}
+    >
+      {#if open}
+        <Icon icon={IconX} size={18} />
+      {:else}
+        <Sparkles />
+      {/if}
+    </div>
   </button>
 
   {#if open}
@@ -273,14 +263,15 @@
         class={flex({
           direction: 'column',
           position: 'fixed',
-          bottom: '92px',
-          right: '32px',
-          borderRadius: '12px',
+          bottom: '68px',
+          right: '20px',
+          borderRadius: '[20px]',
           overflow: 'auto',
-          width: '384px',
+          width: '380px',
+          minHeight: '480px',
           maxHeight: '[calc(100vh - 184px)]',
           textStyle: '14m',
-          color: 'neutral.90',
+          color: 'text.primary',
           backgroundColor: 'white',
           boxShadow: 'heavy',
           pointerEvents: 'auto',
@@ -288,96 +279,63 @@
         onpointerdown={(e) => e.stopPropagation()}
         transition:fly={{ y: 5 }}
       >
-        {#if chatHistory.length > 0}
-          <div
-            class={flex({
-              flexShrink: 0,
-              gap: '4px',
-              height: '48px',
-              alignItems: 'center',
-              paddingX: '4px',
-              borderBottomWidth: '1px',
-              borderBottomColor: 'border.primary',
-            })}
-          >
-            <button
-              class={center({
-                padding: '6px',
-                borderRadius: 'full',
-                _hover: {
-                  backgroundColor: 'neutral.20',
-                },
-              })}
-              onclick={() => (chatHistory = [])}
-              type="button"
-            >
-              <Icon icon={ChevronLeftIcon} size={20} />
-            </button>
-            <h1 class={css({ textStyle: '14b' })}>
-              {site.name} AI 문의
-            </h1>
-          </div>
-        {:else}
-          <div
-            class={center({
-              flexDirection: 'column',
-              height: '150px',
-              gap: '16px',
-              bgGradient: 'to-b',
-              gradientFrom: '[var(--widget-theme-color)/60]',
-              gradientTo: '[var(--widget-theme-color)/100]',
-              flexShrink: 0,
-            })}
-          >
-            {#if site.logoUrl}
-              <Img
-                style={css.raw({
-                  size: '56px',
-                  borderRadius: '8px',
-                  borderWidth: '1px',
-                  borderColor: 'border.image',
-                })}
-                alt=""
-                size={64}
-                url={site.logoUrl}
-              />
+        <div
+          class={flex({
+            align: 'center',
+            justify: 'space-between',
+            borderBottomWidth: '1px',
+            borderBottomColor: 'border.primary',
+            paddingX: '16px',
+            paddingY: '14px',
+            height: '48px',
+          })}
+        >
+          <div class={flex({ align: 'center', gap: '6px', truncate: true })}>
+            {#if chatHistory.length > 0}
+              <button
+                class={center({ padding: '2px', color: 'neutral.50' })}
+                onclick={() => (chatHistory = [])}
+                type="button"
+              >
+                <Icon icon={ArrowLeftIcon} />
+              </button>
             {/if}
-            <h1
-              style:color={getAccessibleTextColor(hexToRgb(site.themeColor))}
-              class={css({
-                textStyle: '16eb',
-              })}
-            >
-              {site.name}
+            <h1 class={css({ textStyle: '14b', truncate: true })}>
+              {chatHistory.length > 0 ? `${site.name} AI 문의` : '이 페이지에 대해 물어보기'}
             </h1>
           </div>
-        {/if}
+          <button class={css({ padding: '2px', color: 'neutral.50' })} onclick={() => (open = false)} type="button">
+            <Icon icon={IconX} size={16} />
+          </button>
+        </div>
+
         {#if chatHistory.length > 0}
           <div
             bind:this={chatHistoryEl}
             class={flex({
               flexDirection: 'column',
-              gap: '12px',
-              paddingX: '16px',
-              paddingY: '20px',
+              gap: '10px',
+              padding: '16px',
               overflow: 'auto',
               minHeight: '170px',
-              maxHeight: '512px',
-              marginBottom: '-40px',
-              paddingBottom: '60px',
+              maxHeight: '340px',
             })}
           >
             {#each chatHistory as chat, idx (idx)}
-              <div class={flex({ justifyContent: 'flex-end', paddingLeft: '40px' })}>
+              <div class={flex({ justifyContent: 'flex-end', paddingLeft: '68px' })}>
                 <p
                   class={cx(
                     'question-bubble',
                     css({
-                      paddingX: '12px',
-                      paddingY: '8px',
-                      backgroundColor: 'neutral.20',
-                      textStyle: '14m',
-                      borderRadius: '[18px]',
+                      borderWidth: '1px',
+                      borderColor: 'border.primary',
+                      borderRadius: '10px',
+                      paddingX: '16px',
+                      paddingY: '12px',
+                      textStyle: '14r',
+                      color: 'text.tertiary',
+                      textAlign: 'right',
+                      backgroundColor: 'neutral.10',
                     }),
                   )}
                   in:fly|global={{ y: 10 }}
@@ -385,24 +343,42 @@
                   {chat.question}
                 </p>
               </div>
-              {#if chat.answer}
-                <div class={flex({ justifyContent: 'flex-start', gap: '12px' })}>
-                  <SparkleSmall />
-                  <MarkdownRenderer style={css.raw({ textStyle: '14m' })} source={chat.answer} />
-                </div>
-              {:else if chat.answer === null}
-                <div class={flex({ justifyContent: 'flex-start', gap: '12px' })}>
-                  <SparkleSmall />
-                  <p class={css({ textStyle: '14m' })}>
+              <div class={flex({ justifyContent: 'flex-start', gap: '12px' })}>
+                <SparkleSmall />
+
+                {#if chat.answer}
+                  <MarkdownRenderer
+                    style={css.raw({
+                      borderWidth: '1px',
+                      borderColor: '[var(--widget-theme-color)/8]',
+                      borderRadius: '10px',
+                      paddingX: '16px',
+                      paddingY: '12px',
+                      textStyle: '14r',
+                      backgroundColor: '[var(--widget-theme-color)/8]',
+                      width: 'full',
+                    })}
+                    source={chat.answer}
+                  />
+                {:else if chat.answer === null}
+                  <p
+                    class={css({
+                      borderWidth: '1px',
+                      borderColor: '[var(--widget-theme-color)/8]',
+                      borderRadius: '10px',
+                      paddingX: '16px',
+                      paddingY: '12px',
+                      textStyle: '14r',
+                      backgroundColor: '[var(--widget-theme-color)/8]',
+                      width: 'full',
+                    })}
+                  >
                     "{chat.question}"과 연관된 내용을 찾지 못했어요.
                   </p>
-                </div>
-              {:else}
-                <div class={flex({ justifyContent: 'flex-start', gap: '12px' })}>
-                  <SparkleSmall />
+                {:else}
                   <AiLoading />
-                </div>
-              {/if}
+                {/if}
+              </div>
             {/each}
           </div>
         {:else if loadingCount > 0}
@@ -410,51 +386,66 @@
             <Sparkle />
             <p class={css({ textStyle: '14b' })}>현재 페이지에서 가장 도움이 될 문서를 찾고 있어요...</p>
           </div>
-        {:else if response}
-          <div
-            class={flex({
-              flexDirection: 'column',
-              gap: '12px',
-              paddingX: '16px',
-              paddingTop: '20px',
-              paddingBottom: '40px',
-            })}
-          >
-            {#if response.pages.length > 0}
-              <h2 class={flex({ alignItems: 'center', gap: '6px' })}>
-                <SparkleSmall />
-                <span class={css({ textStyle: '16b' })}>현재 페이지와 연관된 문서를 찾았어요.</span>
-              </h2>
+        {:else if response && pages}
+          <div class={css({ padding: '16px' })}>
+            {#if pages.length > 0}
+              <div
+                class={css({
+                  marginBottom: '20px',
+                  borderWidth: '1px',
+                  borderColor: '[var(--widget-theme-color)/16]',
+                  borderRadius: '10px',
+                  paddingX: '16px',
+                  paddingY: '12px',
+                  backgroundColor: '[var(--widget-theme-color)/6]',
+                })}
+              >
+                이 페이지에 대해 무엇이든 자유롭게 물어보세요.
+                <br />
+                어떻게 도와드릴까요?
+              </div>
+
+              <p class={css({ marginBottom: '8px', textStyle: '12m', color: 'text.tertiary' })}>
+                해당 페이지에서 자주 찾는 문서({pages.length})
+              </p>
 
               <ul
                 class={flex({
                   flexDirection: 'column',
-                  gap: '4px',
-                  marginLeft: '20px',
-                  paddingLeft: '20px',
-                  listStyle: 'disc',
-                  textStyle: '14m',
-                  color: 'neutral.80',
+                  textStyle: '14r',
                 })}
               >
-                {#each response.pages as page, idx (idx)}
-                  <li>
-                    <a
-                      class={css({
-                        textDecoration: 'underline',
-                        textUnderlineOffset: '4px',
-                        _hover: {
-                          color: 'neutral.100',
-                        },
-                      })}
-                      href={`${site.url}/go/${page.id}`}
-                      rel="noopener noreferrer"
-                      target="_blank"
-                    >
+                {#each pages.slice(0, 3) as page, idx (idx)}
+                  <li class={flex({ align: 'center', gap: '6px', paddingY: '6px' })}>
+                    <Icon style={css.raw({ color: 'neutral.50' })} icon={IconArrowRight} />
+                    <a href={`${site.url}/go/${page.id}`} rel="noopener noreferrer" target="_blank">
                       {page.title}
                     </a>
                   </li>
                 {/each}
+                {#if pages.length > 3}
+                  {#if !expanded}
+                    <li class={css({ paddingY: '6px' })}>
+                      <button
+                        class={flex({ align: 'center', gap: '6px', color: 'text.disabled' })}
+                        onclick={() => (expanded = true)}
+                        type="button"
+                      >
+                        <Icon style={css.raw({ color: 'neutral.50' })} icon={IconEllipsis} />
+                        <span>더보기</span>
+                      </button>
+                    </li>
+                  {:else}
+                    {#each pages.slice(3) as page, idx (idx)}
+                      <li class={flex({ align: 'center', gap: '6px', paddingY: '6px' })}>
+                        <Icon style={css.raw({ color: 'neutral.50' })} icon={IconArrowRight} />
+                        <a href={`${site.url}/go/${page.id}`} rel="noopener noreferrer" target="_blank">
+                          {page.title}
+                        </a>
+                      </li>
+                    {/each}
+                  {/if}
+                {/if}
               </ul>
             {:else}
               <div class={flex({ gap: '6px' })}>
@@ -480,53 +471,96 @@
           </div>
         {/if}
 
-        <div class={flex({ flexDirection: 'column', gap: '8px', paddingX: '16px', pointerEvents: 'none' })}>
-          <div class={flex({ gap: '6px' })}>
-            <Button
-              style={css.raw({ gap: '4px', borderRadius: '16px', pointerEvents: 'auto' })}
-              href={site.url}
-              rel="noopener noreferrer"
-              size="sm"
-              target="_blank"
-              type="link"
-              variant="secondary"
-            >
-              <Icon icon={BookOpenTextIcon} size={16} />
-              <span class={css({ textStyle: '14b' })}>{site.name}</span>
-            </Button>
-            {#if site.widget.outLink}
+        <div
+          class={flex({
+            flexDirection: 'column',
+            gap: '16px',
+            marginTop: 'auto',
+            paddingX: '16px',
+            pointerEvents: 'none',
+          })}
+        >
+          <div>
+            <p class={css({ marginBottom: '10px', textStyle: '12m', color: 'text.tertiary' })}>제안</p>
+            <div class={flex({ gap: '8px' })}>
               <Button
-                style={css.raw({ gap: '4px', borderRadius: '16px', pointerEvents: 'auto' })}
-                href={site.widget.outLink}
+                style={css.raw({ gap: '6px', paddingLeft: '16px', pointerEvents: 'auto' })}
+                href={site.url}
                 rel="noopener noreferrer"
-                size="sm"
+                size="md"
                 target="_blank"
                 type="link"
                 variant="secondary"
               >
-                <Icon icon={MessageCircleIcon} size={16} />
-                <span class={css({ textStyle: '14b' })}>문의</span>
+                <Icon icon={BookOpenTextIcon} size={18} />
+                <span>{site.name}</span>
               </Button>
-            {/if}
-          </div>
-          <FormProvider context={chatFormContext} form={chatForm}>
-            <TextInput
-              name="question"
-              style={css.raw({ borderRadius: '[20px]', pointerEvents: 'auto' })}
-              placeholder={chatHistory.length > 0 ? '추가 문의하기' : '무엇이든 물어보세요'}
-            >
-              {#snippet rightItem()}
+
+              {#if site.widget.outLink}
                 <Button
-                  style={css.raw({ marginRight: '-8px', borderRadius: 'full', padding: '4px', size: '24px' })}
-                  disabled={!$chatFormData.question || $chatFormIsSubmitting}
-                  size="sm"
-                  type="submit"
+                  style={css.raw({ gap: '6px', paddingLeft: '16px', pointerEvents: 'auto' })}
+                  href={site.widget.outLink}
+                  rel="noopener noreferrer"
+                  size="md"
+                  target="_blank"
+                  type="link"
                   variant="secondary"
                 >
-                  <Icon icon={ArrowUpIcon} size={16} />
+                  <Icon icon={MessageCircleIcon} size={18} />
+                  <span>문의</span>
                 </Button>
-              {/snippet}
-            </TextInput>
+              {/if}
+            </div>
+          </div>
+
+          <FormProvider context={chatFormContext} form={chatForm}>
+            <label
+              class={flex({
+                align: 'center',
+                borderWidth: '1px',
+                borderRadius: '10px',
+                borderColor: 'transparent',
+                pointerEvents: 'auto',
+                backgroundImage: '[linear-gradient(#fff, #fff), linear-gradient(to right, #FDB536 0%, #F66E1E 100%)]', // TODO: hue, user theme color
+                backgroundOrigin: 'border-box',
+                backgroundClip: '[content-box, border-box]',
+              })}
+            >
+              <textarea
+                name="question"
+                class={css({
+                  flexGrow: '1',
+                  paddingY: '8px',
+                  paddingLeft: '14px',
+                  width: 'full',
+                  minWidth: '0',
+                  maxHeight: '100px',
+                  resize: 'none',
+                })}
+                oninput={(e) => {
+                  e.currentTarget.style.height = 'auto';
+                  e.currentTarget.style.height = `${e.currentTarget.scrollHeight}px`;
+                }}
+                placeholder="AI를 통해 무엇이든 물어보고, 쓰고, 검색하세요"
+                rows="1"
+              ></textarea>
+
+              <button
+                class={css({
+                  borderRadius: 'full',
+                  marginY: '8px',
+                  marginRight: '10px',
+                  padding: '3px',
+                  size: '22px',
+                  color: 'white',
+                  backgroundColor: 'neutral.40',
+                })}
+                disabled={!$chatFormData.question || $chatFormIsSubmitting}
+                type="submit"
+              >
+                <Icon icon={ArrowUpIcon} size={16} />
+              </button>
+            </label>
           </FormProvider>
         </div>
         <div class={center({ paddingTop: '8px', paddingBottom: '16px' })}>
