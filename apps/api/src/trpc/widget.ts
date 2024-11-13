@@ -2,7 +2,7 @@ import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { RunnableSequence } from '@langchain/core/runnables';
 import stringHash from '@sindresorhus/string-hash';
 import { TRPCError } from '@trpc/server';
-import { and, asc, cosineDistance, eq, inArray } from 'drizzle-orm';
+import { and, asc, cosineDistance, count, desc, eq, inArray } from 'drizzle-orm';
 import stringify from 'fast-json-stable-stringify';
 import { z } from 'zod';
 import { redis } from '@/cache';
@@ -16,6 +16,7 @@ import {
   PageContentChunks,
   PageContents,
   Pages,
+  PageViews,
   SiteCustomDomains,
   Sites,
   SiteWidgets,
@@ -99,108 +100,140 @@ export const widgetRouter = router({
     };
   }),
 
-  lookup: widgetProcedure
-    .input(
-      z.object({
-        keywords: z.array(z.string()),
-        text: z.string(),
-      }),
-    )
-    .query(async ({ input, ctx }) => {
-      const hash = stringHash(
-        stringify({
-          keywords: input.keywords,
-          text: input.text,
+  pages: {
+    lookup: widgetProcedure
+      .input(
+        z.object({
+          keywords: z.array(z.string()),
+          text: z.string(),
         }),
-      );
+      )
+      .query(async ({ input, ctx }) => {
+        const hash = stringHash(
+          stringify({
+            keywords: input.keywords,
+            text: input.text,
+          }),
+        );
 
-      const cacheKey = `widget:v1.2:${ctx.site.id}:${hash}`;
-      const cached = await redis.get(cacheKey);
-      let result: { pages: { id: string; score: number }[] };
+        const cacheKey = `widget:v1.2:${ctx.site.id}:${hash}`;
+        const cached = await redis.get(cacheKey);
+        let result: { pages: { id: string; score: number }[] };
 
-      if (cached) {
-        await Bun.sleep(1000);
-        result = JSON.parse(cached);
-      } else {
-        const vector = await langchain.embeddings.embedQuery(input.keywords.join(' '));
-        const distance = cosineDistance(PageContentChunks.vector, vector);
+        if (cached) {
+          await Bun.sleep(1000);
+          result = JSON.parse(cached);
+        } else {
+          const vector = await langchain.embeddings.embedQuery(input.keywords.join(' '));
+          const distance = cosineDistance(PageContentChunks.vector, vector);
 
-        const chunks = await db
+          const chunks = await db
+            .select({
+              id: Pages.id,
+              title: PageContents.title,
+              text: PageContents.text,
+              distance,
+            })
+            .from(Pages)
+            .innerJoin(PageContents, eq(Pages.id, PageContents.pageId))
+            .innerJoin(PageContentChunks, eq(Pages.id, PageContentChunks.pageId))
+            .where(and(eq(Pages.siteId, ctx.site.id), eq(Pages.state, PageState.PUBLISHED)))
+            .orderBy(asc(distance))
+            .limit(5);
+
+          if (chunks.length > 0) {
+            const chain = RunnableSequence.from([
+              ChatPromptTemplate.fromMessages([
+                ['system', keywordSearchPrompt],
+                ['user', '{context}'],
+                ['user', '{keywords}'],
+                ['user', '{text}'],
+              ]),
+
+              langchain.model.withStructuredOutput(
+                z.object({
+                  pages: z.array(
+                    z.object({
+                      id: z.string(),
+                      score: z.number(),
+                    }),
+                  ),
+                }),
+              ),
+            ]);
+
+            result = await chain.invoke({
+              context: chunks,
+              keywords: input.keywords,
+              text: input.text,
+            });
+
+            await redis.setex(cacheKey, 60 * 60 * 24, JSON.stringify(result));
+          } else {
+            result = {
+              pages: [],
+            };
+          }
+        }
+
+        const resultPages = await db
           .select({
-            id: Pages.id,
+            id: PageContents.pageId,
             title: PageContents.title,
-            text: PageContents.text,
-            distance,
           })
-          .from(Pages)
-          .innerJoin(PageContents, eq(Pages.id, PageContents.pageId))
-          .innerJoin(PageContentChunks, eq(Pages.id, PageContentChunks.pageId))
-          .where(and(eq(Pages.siteId, ctx.site.id), eq(Pages.state, PageState.PUBLISHED)))
-          .orderBy(asc(distance))
-          .limit(5);
+          .from(PageContents)
+          .where(
+            inArray(
+              PageContents.pageId,
+              result.pages.filter((page) => page.score >= 0.8).map((page) => page.id),
+            ),
+          );
 
-        if (chunks.length === 0) {
+        if (resultPages.length === 0) {
+          const sq = db.$with('sq').as(
+            db
+              .select({ id: Pages.id, count: count().as('count') })
+              .from(Pages)
+              .innerJoin(PageViews, eq(Pages.id, PageViews.pageId))
+              .where(and(eq(Pages.siteId, ctx.site.id), eq(Pages.state, PageState.PUBLISHED)))
+              .groupBy(Pages.id)
+              .orderBy((t) => desc(t.count))
+              .limit(5),
+          );
+
+          const pages = await db
+            .with(sq)
+            .select({ id: sq.id, title: PageContents.title, count: sq.count })
+            .from(sq)
+            .innerJoin(PageContents, eq(sq.id, PageContents.pageId))
+            .orderBy(desc(sq.count), asc(PageContents.title))
+            .limit(5);
+
           return {
-            pages: [],
+            type: 'fallback' as const,
+            pages: pages.map((page) => ({
+              id: page.id,
+              title: page.title ?? '(제목 없음)',
+            })),
           };
         }
 
-        const chain = RunnableSequence.from([
-          ChatPromptTemplate.fromMessages([
-            ['system', keywordSearchPrompt],
-            ['user', '{context}'],
-            ['user', '{keywords}'],
-            ['user', '{text}'],
-          ]),
-
-          langchain.model.withStructuredOutput(
-            z.object({
-              pages: z.array(
-                z.object({
-                  id: z.string(),
-                  score: z.number(),
-                }),
-              ),
-            }),
-          ),
-        ]);
-
-        result = await chain.invoke({
-          context: chunks,
-          keywords: input.keywords,
-          text: input.text,
-        });
-
-        await redis.setex(cacheKey, 60 * 60 * 24, JSON.stringify(result));
-      }
-
-      const resultPages = await db
-        .select({
-          id: PageContents.pageId,
-          title: PageContents.title,
-        })
-        .from(PageContents)
-        .where(
-          inArray(
-            PageContents.pageId,
-            result.pages.map((page) => page.id),
-          ),
+        const sortedResultPages = resultPages.toSorted(
+          (a, b) =>
+            result.pages.findIndex((page) => page.id === a.id) - result.pages.findIndex((page) => page.id === b.id),
         );
 
-      const sortedResultPages = resultPages.toSorted(
-        (a, b) =>
-          result.pages.findIndex((page) => page.id === a.id) - result.pages.findIndex((page) => page.id === b.id),
-      );
-
-      return {
-        pages: sortedResultPages.map((page) => ({
-          id: page.id,
-          title: page.title ?? '(제목 없음)',
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          score: result.pages.find((p) => p.id === page.id)!.score,
-        })),
-      };
-    }),
+        return {
+          type: 'match' as const,
+          pages: sortedResultPages.map((page) => ({
+            id: page.id,
+            title: page.title ?? '(제목 없음)',
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            score: result.pages.find((p) => p.id === page.id)!.score,
+          })),
+        };
+      }),
+  },
 
   chat: {
     new: widgetProcedure.mutation(async ({ ctx }) => {

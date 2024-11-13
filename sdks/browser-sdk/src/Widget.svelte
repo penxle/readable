@@ -48,7 +48,7 @@
   let loadingCount = $state(0);
   let lastHash = 0;
 
-  let response = $state<TRPCOutput['widget']['lookup']>();
+  let response = $state<TRPCOutput['widget']['pages']['lookup']>();
 
   let lastTopLayerElement: HTMLElement | null = null;
   let topLayerElements: HTMLElement[] = [];
@@ -97,7 +97,7 @@
 
       lastHash = hash;
 
-      response = await trpc.widget.lookup.query({
+      response = await trpc.widget.pages.lookup.query({
         siteId: site.id,
         keywords,
         text,
@@ -105,7 +105,7 @@
 
       const duration = dayjs().diff(startedAt, 'seconds', true);
 
-      mixpanel.track('widget:lookup', {
+      mixpanel.track('widget:pages:lookup', {
         duration,
       });
     } finally {
@@ -194,8 +194,6 @@
       observer.disconnect();
     };
   });
-
-  const pages = $derived(response?.pages.filter((page) => page.score >= 0.8));
 
   $effect(() => {
     if (open) {
@@ -412,7 +410,7 @@
             <Sparkle />
             <p class={css({ textStyle: '14b' })}>현재 페이지에서 가장 도움이 될 문서를 찾고 있어요...</p>
           </div>
-        {:else if response && pages}
+        {:else if response}
           <div
             class={flex({
               flexDirection: 'column',
@@ -422,7 +420,7 @@
               paddingBottom: '40px',
             })}
           >
-            {#if pages.length > 0}
+            {#if response.pages.length > 0}
               <h2 class={flex({ alignItems: 'center', gap: '6px' })}>
                 <SparkleSmall />
                 <span class={css({ textStyle: '16b' })}>현재 페이지와 연관된 문서를 찾았어요.</span>
@@ -439,7 +437,7 @@
                   color: 'neutral.80',
                 })}
               >
-                {#each pages as page, idx (idx)}
+                {#each response.pages as page, idx (idx)}
                   <li>
                     <a
                       class={css({
