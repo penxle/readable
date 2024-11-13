@@ -5,7 +5,6 @@
   import { getAccessibleTextColor, hexToRgb } from '@readable/ui/utils';
   import qs from 'query-string';
   import { getContext, setContext } from 'svelte';
-  import { writable } from 'svelte/store';
   import { swipe } from 'svelte-gestures';
   import CommandIcon from '~icons/lucide/command';
   import SearchIcon from '~icons/lucide/search';
@@ -73,23 +72,22 @@
   `);
 
   const blurEffectThreshold = 100;
-  const blurEffect = writable(browser ? window.scrollY < blurEffectThreshold : true);
+  let blurEffectState = $state({
+    blurEffect: browser ? window.scrollY < blurEffectThreshold : true,
+  });
+  setContext('blurEffectState', blurEffectState);
 
-  setContext('blurEffect', blurEffect);
-
-  const mobileNavOpen = getContext('mobileNavOpen');
-  const searchBarOpen = getContext('searchBarOpen');
-  const hasCmd = getContext('hasCmd');
+  const uiState = getContext('uiState');
 
   function openSearchBar() {
-    searchBarOpen.set(true);
+    uiState.searchBarOpen = true;
   }
 
   const swipeHandler = (event: SwipeCustomEvent) => {
     if (event.detail.direction === 'left') {
-      mobileNavOpen.set(false);
+      uiState.mobileNavOpen = false;
     } else if (event.detail.direction === 'right') {
-      mobileNavOpen.set(true);
+      uiState.mobileNavOpen = true;
     }
   };
 </script>
@@ -102,7 +100,7 @@
   {/if}
 </svelte:head>
 
-<svelte:window onscroll={() => ($blurEffect = window.scrollY < blurEffectThreshold)} />
+<svelte:window onscroll={() => (blurEffectState.blurEffect = window.scrollY < blurEffectThreshold)} />
 
 <div
   style:--usersite-theme-color={$query.publicSite.themeColor}
@@ -161,7 +159,7 @@
         inset: '0',
         transition: 'background',
         transitionDuration: '500ms',
-        backgroundColor: $blurEffect ? 'surface.primary/60' : 'surface.primary',
+        backgroundColor: blurEffectState.blurEffect ? 'surface.primary/60' : 'surface.primary',
         backdropFilter: 'auto',
         backdropBlur: '8px',
       })}
@@ -252,7 +250,7 @@
               borderWidth: '1px',
             })}
           >
-            {#if $hasCmd}
+            {#if uiState.hasCmd}
               <Icon icon={CommandIcon} size={12} />
             {:else}
               <span>Ctrl</span>

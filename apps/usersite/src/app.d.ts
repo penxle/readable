@@ -18,9 +18,11 @@ declare global {
 declare module 'svelte' {
   type Context = {
     // see routes/+layout.svelte
-    mobileNavOpen: Writable<boolean>;
-    searchBarOpen: Writable<boolean>;
-    hasCmd: Writable<boolean>;
+    uiState: {
+      mobileNavOpen: boolean;
+      searchBarOpen: boolean;
+      hasCmd: boolean;
+    };
   };
 
   export function getContext<T>(key: T extends keyof Context ? T : never): Context[T];

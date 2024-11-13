@@ -16,12 +16,11 @@
   import AiLoading from './@ai/AiLoading.svelte';
   import type { SearchBar_publicSite } from '$graphql';
 
-  const searchBarOpen = getContext('searchBarOpen');
-  const hasCmd = getContext('hasCmd');
+  const uiState = getContext('uiState');
 
   let searchQuery = $state($page.url.searchParams.get('q') ?? '');
   if ($page.url.searchParams.get('q')?.length) {
-    searchBarOpen.set(true);
+    uiState.searchBarOpen = true;
   }
 
   $effect(() => {
@@ -132,7 +131,7 @@
   function closeModal() {
     aiState = 'idle';
     aiSearchResult = null;
-    searchBarOpen.set(false);
+    uiState.searchBarOpen = false;
     searchQuery = '';
     lastRequestedQuery = '';
     searchResults = [];
@@ -160,7 +159,7 @@
   }
 
   async function handleKeyDown(event: KeyboardEvent) {
-    if ($searchBarOpen) {
+    if (uiState.searchBarOpen) {
       if (event.key === 'Escape') {
         closeModal();
         return;
@@ -213,12 +212,12 @@
       }
     } else {
       const metaOrCtrlKeyOnly =
-        ($hasCmd ? event.metaKey && !event.ctrlKey : event.ctrlKey && !event.metaKey) &&
+        (uiState.hasCmd ? event.metaKey && !event.ctrlKey : event.ctrlKey && !event.metaKey) &&
         !event.altKey &&
         !event.shiftKey;
-      if (!$searchBarOpen && event.key === 'k' && metaOrCtrlKeyOnly) {
+      if (!uiState.searchBarOpen && event.key === 'k' && metaOrCtrlKeyOnly) {
         event.preventDefault();
-        searchBarOpen.set(true);
+        uiState.searchBarOpen = true;
       }
     }
   }
@@ -249,7 +248,7 @@
   });
 
   $effect(() => {
-    if ($searchBarOpen) {
+    if (uiState.searchBarOpen) {
       tick().then(() => {
         inputEl?.focus();
       });
@@ -259,7 +258,7 @@
 
 <svelte:window onkeydown={handleKeyDown} />
 
-{#if $searchBarOpen}
+{#if uiState.searchBarOpen}
   <div
     class={css({
       position: 'fixed',

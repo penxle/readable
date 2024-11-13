@@ -17,19 +17,19 @@
   };
 
   let { siteId, siteUrl, navigation }: Props = $props();
-  const mobileNavOpen = getContext('mobileNavOpen');
+  const uiState = getContext('uiState');
 </script>
 
 <svelte:window
   onresize={() => {
-    if ($mobileNavOpen && window.innerWidth >= 768) {
+    if (uiState.mobileNavOpen && window.innerWidth >= 768) {
       // NOTE: 닫아주지 않으면 scrollLock이 계속 적용됨
-      mobileNavOpen.set(false);
+      uiState.mobileNavOpen = false;
     }
   }}
 />
 <svelte:head>
-  {#if $mobileNavOpen}
+  {#if uiState.mobileNavOpen}
     <style>
       body {
         overflow: hidden;
@@ -38,7 +38,7 @@
   {/if}
 </svelte:head>
 
-{#if $mobileNavOpen}
+{#if uiState.mobileNavOpen}
   <div
     class={css({
       hideFrom: 'md',
@@ -52,7 +52,7 @@
         backgroundColor: 'gray.1000/24',
         zIndex: '100',
       })}
-      onclick={() => mobileNavOpen.set(false)}
+      onclick={() => (uiState.mobileNavOpen = false)}
       onkeypress={null}
       role="button"
       tabindex="-1"
@@ -89,7 +89,7 @@
         })}
       >
         <h2 class={css({ textStyle: '18b' })}>페이지 목록</h2>
-        <button onclick={() => mobileNavOpen.set(false)} type="button">
+        <button onclick={() => (uiState.mobileNavOpen = false)} type="button">
           <Icon style={css.raw({ color: 'neutral.60' })} icon={CloseIcon} size={24} />
         </button>
       </div>

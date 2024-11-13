@@ -11,7 +11,6 @@
   import Breadcrumb from './Breadcrumb.svelte';
   import Toc from './Toc.svelte';
   import type { Editor } from '@tiptap/core';
-  import type { Writable } from 'svelte/store';
 
   const query = graphql(`
     query PagePage_Query($path: String!) {
@@ -45,8 +44,9 @@
   let editor = $state<Editor>();
   let headings = $state<{ level: number; text: string; scrollTop: number }[]>([]);
 
-  const blurEffect = getContext<Writable<boolean>>('blurEffect');
-  const mobileNavOpen = getContext('mobileNavOpen');
+  const blurEffectState = getContext<{ blurEffect: boolean }>('blurEffectState');
+
+  const uiState = getContext('uiState');
 
   const reportPageView = async (pageId: string) => {
     const { getFingerprint } = await import('$lib/utils/fingerprint');
@@ -98,13 +98,13 @@
         zIndex: '-1',
         transition: 'background',
         transitionDuration: '500ms',
-        backgroundColor: $blurEffect ? 'surface.primary/60' : 'surface.primary',
+        backgroundColor: blurEffectState.blurEffect ? 'surface.primary/60' : 'surface.primary',
         backdropFilter: 'auto',
         backdropBlur: '8px',
       })}
       aria-hidden="true"
     ></div>
-    <button aria-label="메뉴 열기" onclick={() => mobileNavOpen.set(true)} type="button">
+    <button aria-label="메뉴 열기" onclick={() => (uiState.mobileNavOpen = true)} type="button">
       <Icon style={css.raw({ color: 'text.secondary' })} icon={MenuIcon} size={20} />
     </button>
     <Breadcrumb $publicPage={$query.publicPage} />

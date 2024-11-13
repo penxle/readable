@@ -3,7 +3,6 @@
   import { flex } from '@readable/styled-system/patterns';
   import { Icon } from '@readable/ui/components';
   import { getContext } from 'svelte';
-  import { writable } from 'svelte/store';
   import ChevronDownIcon from '~icons/lucide/chevron-down';
   import ChevronRightIcon from '~icons/lucide/chevron-right';
   import { beforeNavigate } from '$app/navigation';
@@ -86,25 +85,35 @@
   }
 
   let currentPageId = $state<string>();
-  const treeOpenState = writable<Record<string, boolean>>({});
-  const mobileNavOpen = getContext('mobileNavOpen');
+  let treeOpenState = $state<Record<string, boolean>>({});
+  const uiState = getContext('uiState');
 
-  $effect.pre(() => {
+  function updateTreeOpenState() {
     if (currentSlug) {
+      let newTreeOpenState: Record<string, boolean> = {};
+
       // NOTE: 모바일에서 사이드바를 열 때는 현재 페이지만 트리에서 열도록 함
-      if ($mobileNavOpen) {
-        $treeOpenState = {};
+      if (!uiState.mobileNavOpen) {
+        newTreeOpenState = treeOpenState;
       }
+
       const page = findPage(currentSlug);
 
       if (page) {
         currentPageId = page.id;
-        $treeOpenState[page.id] = true;
+        newTreeOpenState[page.id] = true;
         if (page.parent) {
-          $treeOpenState[page.parent.id] = true;
+          newTreeOpenState[page.parent.id] = true;
         }
       }
+
+      treeOpenState = newTreeOpenState;
     }
+  }
+
+  updateTreeOpenState();
+  $effect.pre(() => {
+    updateTreeOpenState();
   });
 
   let navEl = $state<HTMLElement>();
@@ -123,7 +132,7 @@
   });
 
   beforeNavigate(() => {
-    mobileNavOpen.set(false);
+    uiState.mobileNavOpen = false;
   });
 </script>
 
@@ -177,7 +186,7 @@
               aria-current={page.id === currentPageId ? 'page' : undefined}
               href={pageUrl(page)}
               onclick={() => {
-                $treeOpenState[page.id] = true;
+                treeOpenState[page.id] = true;
               }}
             >
               {page.title}
@@ -197,18 +206,18 @@
                     color: 'var(--usersite-theme-color)',
                   },
                 })}
-                aria-expanded={$treeOpenState[page.id] ? 'true' : 'false'}
-                aria-label={$treeOpenState[page.id] ? '하위 메뉴 닫기' : '하위 메뉴 열기'}
+                aria-expanded={treeOpenState[page.id] ? 'true' : 'false'}
+                aria-label={treeOpenState[page.id] ? '하위 메뉴 닫기' : '하위 메뉴 열기'}
                 onclick={() => {
-                  $treeOpenState[page.id] = !$treeOpenState[page.id];
+                  treeOpenState[page.id] = !treeOpenState[page.id];
                 }}
                 type="button"
               >
-                <Icon ariaHidden={true} icon={$treeOpenState[page.id] ? ChevronDownIcon : ChevronRightIcon} size={16} />
+                <Icon ariaHidden={true} icon={treeOpenState[page.id] ? ChevronDownIcon : ChevronRightIcon} size={16} />
               </button>
             {/if}
           </li>
-          {#if page.children.length > 0 && $treeOpenState[page.id]}
+          {#if page.children.length > 0 && treeOpenState[page.id]}
             <li>
               <ul class={flex({ direction: 'column', listStyle: 'none', gap: '2px' })}>
                 {#each page.children as childPage (childPage.id)}
