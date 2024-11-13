@@ -10,6 +10,7 @@
     "up": "NODE_ENV=production doppler run -c prod -- turbo run build && pulumi up -s readable/prod -f"
   },
   "devDependencies": {
+    "@ctrl/tinycolor": "^4.1.0",
     "@iconify-json/lucide": "^1.2.12",
     "@mozilla/readability": "^0.5.0",
     "@pandacss/dev": "^0.47.1",
