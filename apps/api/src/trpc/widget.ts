@@ -2,7 +2,7 @@ import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { RunnableSequence } from '@langchain/core/runnables';
 import stringHash from '@sindresorhus/string-hash';
 import { TRPCError } from '@trpc/server';
-import { and, asc, cosineDistance, eq, inArray } from 'drizzle-orm';
+import { and, asc, cosineDistance, count, desc, eq, inArray } from 'drizzle-orm';
 import stringify from 'fast-json-stable-stringify';
 import { z } from 'zod';
 import { redis } from '@/cache';
@@ -16,6 +16,7 @@ import {
   PageContentChunks,
   PageContents,
   Pages,
+  PageViews,
   SiteCustomDomains,
   Sites,
   SiteWidgets,
@@ -116,7 +117,8 @@ export const widgetRouter = router({
 
       const cacheKey = `widget:v1.2:${ctx.site.id}:${hash}`;
       const cached = await redis.get(cacheKey);
-      let result: { pages: { id: string; score: number }[] };
+      let result: { pages: { id: string; score: number }[] } = { pages: [] };
+      let isLLM = true;
 
       if (cached) {
         await Bun.sleep(1000);
@@ -139,37 +141,50 @@ export const widgetRouter = router({
           .orderBy(asc(distance))
           .limit(5);
 
-        if (chunks.length === 0) {
-          return {
-            pages: [],
-          };
+        if (chunks.length > 0) {
+          const chain = RunnableSequence.from([
+            ChatPromptTemplate.fromMessages([
+              ['system', keywordSearchPrompt],
+              ['user', '{context}'],
+              ['user', '{keywords}'],
+              ['user', '{text}'],
+            ]),
+
+            langchain.model.withStructuredOutput(
+              z.object({
+                pages: z.array(
+                  z.object({
+                    id: z.string(),
+                    score: z.number(),
+                  }),
+                ),
+              }),
+            ),
+          ]);
+
+          result = await chain.invoke({
+            context: chunks,
+            keywords: input.keywords,
+            text: input.text,
+          });
         }
 
-        const chain = RunnableSequence.from([
-          ChatPromptTemplate.fromMessages([
-            ['system', keywordSearchPrompt],
-            ['user', '{context}'],
-            ['user', '{keywords}'],
-            ['user', '{text}'],
-          ]),
+        if (result.pages.length === 0) {
+          result.pages = await db
+            .select({
+              id: PageViews.pageId,
+              score: count(PageViews.id),
+            })
+            .from(PageViews)
+            .innerJoin(Pages, eq(Pages.id, PageViews.pageId))
+            .where(and(eq(Pages.siteId, ctx.site.id), eq(Pages.state, PageState.PUBLISHED)))
+            .groupBy(PageViews.pageId)
+            .orderBy(desc(count(PageViews.id)))
+            .limit(5);
 
-          langchain.model.withStructuredOutput(
-            z.object({
-              pages: z.array(
-                z.object({
-                  id: z.string(),
-                  score: z.number(),
-                }),
-              ),
-            }),
-          ),
-        ]);
-
-        result = await chain.invoke({
-          context: chunks,
-          keywords: input.keywords,
-          text: input.text,
-        });
+          isLLM = false;
+          console.log('fallback to page views');
+        }
 
         await redis.setex(cacheKey, 60 * 60 * 24, JSON.stringify(result));
       }
@@ -199,6 +214,7 @@ export const widgetRouter = router({
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           score: result.pages.find((p) => p.id === page.id)!.score,
         })),
+        isLLM,
       };
     }),
 
