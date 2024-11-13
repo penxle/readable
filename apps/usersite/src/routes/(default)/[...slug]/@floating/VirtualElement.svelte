@@ -76,9 +76,8 @@
       style:top={`${attrs.top}px`}
       style:left={`${attrs.left}px`}
       style:width={`${attrs.width}px`}
-      style:height={`${attrs.height}px`}
-      style:line-height={`${attrs.lineHeight}px`}
-      class={flex({ gap: '8px', position: 'absolute', pointerEvents: 'none' })}
+      style:height={`${attrs.lineHeight}px`}
+      class={flex({ gap: '8px', position: 'absolute', pointerEvents: 'none', alignItems: 'center' })}
       transition:fade|global={{ duration: transition ? 150 : 0, easing: sineIn }}
     >
       <div class={flex({ flex: '1', justify: 'flex-end', align: 'center', height: '[1lh]' })}>
