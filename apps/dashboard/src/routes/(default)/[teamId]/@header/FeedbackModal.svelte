@@ -8,6 +8,7 @@
   import { dataSchemas } from '@/schemas';
   import { graphql } from '$graphql';
   import { TitledModal } from '$lib/components';
+  import { uploadBlobAsImage } from '$lib/utils/blob.svelte';
 
   type Props = {
     open?: boolean;
@@ -22,7 +23,7 @@
     }
   `);
 
-  const { form, context, isValid } = createMutationForm({
+  const { form, context, isValid, setFields } = createMutationForm({
     schema: z.object({
       teamId: dataSchemas.team.id,
       content: z.string().min(1),
@@ -36,6 +37,26 @@
       toast.error('피드백 전송에 실패했습니다');
     },
   });
+
+  let imageInputEl: HTMLInputElement;
+  let contentEl: HTMLTextAreaElement;
+
+  async function handleImageChange(event: Event) {
+    const target = event.currentTarget as HTMLInputElement;
+    const file = target.files?.[0];
+    target.value = '';
+
+    if (!file) {
+      return;
+    }
+
+    const resp = await uploadBlobAsImage(file, {
+      ensureAlpha: true,
+    });
+
+    setFields('content', (content) => `${content}\n<${resp.url}|${file.name}>`);
+    contentEl.scrollTo({ top: contentEl.scrollHeight, behavior: 'smooth' });
+  }
 </script>
 
 <TitledModal bind:open>
@@ -67,6 +88,7 @@
         })}
       >
         <textarea
+          bind:this={contentEl}
           name="content"
           class={css({
             flexGrow: '1',
@@ -79,8 +101,18 @@
         ></textarea>
       </label>
     </FormField>
-    <Button style={css.raw({ width: 'full', marginTop: '20px' })} disabled={!isValid} glossy size="lg" type="submit">
-      보내기
-    </Button>
+    <div class={flex({ gap: '8px', marginTop: '20px' })}>
+      <Button
+        style={css.raw({ width: '140px' })}
+        onclick={() => imageInputEl.click()}
+        size="lg"
+        type="button"
+        variant="secondary"
+      >
+        이미지 첨부
+      </Button>
+      <input bind:this={imageInputEl} accept="image/*" hidden onchange={handleImageChange} type="file" />
+      <Button style={css.raw({ flexGrow: '1' })} disabled={!isValid} glossy size="lg" type="submit">보내기</Button>
+    </div>
   </FormProvider>
 </TitledModal>
