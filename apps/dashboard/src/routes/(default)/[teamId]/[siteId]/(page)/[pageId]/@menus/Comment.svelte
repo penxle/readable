@@ -19,10 +19,22 @@
 <div class={flex({ position: 'relative', align: 'center', pointerEvents: 'auto' })}>
   <button
     bind:this={buttonEl}
-    class={css({ borderRadius: '6px', padding: '2px', color: 'neutral.50', _hover: { backgroundColor: 'neutral.20' } })}
+    class={flex({
+      alignItems: 'center',
+      gap: '4px',
+      borderRadius: '6px',
+      padding: '4px',
+      color: 'neutral.50',
+      _hover: { backgroundColor: 'neutral.20' },
+    })}
     onclick={() => buttonEl && onclick?.({ pos, anchor: buttonEl })}
     type="button"
   >
     <Icon icon={commentCount > 0 ? MessageSquareMoreIcon : MessageSquarePlusIcon} size={18} />
+    {#if commentCount > 99}
+      <span class={css({ textStyle: '12sb', color: 'text.tertiary' })}>99+</span>
+    {:else if commentCount > 0}
+      <span class={css({ textStyle: '12sb', color: 'text.tertiary' })}>{commentCount}</span>
+    {/if}
   </button>
 </div>
