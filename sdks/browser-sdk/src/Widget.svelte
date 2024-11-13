@@ -1,8 +1,9 @@
 <script lang="ts">
+  import { TinyColor } from '@ctrl/tinycolor';
   import { Readability } from '@mozilla/readability';
   import { css, cx } from '@readable/styled-system/css';
   import { center, flex } from '@readable/styled-system/patterns';
-  import { Button, FormProvider, Icon, MarkdownRenderer } from '@readable/ui/components';
+  import { FormProvider, Icon } from '@readable/ui/components';
   import { createMutationForm } from '@readable/ui/forms';
   import stringHash from '@sindresorhus/string-hash';
   import dayjs from 'dayjs';
@@ -14,15 +15,13 @@
   import ArrowLeftIcon from '~icons/lucide/arrow-left';
   import IconArrowRight from '~icons/lucide/arrow-right';
   import ArrowUpIcon from '~icons/lucide/arrow-up';
-  import BookOpenTextIcon from '~icons/lucide/book-open-text';
   import IconEllipsis from '~icons/lucide/ellipsis';
-  import MessageCircleIcon from '~icons/lucide/message-circle';
   import IconX from '~icons/lucide/x';
-  import AiLoading from './assets/AiLoading.svelte';
   import ReadableLogo from './assets/readable-logo.svg';
-  import Sparkle from './assets/Sparkle.svelte';
   import Sparkles from './assets/Sparkles.svelte';
-  import SparkleSmall from './assets/SparkleSmall.svelte';
+  import { BOT_MESSAGE } from './assets/strings';
+  import { BotMessage } from './components';
+  import OtherOptions from './components/OtherOptions.svelte';
   import { trpc } from './trpc';
   import type { TRPCOutput } from './trpc';
 
@@ -35,6 +34,8 @@
   let popoverEl: HTMLDivElement;
   let open = $state(false);
   let expanded = $state(false);
+
+  const themeColor2 = $derived(new TinyColor(site.themeColor).spin(26).toString());
 
   const selectors = [
     'title',
@@ -51,7 +52,7 @@
   let loadingCount = $state(0);
   let lastHash = 0;
 
-  let response = $state<TRPCOutput['widget']['lookup']>();
+  let response = $state<TRPCOutput['widget']['pages']['lookup']>();
 
   let lastTopLayerElement: HTMLElement | null = null;
   let topLayerElements: HTMLElement[] = [];
@@ -100,7 +101,7 @@
 
       lastHash = hash;
 
-      response = await trpc.widget.lookup.query({
+      response = await trpc.widget.pages.lookup.query({
         siteId: site.id,
         keywords,
         text,
@@ -123,28 +124,47 @@
       answer?: string | null;
     }[]
   >([]);
+  const lastChat = $derived(chatHistory.at(-1));
 
-  let chatHistoryEl = $state<HTMLDivElement | undefined>(undefined);
+  let chatHistoryEl = $state<HTMLDivElement>();
+  let chatFormTextareaEl = $state<HTMLTextAreaElement>();
+  let questionDraft = $state('');
+
+  const textareaLineHeightPx = $derived(
+    Number.parseFloat(chatFormTextareaEl?.computedStyleMap().get('line-height')?.toString() ?? '1.6') *
+      Number.parseFloat(chatFormTextareaEl?.computedStyleMap().get('font-size')?.toString() ?? '16'),
+  );
+
+  $effect(() => {
+    questionDraft;
+
+    if (!chatFormTextareaEl) {
+      return;
+    }
+
+    // textarea 높이 자동 조정
+    chatFormTextareaEl.style.height = 'auto';
+    chatFormTextareaEl.style.height = `${chatFormTextareaEl.scrollHeight}px`;
+  });
 
   const {
     form: chatForm,
     context: chatFormContext,
-    data: chatFormData,
     isSubmitting: chatFormIsSubmitting,
-    resetField: chatFormResetField,
+    createSubmitHandler: chatFormCreateSubmitHandler,
   } = createMutationForm({
     schema: z.object({
       question: z.string(),
     }),
     mutation: async ({ question }) => {
+      questionDraft = '';
+
       if (chatHistory.length === 0) {
         const resp = await trpc.widget.chat.new.mutate({ siteId: site.id });
         chatSessionId = resp.sessionId;
       }
 
       chatHistory.push({ question });
-
-      chatFormResetField('question');
 
       tick().then(() => {
         chatHistoryEl?.scrollTo({ top: chatHistoryEl.scrollHeight });
@@ -179,6 +199,25 @@
     },
   });
 
+  const chatFormSubmit = chatFormCreateSubmitHandler();
+  // enter로 submit, shift+enter로 개행
+  function onKeydownInTextarea(e: KeyboardEvent) {
+    if (e.isComposing) {
+      return;
+    }
+
+    if (e.key === 'Enter') {
+      if (e.shiftKey) {
+        return;
+      }
+
+      e.preventDefault();
+      if (questionDraft.trim() && !$chatFormIsSubmitting && !(lastChat && lastChat.answer === undefined)) {
+        chatFormSubmit();
+      }
+    }
+  }
+
   onMount(() => {
     popoverEl.showPopover();
 
@@ -198,7 +237,13 @@
     };
   });
 
-  const pages = $derived(response?.pages.filter((page) => page.score >= 0.8));
+  const pages = $derived(
+    response?.pages.filter((page: TRPCOutput['widget']['pages']['lookup']['pages'][number]) =>
+      'score' in page ? page.score >= 0.8 : true,
+    ),
+  );
+
+  const pagesVisible = $derived(expanded ? pages : pages?.slice(0, 3));
 
   $effect(() => {
     if (open) {
@@ -238,12 +283,13 @@
   >
     <div
       style:--widget-theme-color={site.themeColor}
+      style:--widget-theme-color-2={themeColor2}
       class={center({
         position: 'absolute',
         inset: '0',
         size: 'full',
         color: 'neutral.0',
-        background: '[linear-gradient(160deg, var(--widget-theme-color) 9.28%, var(--widget-theme-color) 75%)]', // TODO: hue
+        background: '[linear-gradient(160deg, var(--widget-theme-color-2) 9.28%, var(--widget-theme-color) 75%)]',
         borderRadius: 'full',
         boxShadow: 'strong',
       })}
@@ -258,7 +304,11 @@
   </button>
 
   {#if open}
-    <div style:--widget-theme-color={site.themeColor} class={css({ display: 'contents' })}>
+    <div
+      style:--widget-theme-color={site.themeColor}
+      style:--widget-theme-color-2={themeColor2}
+      class={css({ display: 'contents' })}
+    >
       <div
         class={flex({
           direction: 'column',
@@ -266,7 +316,7 @@
           bottom: '68px',
           right: '20px',
           borderRadius: '[20px]',
-          overflow: 'auto',
+          overflowY: 'auto',
           width: '380px',
           minHeight: '480px',
           maxHeight: '[calc(100vh - 184px)]',
@@ -300,7 +350,7 @@
                 <Icon icon={ArrowLeftIcon} />
               </button>
             {/if}
-            <h1 class={css({ textStyle: '14b', truncate: true })}>
+            <h1 class={css({ textStyle: '14sb', truncate: true })}>
               {chatHistory.length > 0 ? `${site.name} AI 문의` : '이 페이지에 대해 물어보기'}
             </h1>
           </div>
@@ -314,7 +364,7 @@
             bind:this={chatHistoryEl}
             class={flex({
               flexDirection: 'column',
-              gap: '10px',
+              gap: '24px',
               padding: '16px',
               overflow: 'auto',
               minHeight: '170px',
@@ -336,6 +386,7 @@
                       color: 'text.tertiary',
                       textAlign: 'right',
                       backgroundColor: 'neutral.10',
+                      whiteSpace: 'pre-wrap',
                     }),
                   )}
                   in:fly|global={{ y: 10 }}
@@ -343,219 +394,168 @@
                   {chat.question}
                 </p>
               </div>
-              <div class={flex({ justifyContent: 'flex-start', gap: '12px' })}>
-                <SparkleSmall />
 
-                {#if chat.answer}
-                  <MarkdownRenderer
-                    style={css.raw({
-                      borderWidth: '1px',
-                      borderColor: '[var(--widget-theme-color)/8]',
-                      borderRadius: '10px',
-                      paddingX: '16px',
-                      paddingY: '12px',
-                      textStyle: '14r',
-                      backgroundColor: '[var(--widget-theme-color)/8]',
-                      width: 'full',
-                    })}
-                    source={chat.answer}
-                  />
-                {:else if chat.answer === null}
-                  <p
-                    class={css({
-                      borderWidth: '1px',
-                      borderColor: '[var(--widget-theme-color)/8]',
-                      borderRadius: '10px',
-                      paddingX: '16px',
-                      paddingY: '12px',
-                      textStyle: '14r',
-                      backgroundColor: '[var(--widget-theme-color)/8]',
-                      width: 'full',
-                    })}
-                  >
-                    "{chat.question}"과 연관된 내용을 찾지 못했어요.
-                  </p>
-                {:else}
-                  <AiLoading />
-                {/if}
-              </div>
+              {#if chat.answer}
+                <BotMessage message={chat.answer} {site} />
+              {:else if chat.answer === null}
+                <BotMessage message={`"${chat.question}"과 연관된 내용을 찾지 못했어요.`} {site} />
+                <BotMessage {site} title="다른 도움이 필요하신가요?">
+                  {#snippet content()}
+                    <OtherOptions {site} />
+                  {/snippet}
+                </BotMessage>
+              {:else}
+                <BotMessage loading {site} />
+              {/if}
             {/each}
           </div>
-        {:else if loadingCount > 0}
-          <div class={center({ flexDirection: 'column', paddingY: '20px', gap: '20px' })}>
-            <Sparkle />
-            <p class={css({ textStyle: '14b' })}>현재 페이지에서 가장 도움이 될 문서를 찾고 있어요...</p>
-          </div>
-        {:else if response && pages}
-          <div class={css({ padding: '16px' })}>
-            {#if pages.length > 0}
-              <div
-                class={css({
-                  marginBottom: '20px',
-                  borderWidth: '1px',
-                  borderColor: '[var(--widget-theme-color)/16]',
-                  borderRadius: '10px',
-                  paddingX: '16px',
-                  paddingY: '12px',
-                  backgroundColor: '[var(--widget-theme-color)/6]',
-                })}
-              >
-                이 페이지에 대해 무엇이든 자유롭게 물어보세요.
-                <br />
-                어떻게 도와드릴까요?
-              </div>
-
-              <p class={css({ marginBottom: '8px', textStyle: '12m', color: 'text.tertiary' })}>
-                해당 페이지에서 자주 찾는 문서({pages.length})
-              </p>
-
-              <ul
-                class={flex({
-                  flexDirection: 'column',
-                  textStyle: '14r',
-                })}
-              >
-                {#each pages.slice(0, 3) as page, idx (idx)}
-                  <li class={flex({ align: 'center', gap: '6px', paddingY: '6px' })}>
-                    <Icon style={css.raw({ color: 'neutral.50' })} icon={IconArrowRight} />
-                    <a href={`${site.url}/go/${page.id}`} rel="noopener noreferrer" target="_blank">
-                      {page.title}
-                    </a>
-                  </li>
-                {/each}
-                {#if pages.length > 3}
-                  {#if !expanded}
-                    <li class={css({ paddingY: '6px' })}>
-                      <button
-                        class={flex({ align: 'center', gap: '6px', color: 'text.disabled' })}
-                        onclick={() => (expanded = true)}
-                        type="button"
-                      >
-                        <Icon style={css.raw({ color: 'neutral.50' })} icon={IconEllipsis} />
-                        <span>더보기</span>
-                      </button>
-                    </li>
-                  {:else}
-                    {#each pages.slice(3) as page, idx (idx)}
-                      <li class={flex({ align: 'center', gap: '6px', paddingY: '6px' })}>
-                        <Icon style={css.raw({ color: 'neutral.50' })} icon={IconArrowRight} />
-                        <a href={`${site.url}/go/${page.id}`} rel="noopener noreferrer" target="_blank">
-                          {page.title}
-                        </a>
-                      </li>
-                    {/each}
-                  {/if}
-                {/if}
-              </ul>
-            {:else}
-              <div class={flex({ gap: '6px' })}>
-                <SparkleSmall />
-                <div class={flex({ flexDirection: 'column', gap: '4px' })}>
-                  <p class={css({ textStyle: '16b' })}>현재 페이지와 연관된 문서를 찾지 못했어요.</p>
-                  <p class={css({ textStyle: '14m', color: 'neutral.80' })}>
-                    도움센터 문서를 이용하시거나, 문의를 남겨보세요.
-                  </p>
-                </div>
-              </div>
-            {/if}
-          </div>
         {:else}
-          <div class={flex({ gap: '6px' })}>
-            <SparkleSmall />
-            <div class={flex({ flexDirection: 'column', gap: '4px' })}>
-              <p class={css({ textStyle: '16b' })}>현재 페이지와 연관된 문서를 찾지 못했어요.</p>
-              <p class={css({ textStyle: '14m', color: 'neutral.80' })}>
-                도움센터 문서를 이용하시거나, 문의를 남겨보세요.
-              </p>
-            </div>
+          <div class={center({ flexDirection: 'column', alignItems: 'flex-start', padding: '16px', gap: '24px' })}>
+            <BotMessage message={BOT_MESSAGE.INITIAL} {site} />
+            {#if loadingCount > 0}
+              <BotMessage loading {site}>
+                <!-- {#snippet content()}
+                  <div class={center({ height: '28px' })}>
+                    <AiLoading />
+                  </div>
+                {/snippet} -->
+              </BotMessage>
+            {:else if response && pages && pagesVisible}
+              {#if pages.length > 0}
+                <BotMessage
+                  {site}
+                  title={response.type === 'match'
+                    ? `이 페이지에 대한 추천 문서 (${pages.length})`
+                    : `도움센터에서 자주 찾는 문서 (${pages.length})`}
+                >
+                  {#snippet content()}
+                    <ul
+                      class={flex({
+                        flexDirection: 'column',
+                        textStyle: '14r',
+                      })}
+                    >
+                      {#each pagesVisible as page, idx (idx)}
+                        <li>
+                          <a
+                            class={css({
+                              display: 'inline-flex',
+                              flexDirection: 'row',
+                              alignItems: 'flex-start',
+                              gap: '6px',
+                              padding: '4px',
+                              borderRadius: '6px',
+                              backgroundColor: {
+                                _hover: 'neutral.20',
+                              },
+                            })}
+                            href={`${site.url}/go/${page.id}`}
+                            rel="noopener noreferrer"
+                            target="_blank"
+                          >
+                            <Icon
+                              style={css.raw({ color: 'neutral.50', marginTop: '2px' })}
+                              icon={IconArrowRight}
+                              size={16}
+                            />
+                            <span class={css({ lineClamp: 2 })}>{page.title}</span>
+                          </a>
+                        </li>
+                      {/each}
+                      {#if pages.length > pagesVisible.length && !expanded}
+                        <li>
+                          <button
+                            class={flex({
+                              padding: '4px',
+                              align: 'center',
+                              gap: '6px',
+                              borderRadius: '6px',
+                              backgroundColor: {
+                                _hover: 'neutral.20',
+                              },
+                              color: 'text.tertiary',
+                            })}
+                            onclick={() => (expanded = true)}
+                            type="button"
+                          >
+                            <Icon style={css.raw({ color: 'neutral.50' })} icon={IconEllipsis} />
+                            <span>더보기</span>
+                          </button>
+                        </li>
+                      {/if}
+                    </ul>
+                  {/snippet}
+                </BotMessage>
+              {/if}
+              {#if !response || response.type === 'fallback'}
+                <!-- 로딩 끝났는데 결과가 없는 경우 (에러) 또는 결과 타입이 fallback인 경우 -->
+                <BotMessage message={BOT_MESSAGE.NOT_FOUND} {site} />
+                <BotMessage {site} title="다른 도움이 필요하신가요?">
+                  {#snippet content()}
+                    <OtherOptions {site} />
+                  {/snippet}
+                </BotMessage>
+              {/if}
+            {/if}
           </div>
         {/if}
 
         <div
           class={flex({
             flexDirection: 'column',
-            gap: '16px',
             marginTop: 'auto',
             paddingX: '16px',
             pointerEvents: 'none',
           })}
         >
-          <div>
-            <p class={css({ marginBottom: '10px', textStyle: '12m', color: 'text.tertiary' })}>제안</p>
-            <div class={flex({ gap: '8px' })}>
-              <Button
-                style={css.raw({ gap: '6px', paddingLeft: '16px', pointerEvents: 'auto' })}
-                href={site.url}
-                rel="noopener noreferrer"
-                size="md"
-                target="_blank"
-                type="link"
-                variant="secondary"
-              >
-                <Icon icon={BookOpenTextIcon} size={18} />
-                <span>{site.name}</span>
-              </Button>
-
-              {#if site.widget.outLink}
-                <Button
-                  style={css.raw({ gap: '6px', paddingLeft: '16px', pointerEvents: 'auto' })}
-                  href={site.widget.outLink}
-                  rel="noopener noreferrer"
-                  size="md"
-                  target="_blank"
-                  type="link"
-                  variant="secondary"
-                >
-                  <Icon icon={MessageCircleIcon} size={18} />
-                  <span>문의</span>
-                </Button>
-              {/if}
-            </div>
-          </div>
-
           <FormProvider context={chatFormContext} form={chatForm}>
             <label
               class={flex({
+                width: 'full',
                 align: 'center',
+                gap: '8px',
                 borderWidth: '1px',
                 borderRadius: '10px',
                 borderColor: 'transparent',
                 pointerEvents: 'auto',
-                backgroundImage: '[linear-gradient(#fff, #fff), linear-gradient(to right, #FDB536 0%, #F66E1E 100%)]', // TODO: hue, user theme color
+                backgroundImage:
+                  '[linear-gradient(#fff, #fff), linear-gradient(to right, var(--widget-theme-color-2) 0%, var(--widget-theme-color) 100%)]',
                 backgroundOrigin: 'border-box',
                 backgroundClip: '[content-box, border-box]',
               })}
             >
               <textarea
+                bind:this={chatFormTextareaEl}
                 name="question"
+                style:max-height={`${textareaLineHeightPx * 5}px`}
                 class={css({
                   flexGrow: '1',
-                  paddingY: '8px',
                   paddingLeft: '14px',
-                  width: 'full',
-                  minWidth: '0',
-                  maxHeight: '100px',
+                  paddingY: '10px',
+                  textStyle: '14m',
+                  height: 'auto',
                   resize: 'none',
                 })}
-                oninput={(e) => {
-                  e.currentTarget.style.height = 'auto';
-                  e.currentTarget.style.height = `${e.currentTarget.scrollHeight}px`;
-                }}
+                onkeydown={onKeydownInTextarea}
                 placeholder="AI를 통해 무엇이든 물어보고, 쓰고, 검색하세요"
                 rows="1"
+                bind:value={questionDraft}
               ></textarea>
-
               <button
                 class={css({
+                  alignSelf: 'flex-end',
                   borderRadius: 'full',
+                  padding: '3px',
                   marginY: '8px',
                   marginRight: '10px',
-                  padding: '3px',
                   size: '22px',
                   color: 'white',
-                  backgroundColor: 'neutral.40',
+                  backgroundColor: {
+                    base: '[var(--widget-theme-color)]',
+                    _disabled: 'neutral.40',
+                  },
                 })}
-                disabled={!$chatFormData.question || $chatFormIsSubmitting}
+                disabled={!questionDraft.trim() || $chatFormIsSubmitting || (lastChat && lastChat.answer === undefined)}
                 type="submit"
               >
                 <Icon icon={ArrowUpIcon} size={16} />
