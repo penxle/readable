@@ -459,6 +459,7 @@
                               alignItems: 'flex-start',
                               gap: '6px',
                               padding: '4px',
+                              paddingRight: '6px',
                               borderRadius: '6px',
                               backgroundColor: {
                                 _hover: 'neutral.20',
@@ -481,9 +482,10 @@
                         <li>
                           <button
                             class={flex({
-                              padding: '4px',
                               align: 'center',
                               gap: '6px',
+                              padding: '4px',
+                              paddingRight: '6px',
                               borderRadius: '6px',
                               backgroundColor: {
                                 _hover: 'neutral.20',
