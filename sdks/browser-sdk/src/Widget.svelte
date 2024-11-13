@@ -281,26 +281,41 @@
     type="button"
     transition:fly={{ y: 5 }}
   >
-    <div
-      style:--widget-theme-color={site.themeColor}
-      style:--widget-theme-color-2={themeColor2}
-      class={center({
-        position: 'absolute',
-        inset: '0',
-        size: 'full',
-        color: 'neutral.0',
-        background: '[linear-gradient(160deg, var(--widget-theme-color-2) 9.28%, var(--widget-theme-color) 75%)]',
-        borderRadius: 'full',
-        boxShadow: 'strong',
-      })}
-      transition:scale={{ start: 0.8 }}
-    >
-      {#if open}
+    {#if open}
+      <div
+        style:--widget-theme-color={site.themeColor}
+        style:--widget-theme-color-2={themeColor2}
+        class={center({
+          position: 'absolute',
+          inset: '0',
+          size: 'full',
+          color: 'neutral.0',
+          background: '[linear-gradient(160deg, var(--widget-theme-color-2) 9.28%, var(--widget-theme-color) 75%)]',
+          borderRadius: 'full',
+          boxShadow: 'strong',
+        })}
+        transition:scale={{ start: 0.8 }}
+      >
         <Icon icon={IconX} size={18} />
-      {:else}
+      </div>
+    {:else}
+      <div
+        style:--widget-theme-color={site.themeColor}
+        style:--widget-theme-color-2={themeColor2}
+        class={center({
+          position: 'absolute',
+          inset: '0',
+          size: 'full',
+          color: 'neutral.0',
+          background: '[linear-gradient(160deg, var(--widget-theme-color-2) 9.28%, var(--widget-theme-color) 75%)]',
+          borderRadius: 'full',
+          boxShadow: 'strong',
+        })}
+        transition:scale={{ start: 0.8 }}
+      >
         <Sparkles />
-      {/if}
-    </div>
+      </div>
+    {/if}
   </button>
 
   {#if open}
