@@ -114,6 +114,10 @@
 
   // enter로 submit, shift+enter로 개행
   function onKeydownInTextarea(e: KeyboardEvent) {
+    if (e.isComposing) {
+      return;
+    }
+
     if (e.key === 'Enter') {
       if (e.shiftKey) {
         return;
@@ -189,8 +193,8 @@
     class={flex({
       flexDirection: 'column',
       borderRadius: '8px',
-      width: '420px',
-      maxHeight: '420px',
+      width: '320px',
+      maxHeight: '320px',
       backgroundColor: 'white',
       boxShadow: 'strong',
       zIndex: '50',
