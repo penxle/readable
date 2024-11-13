@@ -28,6 +28,12 @@
             ...Editor_CommentPopover_pageContentComment
           }
         }
+
+        me @required {
+          id
+
+          ...Editor_CommentPopover_me
+        }
       }
     `),
   );
@@ -116,6 +122,7 @@
     pageId={$query.page.id}
     {...commentOpen}
     $comments={commentsByPos.get(commentOpen.pos) ?? []}
+    $me={$query.me}
     onclose={() => (commentOpen = null)}
   />
 {/if}
