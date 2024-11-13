@@ -1,7 +1,7 @@
 import { and, eq } from 'drizzle-orm';
 import { builder } from '@/builder';
 import { db, firstOrThrow, TeamMembers, Teams, Users } from '@/db';
-import { logToSlack } from '@/utils/slack';
+import * as slack from '@/external/slack';
 
 builder.mutationFields((t) => ({
   createFeedback: t.withAuth({ session: true }).fieldWithInput({
@@ -24,10 +24,10 @@ builder.mutationFields((t) => ({
         .where(eq(Users.id, ctx.session.userId))
         .then(firstOrThrow);
 
-      logToSlack('feedback', {
-        content: `사용자: ${user.name} (${user.id})
-팀: ${user.teamName} (${user.teamId})
-내용: ${input.content}`,
+      slack.message({
+        channel: '#feedback',
+        username: '유저 피드백',
+        message: `사용자: ${user.name} (${user.id})\n팀: ${user.teamName} (${user.teamId})\n내용: ${input.content}`,
       });
 
       return true;
