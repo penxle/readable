@@ -109,7 +109,7 @@
 
       const duration = dayjs().diff(startedAt, 'seconds', true);
 
-      mixpanel.track('widget:lookup', {
+      mixpanel.track('widget:pages:lookup', {
         duration,
       });
     } finally {
