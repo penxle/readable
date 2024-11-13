@@ -502,9 +502,11 @@
                   {/snippet}
                 </BotMessage>
               {/if}
+              {#if !response || pages.length === 0}
+                <BotMessage message={BOT_MESSAGE.NOT_FOUND} {site} />
+              {/if}
               {#if !response || response.type === 'fallback'}
                 <!-- 로딩 끝났는데 결과가 없는 경우 (에러) 또는 결과 타입이 fallback인 경우 -->
-                <BotMessage message={BOT_MESSAGE.NOT_FOUND} {site} />
                 <BotMessage {site} title="다른 도움이 필요하신가요?">
                   {#snippet content()}
                     <OtherOptions {site} />
