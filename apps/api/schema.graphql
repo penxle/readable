@@ -452,8 +452,10 @@ type PublicPage implements IPage {
   children: [PublicPage!]!
   content: PublicPageContent!
   id: ID!
+  nextPage: PublicPage
   order: String!
   parent: PublicPage
+  previousPage: PublicPage
   slug: String!
   state: PageState!
   title: String!
