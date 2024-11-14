@@ -75,6 +75,12 @@ input CreateTeamInput {
   name: String!
 }
 
+type DailyVisitor {
+  date: DateTime!
+  pageViews: Int!
+  visitors: Int!
+}
+
 scalar DateTime
 
 input DeleteCategoryInput {
@@ -569,6 +575,7 @@ type Site implements ISite {
   team: Team!
   themeColor: String!
   url: String!
+  visitors(dateEnd: DateTime, dateStart: DateTime!): [DailyVisitor!]!
   widget: SiteWidget
 }
 

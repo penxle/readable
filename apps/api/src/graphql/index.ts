@@ -1,5 +1,6 @@
 import './objects';
 import './enums';
+import './analytics';
 import './auth';
 import './blob';
 import './feedback';
