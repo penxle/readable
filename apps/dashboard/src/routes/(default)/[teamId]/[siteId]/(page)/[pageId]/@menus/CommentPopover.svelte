@@ -380,7 +380,7 @@
       borderRadius: '8px',
       paddingX: '10px',
       paddingY: '8px',
-      width: '400px',
+      width: '320px',
       backgroundColor: 'white',
       boxShadow: 'strong',
       zIndex: '50',
