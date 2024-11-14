@@ -22,6 +22,7 @@
   import { BOT_MESSAGE } from './assets/strings';
   import { BotMessage } from './components';
   import OtherOptions from './components/OtherOptions.svelte';
+  import PageContent from './components/PageContent.svelte';
   import { trpc } from './trpc';
   import type { TRPCOutput } from './trpc';
 
@@ -218,6 +219,12 @@
     }
   }
 
+  let currentPageId = $state<string | null>(null);
+  const openPage = (pageId: string) => {
+    // currentPageId = pageId;
+    window.open(`${site.url}/go/${pageId}`, '_blank');
+  };
+
   onMount(() => {
     popoverEl.showPopover();
 
@@ -356,7 +363,18 @@
           })}
         >
           <div class={flex({ align: 'center', gap: '6px', truncate: true })}>
-            {#if chatHistory.length > 0}
+            {#if currentPageId}
+              <button
+                class={center({ padding: '2px', color: 'neutral.50' })}
+                onclick={() => (currentPageId = null)}
+                type="button"
+              >
+                <Icon icon={ArrowLeftIcon} />
+              </button>
+              <h1 class={css({ textStyle: '14sb', truncate: true })}>
+                {site.name}
+              </h1>
+            {:else if chatHistory.length > 0}
               <button
                 class={center({ padding: '2px', color: 'neutral.50' })}
                 onclick={() => (chatHistory = [])}
@@ -364,17 +382,21 @@
               >
                 <Icon icon={ArrowLeftIcon} />
               </button>
+              <h1 class={css({ textStyle: '14sb', truncate: true })}>
+                {site.name} AI 문의
+              </h1>
+            {:else}
+              <h1 class={css({ textStyle: '14sb', truncate: true })}>이 페이지에 대해 물어보기</h1>
             {/if}
-            <h1 class={css({ textStyle: '14sb', truncate: true })}>
-              {chatHistory.length > 0 ? `${site.name} AI 문의` : '이 페이지에 대해 물어보기'}
-            </h1>
           </div>
           <button class={css({ padding: '2px', color: 'neutral.50' })} onclick={() => (open = false)} type="button">
             <Icon icon={IconX} size={16} />
           </button>
         </div>
 
-        {#if chatHistory.length > 0}
+        {#if currentPageId}
+          <PageContent pageId={currentPageId} siteId={site.id} />
+        {:else if chatHistory.length > 0}
           <div
             bind:this={chatHistoryEl}
             class={flex({
@@ -427,7 +449,7 @@
           </div>
         {:else}
           <div
-            class={center({
+            class={flex({
               flexGrow: '1',
               flexDirection: 'column',
               alignItems: 'flex-start',
@@ -461,7 +483,7 @@
                     >
                       {#each pagesVisible as page, idx (idx)}
                         <li>
-                          <a
+                          <button
                             class={css({
                               display: 'inline-flex',
                               flexDirection: 'row',
@@ -474,9 +496,8 @@
                                 _hover: 'neutral.20',
                               },
                             })}
-                            href={`${site.url}/go/${page.id}`}
-                            rel="noopener noreferrer"
-                            target="_blank"
+                            onclick={() => openPage(page.id)}
+                            type="button"
                           >
                             <Icon
                               style={css.raw({ color: 'neutral.50', marginTop: '2px' })}
@@ -484,7 +505,7 @@
                               size={16}
                             />
                             <span class={css({ lineClamp: 2 })}>{page.title}</span>
-                          </a>
+                          </button>
                         </li>
                       {/each}
                       {#if pages.length > pagesVisible.length && !expanded}
@@ -526,77 +547,80 @@
               {/if}
             {/if}
           </div>
+
+          <div
+            class={css({
+              marginTop: '-20px',
+              height: '20px',
+              background: '[linear-gradient(0deg, #FFF 0%, rgba(255, 255, 255, 0.00) 100%)]',
+            })}
+          ></div>
+          <div
+            class={flex({
+              flexDirection: 'column',
+              paddingX: '16px',
+              pointerEvents: 'none',
+            })}
+          >
+            <FormProvider context={chatFormContext} form={chatForm}>
+              <label
+                class={flex({
+                  width: 'full',
+                  align: 'center',
+                  gap: '8px',
+                  borderWidth: '1px',
+                  borderRadius: '10px',
+                  borderColor: 'transparent',
+                  pointerEvents: 'auto',
+                  backgroundImage:
+                    '[linear-gradient(#fff, #fff), linear-gradient(to right, var(--widget-theme-color-2) 0%, var(--widget-theme-color) 100%)]',
+                  backgroundOrigin: 'border-box',
+                  backgroundClip: '[content-box, border-box]',
+                })}
+              >
+                <textarea
+                  bind:this={chatFormTextareaEl}
+                  name="question"
+                  style:max-height={`${textareaLineHeightPx * 5}px`}
+                  class={css({
+                    flexGrow: '1',
+                    paddingLeft: '14px',
+                    paddingY: '10px',
+                    textStyle: '14r',
+                    height: 'auto',
+                    resize: 'none',
+                  })}
+                  onkeydown={onKeydownInTextarea}
+                  placeholder="AI를 통해 무엇이든 물어보고, 쓰고, 검색하세요"
+                  rows="1"
+                  bind:value={questionDraft}
+                ></textarea>
+                <button
+                  class={css({
+                    alignSelf: 'flex-end',
+                    borderRadius: 'full',
+                    padding: '3px',
+                    marginY: '8px',
+                    marginRight: '10px',
+                    size: '22px',
+                    color: 'white',
+                    backgroundColor: {
+                      base: '[var(--widget-theme-color)]',
+                      _disabled: 'neutral.40',
+                    },
+                  })}
+                  disabled={!questionDraft.trim() ||
+                    $chatFormIsSubmitting ||
+                    (lastChat && lastChat.answer === undefined)}
+                  type="submit"
+                >
+                  <Icon icon={ArrowUpIcon} size={16} />
+                </button>
+              </label>
+            </FormProvider>
+          </div>
         {/if}
 
-        <div
-          class={css({
-            marginTop: '-20px',
-            height: '20px',
-            background: '[linear-gradient(0deg, #FFF 0%, rgba(255, 255, 255, 0.00) 100%)]',
-          })}
-        ></div>
-        <div
-          class={flex({
-            flexDirection: 'column',
-            paddingX: '16px',
-            pointerEvents: 'none',
-          })}
-        >
-          <FormProvider context={chatFormContext} form={chatForm}>
-            <label
-              class={flex({
-                width: 'full',
-                align: 'center',
-                gap: '8px',
-                borderWidth: '1px',
-                borderRadius: '10px',
-                borderColor: 'transparent',
-                pointerEvents: 'auto',
-                backgroundImage:
-                  '[linear-gradient(#fff, #fff), linear-gradient(to right, var(--widget-theme-color-2) 0%, var(--widget-theme-color) 100%)]',
-                backgroundOrigin: 'border-box',
-                backgroundClip: '[content-box, border-box]',
-              })}
-            >
-              <textarea
-                bind:this={chatFormTextareaEl}
-                name="question"
-                style:max-height={`${textareaLineHeightPx * 5}px`}
-                class={css({
-                  flexGrow: '1',
-                  paddingLeft: '14px',
-                  paddingY: '10px',
-                  textStyle: '14r',
-                  height: 'auto',
-                  resize: 'none',
-                })}
-                onkeydown={onKeydownInTextarea}
-                placeholder="AI를 통해 무엇이든 물어보고, 쓰고, 검색하세요"
-                rows="1"
-                bind:value={questionDraft}
-              ></textarea>
-              <button
-                class={css({
-                  alignSelf: 'flex-end',
-                  borderRadius: 'full',
-                  padding: '3px',
-                  marginY: '8px',
-                  marginRight: '10px',
-                  size: '22px',
-                  color: 'white',
-                  backgroundColor: {
-                    base: '[var(--widget-theme-color)]',
-                    _disabled: 'neutral.40',
-                  },
-                })}
-                disabled={!questionDraft.trim() || $chatFormIsSubmitting || (lastChat && lastChat.answer === undefined)}
-                type="submit"
-              >
-                <Icon icon={ArrowUpIcon} size={16} />
-              </button>
-            </label>
-          </FormProvider>
-        </div>
         <div class={center({ paddingTop: '8px', paddingBottom: '16px' })}>
           <a href="https://rdbl.io" rel="noopener noreferrer" target="_blank">
             <img alt="Readable" src={ReadableLogo} />

@@ -1,6 +1,5 @@
 import { mergeAttributes, Node } from '@tiptap/core';
 import { render } from 'svelte/server';
-import { browser } from '$app/environment';
 import { SvelteNodeViewRenderer } from './renderer.svelte';
 import type { NodeConfig } from '@tiptap/core';
 import type { NodeViewComponent } from './renderer.svelte';
@@ -32,13 +31,7 @@ export const extendNodeToNodeView = <Options = any, Storage = any>(
     },
 
     renderHTML({ node, HTMLAttributes }) {
-      if (browser) {
-        const attributes = mergeAttributes(HTMLAttributes, {
-          'data-node-view-type': options?.name ?? this.name,
-        });
-
-        return node.isLeaf ? ['node-view', attributes] : ['node-view', attributes, 0];
-      } else {
+      if (typeof window === 'undefined') {
         const { head, body } = render(component, {
           props: {
             node,
@@ -51,6 +44,12 @@ export const extendNodeToNodeView = <Options = any, Storage = any>(
         return node.isLeaf
           ? ['node-view', { 'data-head': head, 'data-html': body }]
           : ['node-view', { 'data-head': head, 'data-html': body }, ['node-view-content-editable', 0]];
+      } else {
+        const attributes = mergeAttributes(HTMLAttributes, {
+          'data-node-view-type': options?.name ?? this.name,
+        });
+
+        return node.isLeaf ? ['node-view', attributes] : ['node-view', attributes, 0];
       }
     },
 

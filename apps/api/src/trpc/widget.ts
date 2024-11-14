@@ -235,6 +235,27 @@ export const widgetRouter = router({
       }),
   },
 
+  page: {
+    get: widgetProcedure.input(z.object({ pageId: z.string() })).query(async ({ input, ctx }) => {
+      const page = await db
+        .select({
+          id: Pages.id,
+          title: PageContents.title,
+          content: PageContents.content,
+        })
+        .from(Pages)
+        .innerJoin(PageContents, eq(Pages.id, PageContents.pageId))
+        .where(and(eq(Pages.id, input.pageId), eq(Pages.siteId, ctx.site.id)))
+        .then(firstOrThrow);
+
+      return {
+        id: page.id,
+        title: page.title ?? '(제목 없음)',
+        content: page.content,
+      };
+    }),
+  },
+
   chat: {
     new: widgetProcedure.mutation(async ({ ctx }) => {
       const session = await db
