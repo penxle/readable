@@ -1,4 +1,3 @@
-import { StringOutputParser } from '@langchain/core/output_parsers';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { RunnableSequence } from '@langchain/core/runnables';
 import { Annotation, END, Send, START, StateGraph } from '@langchain/langgraph';
@@ -48,13 +47,15 @@ const transform = async (state: GraphState): Promise<Partial<GraphState>> => {
 A previous conversation:\n\`\`\`\n{conversation}\n\`\`\`
 An input text:\n\`\`\`\n{input}\n\`\`\`
 
-If the input text contains keyword(s) or semantic meaning related to the previous conversation, transform the input text into a question based on the previous conversation.
+If the input text contains a question that should be answered based on the previous conversation, transform the input text into a question based on the previous conversation, and return the transformed question.
 Otherwise, return the input text as it is.`),
-    langchain.model,
-    new StringOutputParser(),
+    langchain.model.withStructuredOutput(
+      z.object({ question: z.string().describe('Transformed question based on the previous conversation.') }),
+      { name: 'transform' },
+    ),
   ]);
 
-  const question = await chain.invoke({
+  const { question } = await chain.invoke({
     conversation: state.conversation,
     input: state.question,
   });
@@ -124,11 +125,13 @@ Question:\n\`\`\`\n{question}\n\`\`\`
 Do not use common knowledge to answer the question. Only use the information provided in the documents.
 Answer in the same language as the question, even if the documents are in different languages.
 Carefully provide accurate, factual, thoughtful answers.`),
-    langchain.model,
-    new StringOutputParser(),
+    langchain.model.withStructuredOutput(
+      z.object({ answer: z.string().describe('Accurate, factual, thoughtful answer to the question.') }),
+      { name: 'generate' },
+    ),
   ]);
 
-  const answer = await chain.invoke({
+  const { answer } = await chain.invoke({
     documents: state.chosenChunks,
     question: state.question,
   });
@@ -161,18 +164,20 @@ type AskParams = {
 };
 
 type AskResult = {
+  question: string;
   answer: string | null;
   chunks: Chunk[];
 };
 
 export const ask = async (params: AskParams): Promise<AskResult> => {
-  const { answer, chosenChunks } = await app.invoke({
+  const { question, answer, chosenChunks } = await app.invoke({
     siteId: params.siteId,
     question: params.message,
     conversation: params.conversation ?? [],
   });
 
   return {
+    question,
     answer: answer?.length ? answer : null,
     chunks: chosenChunks,
   };
