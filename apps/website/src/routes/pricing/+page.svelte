@@ -60,25 +60,8 @@
       ],
     },
     {
-      name: 'Lite',
-      price: selectedPrice === 'yearly' ? '2,030' : '2,900',
-      features: [
-        { icon: UsersRoundIcon, feature: '3명의 멤버' },
-        { icon: MonitorSmartphoneIcon, feature: '1개의 사이트' },
-        { icon: FilesIcon, feature: '무제한 페이지' },
-        {
-          icon: MousePointerClickIcon,
-          feature: '100,000 페이지뷰/월',
-          tooltipMessage: '배포된 사이트가 1개월간 총 100,000회의 페이지 조회를 지원합니다',
-        },
-        { icon: SearchIcon, feature: '일반 검색' },
-        { icon: PaintbrushIcon, feature: '브랜딩' },
-        { icon: LinkIcon, feature: '커스텀 도메인' },
-      ],
-    },
-    {
       name: 'Pro',
-      price: selectedPrice === 'yearly' ? '13,300' : '19,000',
+      price: selectedPrice === 'yearly' ? '82,500' : '99,000',
       features: [
         { icon: UsersRoundIcon, feature: '무제한 멤버' },
         { icon: MonitorSmartphoneIcon, feature: '무제한 사이트' },
@@ -189,7 +172,7 @@
           color: 'text.primary',
         })}
       >
-        30% 할인
+        2달 무료
       </span>
     </div>
   </div>
