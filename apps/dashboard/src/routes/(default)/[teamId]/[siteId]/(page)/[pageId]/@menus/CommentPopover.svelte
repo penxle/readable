@@ -290,7 +290,7 @@
           </div>
           <div
             class={css({
-              textStyle: '13r',
+              textStyle: '14r',
               wordBreak: 'break-all',
               whiteSpace: 'pre-line',
             })}
@@ -345,7 +345,7 @@
             flexGrow: '1',
             borderRadius: '6px',
             paddingY: '2px',
-            textStyle: '14m',
+            textStyle: '14r',
             height: 'auto',
             resize: 'none',
           })}
@@ -418,7 +418,7 @@
           flexGrow: '1',
           borderRadius: '6px',
           paddingY: '2px',
-          textStyle: '14m',
+          textStyle: '14r',
           resize: 'none',
         })}
         onkeydown={onKeydownInTextarea}

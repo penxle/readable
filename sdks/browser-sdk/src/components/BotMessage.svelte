@@ -58,8 +58,8 @@
           borderWidth: '1px',
           borderColor: '[var(--widget-theme-color)/10]',
           borderRadius: '10px',
-          paddingX: '16px',
-          paddingY: '12px',
+          paddingX: '12px',
+          paddingY: '10px',
           backgroundColor: '[var(--widget-theme-color)/6]',
           whiteSpace: 'pre-line',
         })}
