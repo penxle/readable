@@ -378,6 +378,7 @@
           <div
             bind:this={chatHistoryEl}
             class={flex({
+              flexGrow: '1',
               flexDirection: 'column',
               gap: '24px',
               padding: '16px',
@@ -425,7 +426,15 @@
             {/each}
           </div>
         {:else}
-          <div class={center({ flexDirection: 'column', alignItems: 'flex-start', padding: '16px', gap: '24px' })}>
+          <div
+            class={center({
+              flexGrow: '1',
+              flexDirection: 'column',
+              alignItems: 'flex-start',
+              padding: '16px',
+              gap: '24px',
+            })}
+          >
             <BotMessage message={BOT_MESSAGE.INITIAL} {site} />
             {#if loadingCount > 0}
               <BotMessage loading {site}>
@@ -520,9 +529,15 @@
         {/if}
 
         <div
+          class={css({
+            marginTop: '-20px',
+            height: '20px',
+            background: '[linear-gradient(0deg, #FFF 0%, rgba(255, 255, 255, 0.00) 100%)]',
+          })}
+        ></div>
+        <div
           class={flex({
             flexDirection: 'column',
-            marginTop: 'auto',
             paddingX: '16px',
             pointerEvents: 'none',
           })}
