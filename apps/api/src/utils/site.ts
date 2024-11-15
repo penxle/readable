@@ -1,9 +1,31 @@
 import { and, eq, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
+import { redis } from '@/cache';
 import { Categories, db, Pages } from '@/db';
 import { CategoryState, PageState } from '@/enums';
 
-export const getOrderedPageList = async (siteId: string) => {
+let runningPromise: Promise<{ id: string }[]> | null = null;
+
+export const getOrderedPageList = (siteId: string) => {
+  if (runningPromise === null) {
+    runningPromise = getOrderedPageListInternal(siteId)
+      .then((list) => {
+        return list;
+      })
+      .finally(() => {
+        runningPromise = null;
+      });
+  }
+
+  return runningPromise;
+};
+
+const getOrderedPageListInternal = async (siteId: string) => {
+  const cached = await redis.get(`sitecache:${siteId}:orderedPageList`);
+  if (cached !== null) {
+    return JSON.parse(cached);
+  }
+
   const c = alias(Categories, 'c');
   const p = alias(Pages, 'p');
 
@@ -38,6 +60,8 @@ export const getOrderedPageList = async (siteId: string) => {
     WHERE type = 'P'
     ORDER BY sq.path ASC;`,
   )) as { id: string }[];
+
+  await redis.set(`sitecache:${siteId}:orderedPageList`, JSON.stringify(list));
 
   return list;
 };
