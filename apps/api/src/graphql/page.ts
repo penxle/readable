@@ -1,6 +1,6 @@
 import { schema } from '@readable/ui/tiptap/server';
 import dayjs from 'dayjs';
-import { and, asc, count, desc, eq, getTableColumns, gt, inArray, isNull, lt, ne, or, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gt, inArray, isNull, ne, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { generateJitteredKeyBetween } from 'fractional-indexing-jittered';
 import { Repeater } from 'graphql-yoga';
@@ -30,6 +30,7 @@ import { invalidateSiteCache } from '@/utils/cache';
 import { hashPageContent, makeYDoc } from '@/utils/page';
 import { assertCategoryPermission, assertPagePermission, assertSitePermission } from '@/utils/permissions';
 import { assertTeamRestriction } from '@/utils/restrictions';
+import { getOrderedPageList } from '@/utils/site';
 import {
   Category,
   ICategory,
@@ -398,58 +399,10 @@ PublicPage.implement({
       type: PublicPage,
       nullable: true,
       resolve: async (page) => {
-        const ParentPages = alias(Pages, 'parent_pages');
+        const pageList = await getOrderedPageList(page.siteId);
+        const index = pageList.findIndex((p) => p.id === page.id);
 
-        const { categoryOrder } = await db
-          .select({
-            categoryOrder: Categories.order,
-          })
-          .from(Pages)
-          .innerJoin(Categories, eq(Pages.categoryId, Categories.id))
-          .leftJoin(ParentPages, eq(Pages.parentId, ParentPages.id))
-          .where(eq(Pages.id, page.id))
-          .then(firstOrThrow);
-
-        if (page.parentId) {
-          const nextSiblingPage = await db
-            .select()
-            .from(Pages)
-            .where(
-              and(
-                eq(Pages.siteId, page.siteId),
-                eq(Pages.state, PageState.PUBLISHED),
-                eq(Pages.parentId, page.parentId),
-                gt(Pages.order, page.order),
-              ),
-            )
-            .orderBy(asc(Pages.order))
-            .limit(1)
-            .then(first);
-
-          if (nextSiblingPage) {
-            return nextSiblingPage;
-          }
-        }
-
-        // 여기까지 내려왔으면 다음 페이지는 나랑 부모가 다름
-
-        return await db
-          .select(getTableColumns(Pages))
-          .from(Categories)
-          .innerJoin(Pages, and(eq(Categories.id, Pages.categoryId), eq(Pages.state, PageState.PUBLISHED)))
-          .where(
-            and(
-              eq(Categories.siteId, page.siteId),
-              eq(Categories.state, CategoryState.ACTIVE),
-              or(
-                gt(Categories.order, categoryOrder),
-                and(eq(Categories.order, categoryOrder), gt(Pages.order, page.order)),
-              ),
-            ),
-          )
-          .orderBy(asc(Categories.order), asc(Pages.order))
-          .limit(1)
-          .then(first);
+        return pageList.at(index + 1)?.id;
       },
     }),
 
@@ -457,78 +410,11 @@ PublicPage.implement({
       type: PublicPage,
       nullable: true,
       resolve: async (page) => {
-        const ParentPages = alias(Pages, 'parent_pages');
+        const pageList = await getOrderedPageList(page.siteId);
+        const index = pageList.findIndex((p) => p.id === page.id);
 
-        const { categoryOrder } = await db
-          .select({
-            categoryOrder: Categories.order,
-          })
-          .from(Pages)
-          .innerJoin(Categories, eq(Pages.categoryId, Categories.id))
-          .leftJoin(ParentPages, eq(Pages.parentId, ParentPages.id))
-          .where(eq(Pages.id, page.id))
-          .then(firstOrThrow);
-
-        if (page.parentId) {
-          const previousSiblingPage = await db
-            .select()
-            .from(Pages)
-            .where(
-              and(
-                eq(Pages.siteId, page.siteId),
-                eq(Pages.state, PageState.PUBLISHED),
-                eq(Pages.parentId, page.parentId),
-                lt(Pages.order, page.order),
-              ),
-            )
-            .orderBy(desc(Pages.order))
-            .limit(1)
-            .then(first);
-
-          if (previousSiblingPage) {
-            return previousSiblingPage;
-          } else {
-            return page.parentId;
-          }
-        }
-
-        // 여기까지 내려왔으면 이전 페이지는 나랑 부모가 다름 & 나는 카테고리의 최상위 페이지임
-
-        let lastPage = await db
-          .select(getTableColumns(Pages))
-          .from(Categories)
-          .innerJoin(Pages, and(eq(Categories.id, Pages.categoryId), eq(Pages.state, PageState.PUBLISHED)))
-          .where(
-            and(
-              eq(Categories.siteId, page.siteId),
-              eq(Categories.state, CategoryState.ACTIVE),
-              or(
-                lt(Categories.order, categoryOrder),
-                and(eq(Categories.order, categoryOrder), lt(Pages.order, page.order), isNull(Pages.parentId)),
-              ),
-            ),
-          )
-          .orderBy(desc(Categories.order), asc(Pages.order))
-          .limit(1)
-          .then(first);
-
-        while (lastPage) {
-          const lastChildPage = await db
-            .select(getTableColumns(Pages))
-            .from(Pages)
-            .where(eq(Pages.parentId, lastPage.id))
-            .orderBy(desc(Pages.order))
-            .limit(1)
-            .then(first);
-
-          if (lastChildPage) {
-            lastPage = lastChildPage;
-          } else {
-            break;
-          }
-        }
-
-        return lastPage;
+        // Array.at은 -1이면 undefined가 아니라 마지막 요소를 반환함
+        return index > 0 ? pageList.at(index - 1)?.id : null;
       },
     }),
   }),
