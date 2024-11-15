@@ -1,10 +1,16 @@
 <script lang="ts">
   import { css } from '@readable/styled-system/css';
-  import { flex } from '@readable/styled-system/patterns';
+  import { center, flex, grid } from '@readable/styled-system/patterns';
   import { createFloatingActions } from '@readable/ui/actions';
   import { NodeView, NodeViewContentEditable } from '@readable/ui/tiptap';
-  import Emoji from './Emoji.svelte';
+  import HighVoltageIcon from '~icons/twemoji/high-voltage';
+  import LightBulbIcon from '~icons/twemoji/light-bulb';
+  import LoudspeakerIcon from '~icons/twemoji/loudspeaker';
+  import PartyPopperIcon from '~icons/twemoji/party-popper';
+  import PoliceCarLightIcon from '~icons/twemoji/police-car-light';
+  import PushpinIcon from '~icons/twemoji/pushpin';
   import type { NodeViewProps } from '@readable/ui/tiptap';
+  import type { Component } from 'svelte';
 
   type Props = NodeViewProps;
 
@@ -19,6 +25,15 @@
       emojiPickerOpened = false;
     },
   });
+
+  const emojis: Record<string, Component> = {
+    lightbulb: LightBulbIcon,
+    loudspeaker: LoudspeakerIcon,
+    pushpin: PushpinIcon,
+    rotating_light: PoliceCarLightIcon,
+    tada: PartyPopperIcon,
+    zap: HighVoltageIcon,
+  };
 </script>
 
 <NodeView>
@@ -67,32 +82,48 @@
       use:anchor
     >
       {#if node.attrs.emoji}
-        <Emoji style={css.raw({ size: '20px' })} emoji={node.attrs.emoji} />
+        {@const Emoji = emojis[node.attrs.emoji]}
+        <Emoji class={css({ display: 'block', flex: 'none', size: '20px' })} />
       {/if}
     </svelte:element>
 
     {#if emojiPickerOpened}
       <div
-        class={flex({
-          direction: 'column',
+        class={grid({
+          columns: 3,
           gap: '6px',
           borderRadius: '4px',
-          padding: '5px',
+          padding: '6px',
           backgroundColor: 'surface.primary',
           boxShadow: 'emphasize',
-          width: '280px',
-          height: '280px',
           zIndex: '50',
         })}
         use:floating
       >
-        {#await import('./Picker.svelte') then { default: Picker }}
-          <Picker
-            onselect={(emoji) => updateAttributes({ emoji })}
-            selectedEmoji={node.attrs.emoji}
-            bind:open={emojiPickerOpened}
-          />
-        {/await}
+        {#each Object.entries(emojis) as [emoji, Emoji] (emoji)}
+          <button
+            class={center({
+              borderRadius: '2px',
+              size: '28px',
+              _pressed: {
+                backgroundColor: 'gray.1000/8',
+              },
+              _hover: {
+                backgroundColor: 'gray.1000/8',
+              },
+            })}
+            aria-label={emoji}
+            aria-pressed={emoji === node.attrs.emoji}
+            onclick={() => {
+              updateAttributes({ emoji });
+              emojiPickerOpened = false;
+            }}
+            title={emoji}
+            type="button"
+          >
+            <Emoji class={css({ display: 'block', flex: 'none', size: '20px' })} />
+          </button>
+        {/each}
       </div>
     {/if}
     <div class={css({ flexGrow: 1, paddingTop: '2px' })}>

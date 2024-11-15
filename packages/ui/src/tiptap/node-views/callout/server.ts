@@ -8,7 +8,7 @@ export const Callout = createServerNodeView({
 
   addAttributes() {
     return {
-      emoji: { default: 'bulb' },
+      emoji: { default: 'lightbulb' },
     };
   },
 });

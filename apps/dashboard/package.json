@@ -12,6 +12,7 @@
   "devDependencies": {
     "@iconify-json/lucide": "^1.2.12",
     "@iconify-json/simple-icons": "^1.2.11",
+    "@iconify-json/twemoji": "^1.2.1",
     "@pandacss/dev": "^0.47.1",
     "@pulumi/pulumi": "^3.138.0",
     "@readable/adapter-bun": "workspace:*",

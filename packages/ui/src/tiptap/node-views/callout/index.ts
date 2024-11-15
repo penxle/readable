@@ -20,7 +20,7 @@ export const Callout = createNodeView(Component, {
 
   addAttributes() {
     return {
-      emoji: { default: 'bulb' },
+      emoji: { default: 'lightbulb' },
     };
   },
 
