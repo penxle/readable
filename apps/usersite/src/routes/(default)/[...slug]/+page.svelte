@@ -64,8 +64,6 @@
     }
   `);
 
-  $inspect($query.publicPage.previousPage, $query.publicPage.nextPage);
-
   const updatePageView = graphql(`
     mutation PagePage_UpdatePageView_Mutation($input: UpdatePageViewInput!) {
       updatePageView(input: $input)
@@ -254,11 +252,11 @@
           >
             <Icon style={css.raw({ color: 'neutral.50' })} icon={ChevronLeftIcon} />
 
-            <div class={css({ textAlign: 'right' })}>
-              <p class={css({ textStyle: '12m', color: 'text.disabled' })}>
+            <div class={flex({ direction: 'column', align: 'flex-end' })}>
+              <p class={css({ textStyle: '12m', color: 'text.disabled', lineClamp: 1 })}>
                 {$query.publicPage.previousPage.category.name}
               </p>
-              <p class={css({ marginTop: '4px', textStyle: '14sb', lineClamp: '1' })}>
+              <p class={css({ marginTop: '4px', textStyle: '14sb', lineClamp: 1 })}>
                 {$query.publicPage.previousPage.title}
               </p>
             </div>
@@ -280,10 +278,10 @@
             href={pageUrl($query.publicPage.nextPage)}
           >
             <div>
-              <p class={css({ textStyle: '12m', color: 'text.disabled' })}>
+              <p class={css({ textStyle: '12m', color: 'text.disabled', lineClamp: 1 })}>
                 {$query.publicPage.nextPage.category.name}
               </p>
-              <p class={css({ marginTop: '4px', textStyle: '14sb', lineClamp: '1' })}>
+              <p class={css({ marginTop: '4px', textStyle: '14sb', lineClamp: 1 })}>
                 {$query.publicPage.nextPage.title}
               </p>
             </div>
