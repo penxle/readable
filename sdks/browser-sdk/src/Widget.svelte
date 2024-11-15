@@ -547,79 +547,76 @@
               {/if}
             {/if}
           </div>
-
-          <div
-            class={css({
-              marginTop: '-20px',
-              height: '20px',
-              background: '[linear-gradient(0deg, #FFF 0%, rgba(255, 255, 255, 0.00) 100%)]',
-            })}
-          ></div>
-          <div
-            class={flex({
-              flexDirection: 'column',
-              paddingX: '16px',
-              pointerEvents: 'none',
-            })}
-          >
-            <FormProvider context={chatFormContext} form={chatForm}>
-              <label
-                class={flex({
-                  width: 'full',
-                  align: 'center',
-                  gap: '8px',
-                  borderWidth: '1px',
-                  borderRadius: '10px',
-                  borderColor: 'transparent',
-                  pointerEvents: 'auto',
-                  backgroundImage:
-                    '[linear-gradient(#fff, #fff), linear-gradient(to right, var(--widget-theme-color-2) 0%, var(--widget-theme-color) 100%)]',
-                  backgroundOrigin: 'border-box',
-                  backgroundClip: '[content-box, border-box]',
-                })}
-              >
-                <textarea
-                  bind:this={chatFormTextareaEl}
-                  name="question"
-                  style:max-height={`${textareaLineHeightPx * 5}px`}
-                  class={css({
-                    flexGrow: '1',
-                    paddingLeft: '14px',
-                    paddingY: '10px',
-                    textStyle: '14r',
-                    height: 'auto',
-                    resize: 'none',
-                  })}
-                  onkeydown={onKeydownInTextarea}
-                  placeholder="AI를 통해 무엇이든 물어보고, 쓰고, 검색하세요"
-                  rows="1"
-                  bind:value={questionDraft}
-                ></textarea>
-                <button
-                  class={css({
-                    alignSelf: 'flex-end',
-                    borderRadius: 'full',
-                    padding: '3px',
-                    marginY: '8px',
-                    marginRight: '10px',
-                    size: '22px',
-                    color: 'white',
-                    backgroundColor: {
-                      base: '[var(--widget-theme-color)]',
-                      _disabled: 'neutral.40',
-                    },
-                  })}
-                  disabled={!questionDraft.trim() ||
-                    $chatFormIsSubmitting ||
-                    (lastChat && lastChat.answer === undefined)}
-                  type="submit"
-                >
-                  <Icon icon={ArrowUpIcon} size={16} />
-                </button>
-              </label>
-            </FormProvider>
-          </div>
         {/if}
+        <div
+          class={css({
+            marginTop: '-20px',
+            height: '20px',
+            background: '[linear-gradient(0deg, #FFF 0%, rgba(255, 255, 255, 0.00) 100%)]',
+          })}
+        ></div>
+        <div
+          class={flex({
+            flexDirection: 'column',
+            paddingX: '16px',
+            pointerEvents: 'none',
+          })}
+        >
+          <FormProvider context={chatFormContext} form={chatForm}>
+            <label
+              class={flex({
+                width: 'full',
+                align: 'center',
+                gap: '8px',
+                borderWidth: '1px',
+                borderRadius: '10px',
+                borderColor: 'transparent',
+                pointerEvents: 'auto',
+                backgroundImage:
+                  '[linear-gradient(#fff, #fff), linear-gradient(to right, var(--widget-theme-color-2) 0%, var(--widget-theme-color) 100%)]',
+                backgroundOrigin: 'border-box',
+                backgroundClip: '[content-box, border-box]',
+              })}
+            >
+              <textarea
+                bind:this={chatFormTextareaEl}
+                name="question"
+                style:max-height={`${textareaLineHeightPx * 5}px`}
+                class={css({
+                  flexGrow: '1',
+                  paddingLeft: '14px',
+                  paddingY: '10px',
+                  textStyle: '14r',
+                  height: 'auto',
+                  resize: 'none',
+                })}
+                onkeydown={onKeydownInTextarea}
+                placeholder="AI를 통해 무엇이든 물어보고, 쓰고, 검색하세요"
+                rows="1"
+                bind:value={questionDraft}
+              ></textarea>
+              <button
+                class={css({
+                  alignSelf: 'flex-end',
+                  borderRadius: 'full',
+                  padding: '3px',
+                  marginY: '8px',
+                  marginRight: '10px',
+                  size: '22px',
+                  color: 'white',
+                  backgroundColor: {
+                    base: '[var(--widget-theme-color)]',
+                    _disabled: 'neutral.40',
+                  },
+                })}
+                disabled={!questionDraft.trim() || $chatFormIsSubmitting || (lastChat && lastChat.answer === undefined)}
+                type="submit"
+              >
+                <Icon icon={ArrowUpIcon} size={16} />
+              </button>
+            </label>
+          </FormProvider>
+        </div>
 
         <div class={center({ paddingTop: '8px', paddingBottom: '16px' })}>
           <a href="https://rdbl.io" rel="noopener noreferrer" target="_blank">
