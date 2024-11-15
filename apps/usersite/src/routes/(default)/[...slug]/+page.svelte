@@ -4,9 +4,12 @@
   import { Helmet, Icon } from '@readable/ui/components';
   import { TiptapRenderer } from '@readable/ui/tiptap';
   import { getContext } from 'svelte';
+  import ChevronLeftIcon from '~icons/lucide/chevron-left';
+  import ChevronRightIcon from '~icons/lucide/chevron-right';
   import MenuIcon from '~icons/lucide/menu';
   import { env } from '$env/dynamic/public';
   import { graphql } from '$graphql';
+  import { pageUrl } from '$lib/utils/url';
   import Handler from './@floating/Handler.svelte';
   import Breadcrumb from './Breadcrumb.svelte';
   import Toc from './Toc.svelte';
@@ -23,6 +26,32 @@
         id
         slug
 
+        previousPage {
+          id
+          slug
+          title
+
+          ...PageUrl_publicPage
+
+          category {
+            id
+            name
+          }
+        }
+
+        nextPage {
+          id
+          slug
+          title
+
+          ...PageUrl_publicPage
+
+          category {
+            id
+            name
+          }
+        }
+
         content {
           id
           title
@@ -34,6 +63,8 @@
       }
     }
   `);
+
+  $inspect($query.publicPage.previousPage, $query.publicPage.nextPage);
 
   const updatePageView = graphql(`
     mutation PagePage_UpdatePageView_Mutation($input: UpdatePageViewInput!) {
@@ -198,6 +229,69 @@
           <Handler {editor} />
         {/if}
       {/key}
+
+      <div
+        class={grid({
+          columns: $query.publicPage.previousPage && $query.publicPage.nextPage ? 2 : 1,
+          gap: '8px',
+          marginTop: '40px',
+          paddingX: { md: '40px' },
+        })}
+      >
+        {#if $query.publicPage.previousPage}
+          <a
+            class={flex({
+              align: 'center',
+              justify: 'space-between',
+              gap: '20px',
+              borderWidth: '1px',
+              borderRadius: '8px',
+              borderColor: 'border.primary',
+              padding: '16px',
+              _hover: { backgroundColor: 'neutral.10' },
+            })}
+            href={pageUrl($query.publicPage.previousPage)}
+          >
+            <Icon style={css.raw({ color: 'neutral.50' })} icon={ChevronLeftIcon} />
+
+            <div class={css({ textAlign: 'right' })}>
+              <p class={css({ textStyle: '12m', color: 'text.disabled' })}>
+                {$query.publicPage.previousPage.category.name}
+              </p>
+              <p class={css({ marginTop: '4px', textStyle: '14sb', lineClamp: '1' })}>
+                {$query.publicPage.previousPage.title}
+              </p>
+            </div>
+          </a>
+        {/if}
+
+        {#if $query.publicPage.nextPage}
+          <a
+            class={flex({
+              align: 'center',
+              justify: 'space-between',
+              gap: '20px',
+              borderWidth: '1px',
+              borderRadius: '8px',
+              borderColor: 'border.primary',
+              padding: '16px',
+              _hover: { backgroundColor: 'neutral.10' },
+            })}
+            href={pageUrl($query.publicPage.nextPage)}
+          >
+            <div>
+              <p class={css({ textStyle: '12m', color: 'text.disabled' })}>
+                {$query.publicPage.nextPage.category.name}
+              </p>
+              <p class={css({ marginTop: '4px', textStyle: '14sb', lineClamp: '1' })}>
+                {$query.publicPage.nextPage.title}
+              </p>
+            </div>
+
+            <Icon style={css.raw({ color: 'neutral.50' })} icon={ChevronRightIcon} />
+          </a>
+        {/if}
+      </div>
     </div>
   </div>
 </div>
