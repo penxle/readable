@@ -41,7 +41,6 @@ export type SiteContext = {
   site: {
     id: string;
     teamId: string;
-    hostname: string;
   };
 };
 
@@ -130,45 +129,49 @@ export const createContext = async ({ request, ip }: ServerContext): Promise<Con
   }
 
   if (service === 'usersite') {
-    const origin = request.headers.get('origin');
+    let site;
 
-    let hostname = env.USERSITE_FORCE_HOST;
-    if (!hostname && origin) {
-      hostname = new URL(origin).hostname;
+    if (env.USERSITE_OVERRIDE_ID) {
+      site = await db
+        .select({ id: Sites.id, teamId: Sites.teamId })
+        .from(Sites)
+        .where(and(eq(Sites.id, env.USERSITE_OVERRIDE_ID), eq(Sites.state, SiteState.ACTIVE)))
+        .then(first);
+    } else {
+      const origin = request.headers.get('origin');
+      if (origin) {
+        const hostname = new URL(origin).hostname;
+
+        if (hostname.endsWith(`.${env.USERSITE_DEFAULT_HOST}`)) {
+          const slug = hostname.split('.')[0];
+
+          site = await db
+            .select({ id: Sites.id, teamId: Sites.teamId })
+            .from(Sites)
+            .where(and(eq(Sites.slug, slug), eq(Sites.state, SiteState.ACTIVE)))
+            .then(first);
+        } else {
+          site = await db
+            .select({ id: Sites.id, teamId: Sites.teamId })
+            .from(Sites)
+            .innerJoin(SiteCustomDomains, eq(Sites.id, SiteCustomDomains.siteId))
+            .where(
+              and(
+                eq(SiteCustomDomains.domain, hostname),
+                eq(SiteCustomDomains.state, SiteCustomDomainState.ACTIVE),
+                eq(Sites.state, SiteState.ACTIVE),
+              ),
+            )
+            .then(first);
+        }
+      }
     }
 
-    if (hostname) {
-      let site;
-      if (hostname.endsWith(`.${env.USERSITE_DEFAULT_HOST}`)) {
-        const slug = hostname.split('.')[0];
-
-        site = await db
-          .select({ id: Sites.id, teamId: Sites.teamId })
-          .from(Sites)
-          .where(and(eq(Sites.slug, slug), eq(Sites.state, SiteState.ACTIVE)))
-          .then(first);
-      } else {
-        site = await db
-          .select({ id: Sites.id, teamId: Sites.teamId })
-          .from(Sites)
-          .innerJoin(SiteCustomDomains, eq(Sites.id, SiteCustomDomains.siteId))
-          .where(
-            and(
-              eq(SiteCustomDomains.domain, hostname),
-              eq(SiteCustomDomains.state, SiteCustomDomainState.ACTIVE),
-              eq(Sites.state, SiteState.ACTIVE),
-            ),
-          )
-          .then(first);
-      }
-
-      if (site) {
-        ctx.site = {
-          id: site.id,
-          teamId: site.teamId,
-          hostname,
-        };
-      }
+    if (site) {
+      ctx.site = {
+        id: site.id,
+        teamId: site.teamId,
+      };
     }
   }
 

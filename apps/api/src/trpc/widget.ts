@@ -64,13 +64,20 @@ const widgetProcedure = publicProcedure
 
 export const widgetRouter = router({
   site: widgetProcedure.query(async ({ ctx }) => {
-    const customDomain = await db
-      .select({
-        domain: SiteCustomDomains.domain,
-      })
-      .from(SiteCustomDomains)
-      .where(and(eq(SiteCustomDomains.siteId, ctx.site.id), eq(SiteCustomDomains.state, SiteCustomDomainState.ACTIVE)))
-      .then(first);
+    let url;
+    if (env.USERSITE_OVERRIDE_URL) {
+      url = env.USERSITE_OVERRIDE_URL;
+    } else {
+      const customDomain = await db
+        .select({ domain: SiteCustomDomains.domain })
+        .from(SiteCustomDomains)
+        .where(
+          and(eq(SiteCustomDomains.siteId, ctx.site.id), eq(SiteCustomDomains.state, SiteCustomDomainState.ACTIVE)),
+        )
+        .then(first);
+
+      url = customDomain ? `https://${customDomain.domain}` : `https://${ctx.site.slug}.${env.USERSITE_DEFAULT_HOST}`;
+    }
 
     const logo = ctx.site.logoId
       ? await db
@@ -92,7 +99,7 @@ export const widgetRouter = router({
       id: ctx.site.id,
       name: ctx.site.name,
       themeColor: ctx.site.themeColor,
-      url: customDomain ? `https://${customDomain.domain}` : `https://${ctx.site.slug}.${env.USERSITE_DEFAULT_HOST}`,
+      url,
       logoUrl: logo ? `${env.PUBLIC_USERCONTENTS_URL}/images/${logo.path}` : null,
       widget: {
         outLink: widget?.outLink,

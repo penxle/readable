@@ -73,6 +73,10 @@ ISite.implement({
 
     url: t.string({
       resolve: async (site) => {
+        if (env.USERSITE_OVERRIDE_URL) {
+          return env.USERSITE_OVERRIDE_URL;
+        }
+
         const customDomain = await db
           .select({ domain: SiteCustomDomains.domain })
           .from(SiteCustomDomains)

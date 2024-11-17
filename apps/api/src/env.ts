@@ -20,7 +20,8 @@ const schema = z.object({
   SLACK_WEBHOOK_URL: z.string(),
   USERSITE_CNAME_HOST: z.string(),
   USERSITE_DEFAULT_HOST: z.string(),
-  USERSITE_FORCE_HOST: z.string().optional(),
+  USERSITE_OVERRIDE_ID: z.string().optional(),
+  USERSITE_OVERRIDE_URL: z.string().optional(),
 });
 
 export const env = schema.parse(process.env);
