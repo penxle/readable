@@ -1,18 +1,15 @@
 <script lang="ts">
   import { css } from '@readable/styled-system/css';
-  import { TiptapRenderer } from '@readable/ui/tiptap';
-  import { trpc } from '../trpc';
+  import { flex } from '@readable/styled-system/patterns';
 
   type Props = {
-    siteId: string;
+    siteUrl: string;
     pageId: string;
   };
 
-  let { siteId, pageId }: Props = $props();
+  let { siteUrl, pageId }: Props = $props();
 </script>
 
-{#await trpc.widget.page.get.query({ siteId, pageId }) then page}
-  <div class={css({ paddingX: '16px' })}>
-    <TiptapRenderer content={page.content} />
-  </div>
-{/await}
+<div class={flex({ flexGrow: '1', paddingX: '16px' })}>
+  <iframe class={css({ flexGrow: '1', width: 'full' })} src={`${siteUrl}/r/${pageId}`} title=""></iframe>
+</div>
