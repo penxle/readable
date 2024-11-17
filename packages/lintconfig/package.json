@@ -8,7 +8,7 @@
     "./prettier": "./prettier.js"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.1.0",
+    "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^8.57.1",
     "@prettier/plugin-xml": "^3.4.1",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
@@ -21,7 +21,7 @@
     "ignore": "^5.3.2",
     "prettier-plugin-packagejson": "^2.5.3",
     "prettier-plugin-sh": "^0.14.0",
-    "prettier-plugin-svelte": "^3.2.7",
+    "prettier-plugin-svelte": "^3.2.8",
     "svelte-eslint-parser": "^0.43.0"
   },
   "peerDependencies": {
