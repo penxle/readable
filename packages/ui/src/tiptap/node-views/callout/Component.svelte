@@ -83,7 +83,9 @@
     >
       {#if node.attrs.emoji}
         {@const Emoji = emojis[node.attrs.emoji]}
-        <Emoji class={css({ display: 'block', flex: 'none', size: '20px' })} />
+        {#if Emoji}
+          <Emoji class={css({ display: 'block', flex: 'none', size: '20px' })} />
+        {/if}
       {/if}
     </svelte:element>
 
