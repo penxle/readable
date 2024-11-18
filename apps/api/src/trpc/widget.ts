@@ -187,6 +187,7 @@ export const widgetRouter = router({
           .select({
             id: PageContents.pageId,
             title: PageContents.title,
+            previewText: PageContents.text,
           })
           .from(PageContents)
           .where(
@@ -210,7 +211,7 @@ export const widgetRouter = router({
 
           const pages = await db
             .with(sq)
-            .select({ id: sq.id, title: PageContents.title, count: sq.count })
+            .select({ id: sq.id, title: PageContents.title, count: sq.count, previewText: PageContents.text })
             .from(sq)
             .innerJoin(PageContents, eq(sq.id, PageContents.pageId))
             .orderBy(desc(sq.count), asc(PageContents.title))
@@ -221,6 +222,7 @@ export const widgetRouter = router({
             pages: pages.map((page) => ({
               id: page.id,
               title: page.title ?? '(제목 없음)',
+              previewText: page.previewText.slice(0, 100),
             })),
           };
         }
@@ -237,6 +239,7 @@ export const widgetRouter = router({
             title: page.title ?? '(제목 없음)',
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             score: result.pages.find((p) => p.id === page.id)!.score,
+            previewText: page.previewText.slice(0, 100),
           })),
         };
       }),
