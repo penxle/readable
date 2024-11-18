@@ -80,8 +80,6 @@ new readable.Caddy('usersite-proxy', {
 
 http:// {
   respond /healthz 200
-
-  log
 }
 
 https:// {
