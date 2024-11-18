@@ -230,7 +230,10 @@
 
       <div
         class={grid({
-          columns: $query.publicPage.previousPage && $query.publicPage.nextPage ? 2 : 1,
+          columns: {
+            base: 1,
+            md: $query.publicPage.previousPage && $query.publicPage.nextPage ? 2 : 1,
+          },
           gap: '8px',
           marginTop: '40px',
           paddingX: { md: '40px' },
@@ -245,7 +248,9 @@
               borderWidth: '1px',
               borderRadius: '8px',
               borderColor: 'border.primary',
-              padding: '16px',
+              paddingY: '14px',
+              paddingLeft: '12px',
+              paddingRight: '14px',
               _hover: { backgroundColor: 'neutral.10' },
             })}
             href={pageUrl($query.publicPage.previousPage)}
@@ -256,7 +261,7 @@
               <p class={css({ textStyle: '12m', color: 'text.disabled', lineClamp: 1 })}>
                 {$query.publicPage.previousPage.category.name}
               </p>
-              <p class={css({ marginTop: '4px', textStyle: '14sb', lineClamp: 1 })}>
+              <p class={css({ marginTop: '4px', textStyle: '14m', lineClamp: 1 })}>
                 {$query.publicPage.previousPage.title}
               </p>
             </div>
@@ -272,7 +277,9 @@
               borderWidth: '1px',
               borderRadius: '8px',
               borderColor: 'border.primary',
-              padding: '16px',
+              paddingY: '14px',
+              paddingLeft: '14px',
+              paddingRight: '12px',
               _hover: { backgroundColor: 'neutral.10' },
             })}
             href={pageUrl($query.publicPage.nextPage)}
@@ -281,7 +288,7 @@
               <p class={css({ textStyle: '12m', color: 'text.disabled', lineClamp: 1 })}>
                 {$query.publicPage.nextPage.category.name}
               </p>
-              <p class={css({ marginTop: '4px', textStyle: '14sb', lineClamp: 1 })}>
+              <p class={css({ marginTop: '4px', textStyle: '14m', lineClamp: 1 })}>
                 {$query.publicPage.nextPage.title}
               </p>
             </div>
