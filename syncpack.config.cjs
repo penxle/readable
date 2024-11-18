@@ -5,6 +5,11 @@ module.exports = {
   semverGroups: [
     {
       packages: ['**'],
+      dependencies: ['svelte'],
+      range: '',
+    },
+    {
+      packages: ['**'],
       dependencies: ['**'],
       range: '^',
     },
