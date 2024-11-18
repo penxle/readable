@@ -4,7 +4,7 @@
   import { Icon } from '@readable/ui/components';
   import mixpanel from 'mixpanel-browser';
   import { setContext } from 'svelte';
-  import MousePointerClickIcon from '~icons/lucide/mouse-pointer-click';
+  import EarthIcon from '~icons/lucide/earth';
   import WandSparklesIcon from '~icons/lucide/wand-sparkles';
   import { page } from '$app/stores';
   import { graphql } from '$graphql';
@@ -164,7 +164,7 @@
         rel="noopener noreferrer"
         target="_blank"
       >
-        <Icon icon={MousePointerClickIcon} />
+        <Icon icon={EarthIcon} />
         사이트 바로가기
       </a>
     </div>
