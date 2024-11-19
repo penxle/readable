@@ -932,27 +932,28 @@ builder.mutationFields((t) => ({
         type: TeamRestrictionType.DASHBOARD_WRITE,
       });
 
-      const page = await db
-        .update(Pages)
-        .set({
-          order: encoder.encode(generateJitteredKeyBetween(input.lower ?? null, input.upper ?? null)),
-          categoryId: input.categoryId,
-          parentId: input.parentId ?? null,
-        })
-        .where(eq(Pages.id, input.pageId))
-        .returning()
-        .then(firstOrThrow)
-        .catch((err) => {
-          if (err.code === '23505') {
-            throw new ReadableError({ code: 'page_slug_exists' });
-          }
+      return await db.transaction(async (tx) => {
+        const page = await tx
+          .update(Pages)
+          .set({
+            order: encoder.encode(generateJitteredKeyBetween(input.lower ?? null, input.upper ?? null)),
+            categoryId: input.categoryId,
+            parentId: input.parentId ?? null,
+          })
+          .where(eq(Pages.id, input.pageId))
+          .returning()
+          .then(firstOrThrow)
+          .catch((err) => {
+            if (err.code === '23505') {
+              throw new ReadableError({ code: 'page_slug_exists' });
+            }
 
-          throw err;
-        });
+            throw err;
+          });
 
-      const p = alias(Pages, 'p');
+        const p = alias(Pages, 'p');
 
-      await db.execute(sql`
+        await tx.execute(sql`
           WITH RECURSIVE sq AS (
             SELECT ${Pages.id}, ${Pages.parentId}
             FROM ${Pages}
@@ -962,13 +963,14 @@ builder.mutationFields((t) => ({
             FROM ${Pages} AS p
             INNER JOIN sq ON ${p.parentId} = sq.id
           )
-          UPDATE ${Pages} SET ${Pages.categoryId} = ${input.categoryId} WHERE id IN (SELECT id FROM sq);
+          UPDATE ${Pages} SET category_id = ${input.categoryId} WHERE id IN (SELECT id FROM sq);
         `);
 
-      pubsub.publish('site:update', page.siteId, { scope: 'site' });
-      await invalidateSiteCache(page.siteId);
+        pubsub.publish('site:update', page.siteId, { scope: 'site' });
+        await invalidateSiteCache(page.siteId);
 
-      return page;
+        return page;
+      });
     },
   }),
 
