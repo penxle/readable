@@ -537,6 +537,7 @@
                 alignItems: 'flex-start',
                 padding: '16px',
                 gap: '24px',
+                overflow: 'auto',
               })}
             >
               <BotMessage message={BOT_MESSAGE.INITIAL} {site} />
