@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { css } from '@readable/styled-system/css';
+  import { css, cx } from '@readable/styled-system/css';
   import { flex } from '@readable/styled-system/patterns';
   import { createFloatingActions } from '@readable/ui/actions';
   import { NodeView } from '@readable/ui/tiptap';
@@ -68,20 +68,25 @@
 </script>
 
 <NodeView data-drag-handle draggable>
-  <div
-    class={css(
-      {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        borderWidth: '1px',
-        borderColor: 'border.primary',
-        borderRadius: '4px',
-        backgroundColor: { base: 'neutral.10' },
-        _hover: { '& > button > div': { display: 'flex' } },
-      },
-      pickerOpened && { backgroundColor: 'neutral.20' },
+  <svelte:element
+    this={editor?.isEditable ? 'div' : 'a'}
+    class={cx(
+      'group',
+      css(
+        {
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          borderWidth: '1px',
+          borderColor: 'border.primary',
+          borderRadius: '4px',
+          backgroundColor: { base: 'neutral.10', _hover: 'neutral.20', _active: 'neutral.30' },
+        },
+        pickerOpened && { backgroundColor: 'neutral.20' },
+      ),
     )}
+    aria-label={editor?.isEditable ? undefined : `${node.attrs.name} 파일 다운로드`}
+    href={editor?.isEditable ? undefined : node.attrs.url}
   >
     {#if node.attrs.id}
       <div
@@ -135,14 +140,16 @@
           <div
             class={css(
               {
-                display: 'none',
+                display: 'flex',
+                opacity: '0',
                 marginRight: '12px',
                 borderRadius: '4px',
                 padding: '2px',
                 color: 'text.tertiary',
                 _hover: { backgroundColor: 'neutral.30' },
+                _groupHover: { opacity: '100' },
               },
-              open && { display: 'flex' },
+              open && { opacity: '100' },
             )}
           >
             <Icon icon={EllipsisIcon} size={20} />
@@ -155,21 +162,18 @@
         </MenuItem>
       </Menu>
     {:else}
-      <a
+      <div
         class={css({
           marginRight: '12px',
           borderRadius: '4px',
           padding: '2px',
           color: 'text.tertiary',
-          _hover: { backgroundColor: 'neutral.30' },
         })}
-        aria-label={`${node.attrs.name} 파일 다운로드`}
-        href={node.attrs.url}
       >
         <Icon icon={ArrowDownToLineIcon} size={20} />
-      </a>
+      </div>
     {/if}
-  </div>
+  </svelte:element>
 </NodeView>
 
 {#if pickerOpened && !node.attrs.id && !inflight && editor?.isEditable}
