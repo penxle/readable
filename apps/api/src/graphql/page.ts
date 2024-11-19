@@ -763,7 +763,7 @@ builder.mutationFields((t) => ({
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const node = schema.topNodeType.createAndFill()!;
       const content = node.toJSON();
-      const text = node.content.textBetween(0, node.content.size, '\n');
+      const text = '';
 
       const doc = makeYDoc({
         title: null,

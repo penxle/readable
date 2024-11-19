@@ -1,4 +1,5 @@
 import { markdownSerializer, schema } from '@readable/ui/tiptap/server';
+import { getText, getTextSerializersFromSchema } from '@tiptap/core';
 import { Node } from '@tiptap/pm/model';
 import dayjs from 'dayjs';
 import { and, desc, eq, gt, sql } from 'drizzle-orm';
@@ -81,7 +82,10 @@ export const PageContentStateUpdateJob = defineJob('page:content:state-update', 
 
     const node = yXmlFragmentToProseMirrorRootNode(fragment, schema);
     const content = node.toJSON();
-    const text = node.textBetween(0, node.content.size, '\n');
+    const text = getText(node, {
+      blockSeparator: '\n',
+      textSerializers: getTextSerializersFromSchema(schema),
+    }).trim();
 
     await tx
       .update(PageContentStates)

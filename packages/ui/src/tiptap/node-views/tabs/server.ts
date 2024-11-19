@@ -20,4 +20,8 @@ export const Tab = Node.create({
       },
     };
   },
+
+  renderText({ node }) {
+    return `${node.attrs.title}\n${node.textContent}`;
+  },
 });
