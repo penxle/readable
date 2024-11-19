@@ -3,12 +3,14 @@ import { RunnableSequence } from '@langchain/core/runnables';
 import stringHash from '@sindresorhus/string-hash';
 import { TRPCError } from '@trpc/server';
 import { and, asc, cosineDistance, count, desc, eq, inArray } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
 import stringify from 'fast-json-stable-stringify';
 import { z } from 'zod';
 import { redis } from '@/cache';
 import {
   AiChatMessages,
   AiChatSessions,
+  Categories,
   db,
   first,
   firstOrThrow,
@@ -246,23 +248,21 @@ export const widgetRouter = router({
   },
 
   page: {
-    get: widgetProcedure.input(z.object({ pageId: z.string() })).query(async ({ input, ctx }) => {
-      const page = await db
-        .select({
-          id: Pages.id,
-          title: PageContents.title,
-          content: PageContents.content,
-        })
+    breadcrumbs: widgetProcedure.input(z.object({ pageId: z.string() })).query(async ({ input }) => {
+      const P = alias(Pages, 'p');
+      const PC = alias(PageContents, 'pc');
+
+      const { categoryName, parentTitle, title } = await db
+        .select({ categoryName: Categories.name, parentTitle: PC.title, title: PageContents.title })
         .from(Pages)
+        .innerJoin(Categories, eq(Pages.categoryId, Categories.id))
         .innerJoin(PageContents, eq(Pages.id, PageContents.pageId))
-        .where(and(eq(Pages.id, input.pageId), eq(Pages.siteId, ctx.site.id)))
+        .leftJoin(P, eq(Pages.parentId, P.id))
+        .leftJoin(PC, eq(P.id, PC.pageId))
+        .where(eq(Pages.id, input.pageId))
         .then(firstOrThrow);
 
-      return {
-        id: page.id,
-        title: page.title ?? '(제목 없음)',
-        content: page.content,
-      };
+      return [categoryName, parentTitle, title].filter(Boolean);
     }),
   },
 
