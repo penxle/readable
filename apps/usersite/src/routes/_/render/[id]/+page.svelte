@@ -23,6 +23,10 @@
   `);
 </script>
 
+<svelte:head>
+  <base target="_blank" />
+</svelte:head>
+
 <div style:--usersite-theme-color={$query.publicSite.themeColor} class={css({ display: 'contents' })}>
   <h1 class={css({ textStyle: '34b', marginBottom: '32px' })}>{$query.publicPageById.title}</h1>
   <TiptapRenderer content={$query.publicPageById.content.content} />
