@@ -12,10 +12,13 @@
   import { onMount, tick, untrack } from 'svelte';
   import { fly, scale } from 'svelte/transition';
   import { z } from 'zod';
-  import ArrowLeftIcon from '~icons/lucide/arrow-left';
-  import IconArrowRight from '~icons/lucide/arrow-right';
   import ArrowUpIcon from '~icons/lucide/arrow-up';
+  import IconChevronLeft from '~icons/lucide/chevron-left';
+  import IconChevronRight from '~icons/lucide/chevron-right';
   import IconEllipsis from '~icons/lucide/ellipsis';
+  import IconFileSearch from '~icons/lucide/file-search';
+  import IconHeadset from '~icons/lucide/headset';
+  import IconSquareArrowOurUpRight from '~icons/lucide/square-arrow-out-up-right';
   import IconX from '~icons/lucide/x';
   import ReadableLogo from './assets/readable-logo.svg';
   import Sparkles from './assets/Sparkles.svelte';
@@ -220,13 +223,7 @@
   }
 
   let currentPageId = $state<string | null>(null);
-  const openPage = (pageId: string) => {
-    if (import.meta.env.PROD) {
-      window.open(`${site.url}/_/go/${pageId}`, '_blank');
-    } else {
-      currentPageId = pageId;
-    }
-  };
+  let breadcrumbs = $state<TRPCOutput['widget']['page']['breadcrumbs']>();
 
   onMount(() => {
     popoverEl.showPopover();
@@ -303,6 +300,7 @@
           background: '[linear-gradient(160deg, var(--widget-theme-color-2) 9.28%, var(--widget-theme-color) 75%)]',
           borderRadius: 'full',
           boxShadow: 'strong',
+          hideBelow: 'md',
         })}
         transition:scale={{ start: 0.8 }}
       >
@@ -335,22 +333,39 @@
       class={css({ display: 'contents' })}
     >
       <div
-        class={flex({
-          direction: 'column',
-          position: 'fixed',
-          bottom: '68px',
-          right: '20px',
-          borderRadius: '[20px]',
-          overflowY: 'auto',
-          width: '380px',
-          minHeight: '480px',
-          maxHeight: '[calc(100vh - 184px)]',
-          textStyle: '14m',
-          color: 'text.primary',
-          backgroundColor: 'white',
-          boxShadow: 'heavy',
-          pointerEvents: 'auto',
-        })}
+        class={css(
+          {
+            display: 'flex',
+            flexDirection: 'column',
+            position: 'fixed',
+            bottom: '68px',
+            right: '20px',
+            borderRadius: '[20px]',
+            overflowY: 'auto',
+            minWidth: '380px',
+            width: '380px',
+            height: '580px',
+            textStyle: '14m',
+            color: 'text.primary',
+            backgroundColor: 'white',
+            boxShadow: 'heavy',
+            pointerEvents: 'auto',
+            mdDown: {
+              width: 'full',
+              height: 'full',
+              inset: '0',
+              borderRadius: '0!',
+            },
+          },
+          !!currentPageId && {
+            md: {
+              width: 'auto',
+              height: 'full',
+              maxHeight: '[calc(100vh - 100px)]',
+              aspectRatio: '[3 / 5]',
+            },
+          },
+        )}
         onpointerdown={(e) => e.stopPropagation()}
         transition:fly={{ y: 5 }}
       >
@@ -365,197 +380,269 @@
             height: '48px',
           })}
         >
-          <div class={flex({ align: 'center', gap: '6px', truncate: true })}>
+          <div
+            class={flex({
+              align: 'center',
+              gap: '10px',
+              truncate: true,
+              '& > h1': { textStyle: '14sb', truncate: true },
+            })}
+          >
             {#if currentPageId}
               <button
-                class={center({ padding: '2px', color: 'neutral.50' })}
+                class={center({
+                  borderRadius: '6px',
+                  padding: '3px',
+                  color: 'white',
+                  backgroundColor: { base: '[var(--widget-theme-color)]', _hover: '[var(--widget-theme-color)/72]' },
+                })}
                 onclick={() => (currentPageId = null)}
                 type="button"
               >
-                <Icon icon={ArrowLeftIcon} />
+                <Icon icon={IconChevronLeft} />
               </button>
-              <h1 class={css({ textStyle: '14sb', truncate: true })}>
-                {site.name}
-              </h1>
+
+              {#if breadcrumbs}
+                <ol
+                  class={css({
+                    display: 'flex',
+                    minWidth: '0',
+                    '& > li': {
+                      display: 'inline-flex',
+                      color: 'text.secondary',
+                      textStyle: '14r',
+                      minWidth: '30px',
+                      flexShrink: 1,
+                      _last: {
+                        color: 'text.primary',
+                      },
+                    },
+                  })}
+                >
+                  {#each breadcrumbs as breadcrumb, index (`${breadcrumb}-${index}`)}
+                    <li>
+                      <span class={css({ truncate: true })}>{breadcrumb}</span>
+                      {#if index !== breadcrumbs.length - 1}
+                        <span class={css({ marginX: '6px', color: 'neutral.50', flexShrink: '0' })} aria-hidden="true">
+                          /
+                        </span>
+                      {/if}
+                    </li>
+                  {/each}
+                </ol>
+              {/if}
             {:else if chatHistory.length > 0}
               <button
-                class={center({ padding: '2px', color: 'neutral.50' })}
+                class={center({
+                  borderRadius: '6px',
+                  padding: '3px',
+                  color: 'white',
+                  backgroundColor: { base: '[var(--widget-theme-color)]', _hover: '[var(--widget-theme-color)/72]' },
+                })}
                 onclick={() => (chatHistory = [])}
                 type="button"
               >
-                <Icon icon={ArrowLeftIcon} />
+                <Icon icon={IconChevronLeft} />
               </button>
-              <h1 class={css({ textStyle: '14sb', truncate: true })}>
-                {site.name} AI 문의
-              </h1>
+              <h1>{site.name} AI 문의</h1>
             {:else}
-              <h1 class={css({ textStyle: '14sb', truncate: true })}>이 페이지에 대해 물어보기</h1>
+              <h1>이 페이지에 대해 물어보기</h1>
             {/if}
           </div>
-          <button class={css({ padding: '2px', color: 'neutral.50' })} onclick={() => (open = false)} type="button">
-            <Icon icon={IconX} size={16} />
-          </button>
+
+          <div class={flex({ align: 'center', gap: '10px', marginLeft: '20px' })}>
+            {#if currentPageId}
+              <a
+                class={css({ padding: '2px', color: 'neutral.50' })}
+                href={`${site.url}/_/go/${currentPageId}`}
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                <Icon icon={IconSquareArrowOurUpRight} size={16} />
+              </a>
+            {:else if site.widget.outLink && chatHistory.length === 0}
+              <a
+                class={css({ padding: '2px', color: 'neutral.50' })}
+                href={site.widget.outLink}
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                <Icon icon={IconHeadset} size={16} />
+              </a>
+            {/if}
+            <button class={css({ padding: '2px', color: 'neutral.50' })} onclick={() => (open = false)} type="button">
+              <Icon icon={IconX} size={16} />
+            </button>
+          </div>
         </div>
 
         {#if currentPageId}
           <PageContent pageId={currentPageId} siteUrl={site.url} />
-        {:else if chatHistory.length > 0}
-          <div
-            bind:this={chatHistoryEl}
-            class={flex({
-              flexGrow: '1',
-              flexDirection: 'column',
-              gap: '24px',
-              padding: '16px',
-              overflow: 'auto',
-              minHeight: '170px',
-              maxHeight: '340px',
-            })}
-          >
-            {#each chatHistory as chat, idx (idx)}
-              <div class={flex({ justifyContent: 'flex-end', paddingLeft: '68px' })}>
-                <p
-                  class={cx(
-                    'question-bubble',
-                    css({
-                      borderWidth: '1px',
-                      borderColor: 'border.primary',
-                      borderRadius: '10px',
-                      paddingX: '12px',
-                      paddingY: '10px',
-                      textStyle: '14r',
-                      color: 'text.tertiary',
-                      textAlign: 'right',
-                      backgroundColor: 'neutral.10',
-                      whiteSpace: 'pre-wrap',
-                    }),
-                  )}
-                  in:fly|global={{ y: 10 }}
-                >
-                  {chat.question}
-                </p>
-              </div>
-
-              {#if chat.answer}
-                <BotMessage message={chat.answer} {site} />
-              {:else if chat.answer === null}
-                <BotMessage message={`"${chat.question}"과 연관된 내용을 찾지 못했어요.`} {site} />
-                <BotMessage {site} title="다른 도움이 필요하신가요?">
-                  {#snippet content()}
-                    <OtherOptions {site} />
-                  {/snippet}
-                </BotMessage>
-              {:else}
-                <BotMessage loading {site} />
-              {/if}
-            {/each}
-          </div>
         {:else}
-          <div
-            class={flex({
-              flexGrow: '1',
-              flexDirection: 'column',
-              alignItems: 'flex-start',
-              padding: '16px',
-              gap: '24px',
-            })}
-          >
-            <BotMessage message={BOT_MESSAGE.INITIAL} {site} />
-            {#if loadingCount > 0}
-              <BotMessage loading {site}>
-                <!-- {#snippet content()}
-                  <div class={center({ height: '28px' })}>
-                    <AiLoading />
-                  </div>
-                {/snippet} -->
-              </BotMessage>
-            {:else if response && pages && pagesVisible}
-              {#if pages.length > 0}
-                <BotMessage
-                  {site}
-                  title={response.type === 'match'
-                    ? `이 페이지에 대한 추천 문서 (${pages.length})`
-                    : `도움센터에서 자주 찾는 문서 (${pages.length})`}
-                >
-                  {#snippet content()}
-                    <ul
-                      class={flex({
-                        flexDirection: 'column',
+          {#if chatHistory.length > 0}
+            <div
+              bind:this={chatHistoryEl}
+              class={flex({
+                flexGrow: '1',
+                flexDirection: 'column',
+                gap: '24px',
+                padding: '16px',
+                overflow: 'auto',
+                minHeight: '170px',
+              })}
+            >
+              {#each chatHistory as chat, idx (idx)}
+                <div class={flex({ justifyContent: 'flex-end', paddingLeft: '68px' })}>
+                  <p
+                    class={cx(
+                      'question-bubble',
+                      css({
+                        borderWidth: '1px',
+                        borderColor: 'border.primary',
+                        borderRadius: '10px',
+                        paddingX: '12px',
+                        paddingY: '10px',
                         textStyle: '14r',
-                      })}
-                    >
-                      {#each pagesVisible as page, idx (idx)}
-                        <li>
-                          <button
-                            class={css({
-                              display: 'inline-flex',
-                              flexDirection: 'row',
-                              alignItems: 'flex-start',
-                              gap: '6px',
-                              padding: '4px',
-                              paddingRight: '6px',
-                              borderRadius: '6px',
-                              backgroundColor: {
-                                _hover: 'neutral.20',
-                              },
-                            })}
-                            onclick={() => openPage(page.id)}
-                            type="button"
-                          >
-                            <Icon
-                              style={css.raw({ color: 'neutral.50', marginTop: '2px' })}
-                              icon={IconArrowRight}
-                              size={16}
-                            />
-                            <span class={css({ lineClamp: 2 })}>{page.title}</span>
-                          </button>
-                        </li>
-                      {/each}
-                      {#if pages.length > pagesVisible.length && !expanded}
-                        <li>
-                          <button
-                            class={flex({
-                              align: 'center',
-                              gap: '6px',
-                              padding: '4px',
-                              paddingRight: '6px',
-                              borderRadius: '6px',
-                              backgroundColor: {
-                                _hover: 'neutral.20',
-                              },
-                              color: 'text.tertiary',
-                            })}
-                            onclick={() => (expanded = true)}
-                            type="button"
-                          >
-                            <Icon style={css.raw({ color: 'neutral.50' })} icon={IconEllipsis} />
-                            <span>더보기</span>
-                          </button>
-                        </li>
-                      {/if}
-                    </ul>
-                  {/snippet}
-                </BotMessage>
+                        color: 'text.tertiary',
+                        textAlign: 'right',
+                        backgroundColor: 'neutral.10',
+                        whiteSpace: 'pre-wrap',
+                      }),
+                    )}
+                    in:fly|global={{ y: 10 }}
+                  >
+                    {chat.question}
+                  </p>
+                </div>
+
+                {#if chat.answer}
+                  <BotMessage message={chat.answer} {site} />
+                {:else if chat.answer === null}
+                  <BotMessage message={`"${chat.question}"과 연관된 내용을 찾지 못했어요.`} {site} />
+                  <BotMessage {site} title="다른 도움이 필요하신가요?">
+                    {#snippet content()}
+                      <OtherOptions {site} />
+                    {/snippet}
+                  </BotMessage>
+                {:else}
+                  <BotMessage loading {site} />
+                {/if}
+              {/each}
+            </div>
+          {:else}
+            <div
+              class={flex({
+                flexGrow: '1',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                padding: '16px',
+                gap: '24px',
+              })}
+            >
+              <BotMessage message={BOT_MESSAGE.INITIAL} {site} />
+              {#if loadingCount > 0}
+                <BotMessage loading {site} />
+              {:else if response && pages && pagesVisible}
+                {#if pages.length > 0}
+                  <BotMessage
+                    {site}
+                    title={response.type === 'match'
+                      ? `이 페이지에 대한 추천 문서 (${pages.length})`
+                      : `도움센터에서 자주 찾는 문서 (${pages.length})`}
+                  >
+                    {#snippet content()}
+                      <ul class={flex({ flexDirection: 'column', gap: '6px' })}>
+                        {#each pagesVisible as page, idx (idx)}
+                          <li>
+                            <button
+                              class={flex({
+                                align: 'center',
+                                gap: '10px',
+                                borderWidth: '1px',
+                                borderColor: 'border.primary',
+                                borderRadius: '10px',
+                                paddingY: '10px',
+                                paddingLeft: '12px',
+                                paddingRight: '10px',
+                                _hover: {
+                                  backgroundColor: 'neutral.10',
+                                },
+                              })}
+                              onclick={async () => {
+                                currentPageId = page.id;
+
+                                breadcrumbs = await trpc.widget.page.breadcrumbs.query({
+                                  siteId: site.id,
+                                  pageId: page.id,
+                                });
+                              }}
+                              type="button"
+                            >
+                              <div class={css({ textAlign: 'left' })}>
+                                <div class={flex({ align: 'center', gap: '6px', marginBottom: '6px' })}>
+                                  <Icon style={css.raw({ color: 'neutral.50' })} icon={IconFileSearch} size={16} />
+                                  <span class={css({ textStyle: '14sb', lineClamp: 1 })}>{page.title}</span>
+                                </div>
+                                <span class={css({ textStyle: '12r', color: 'text.secondary', lineClamp: 2 })}>
+                                  {page.previewText}
+                                </span>
+                              </div>
+
+                              <Icon style={css.raw({ color: 'neutral.50' })} icon={IconChevronRight} size={16} />
+                            </button>
+                          </li>
+                        {/each}
+
+                        {#if pages.length > pagesVisible.length && !expanded}
+                          <li>
+                            <button
+                              class={flex({
+                                align: 'center',
+                                gap: '6px',
+                                padding: '4px',
+                                paddingRight: '6px',
+                                borderRadius: '6px',
+                                textStyle: '14r',
+                                color: 'text.tertiary',
+                                _hover: {
+                                  backgroundColor: 'neutral.20',
+                                },
+                              })}
+                              onclick={() => (expanded = true)}
+                              type="button"
+                            >
+                              <Icon style={css.raw({ color: 'neutral.50' })} icon={IconEllipsis} />
+                              <span>더보기</span>
+                            </button>
+                          </li>
+                        {/if}
+                      </ul>
+                    {/snippet}
+                  </BotMessage>
+                {/if}
+                {#if !response || pages.length === 0}
+                  <BotMessage message={BOT_MESSAGE.NOT_FOUND} {site} />
+                {/if}
+                {#if !response || response.type === 'fallback'}
+                  <!-- 로딩 끝났는데 결과가 없는 경우 (에러) 또는 결과 타입이 fallback인 경우 -->
+                  <BotMessage {site} title="다른 도움이 필요하신가요?">
+                    {#snippet content()}
+                      <OtherOptions {site} />
+                    {/snippet}
+                  </BotMessage>
+                {/if}
               {/if}
-              {#if !response || pages.length === 0}
-                <BotMessage message={BOT_MESSAGE.NOT_FOUND} {site} />
-              {/if}
-              {#if !response || response.type === 'fallback'}
-                <!-- 로딩 끝났는데 결과가 없는 경우 (에러) 또는 결과 타입이 fallback인 경우 -->
-                <BotMessage {site} title="다른 도움이 필요하신가요?">
-                  {#snippet content()}
-                    <OtherOptions {site} />
-                  {/snippet}
-                </BotMessage>
-              {/if}
-            {/if}
-          </div>
+            </div>
+          {/if}
 
           <div
             class={css({
+              flex: 'none',
               marginTop: '-20px',
               height: '20px',
-              background: '[linear-gradient(0deg, #FFF 0%, rgba(255, 255, 255, 0.00) 100%)]',
+              bgGradient: 'to-t',
+              gradientFrom: 'white',
+              gradientTo: 'white/0',
             })}
           ></div>
 

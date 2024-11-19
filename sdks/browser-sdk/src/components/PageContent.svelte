@@ -10,6 +10,6 @@
   let { siteUrl, pageId }: Props = $props();
 </script>
 
-<div class={flex({ flexGrow: '1', paddingX: '16px' })}>
+<div class={flex({ flexGrow: '1', paddingX: '20px', paddingY: '28px' })}>
   <iframe class={css({ flexGrow: '1', width: 'full' })} src={`${siteUrl}/_/render/${pageId}`} title=""></iframe>
 </div>

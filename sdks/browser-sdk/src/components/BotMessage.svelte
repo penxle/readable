@@ -61,6 +61,7 @@
           paddingX: '12px',
           paddingY: '10px',
           backgroundColor: '[var(--widget-theme-color)/6]',
+          width: 'full',
           whiteSpace: 'pre-line',
         })}
         in:fly|global={{ y: 10 }}
