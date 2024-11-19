@@ -225,7 +225,9 @@ const extensions = [
   Bold.configure({ HTMLAttributes: { class: css({ fontWeight: 'bold' }) } }),
   Italic.configure({ HTMLAttributes: { class: css({ fontStyle: 'italic' }) } }),
   Strike.configure({ HTMLAttributes: { class: css({ textDecorationLine: 'line-through' }) } }),
-  Underline.configure({ HTMLAttributes: { class: css({ textDecorationLine: 'underline' }) } }),
+  Underline.configure({
+    HTMLAttributes: { class: css({ textDecorationLine: 'underline', textUnderlineOffset: '2px' }) },
+  }),
   Color.extend({
     addGlobalAttributes() {
       return [
