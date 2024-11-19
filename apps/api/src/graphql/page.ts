@@ -950,6 +950,21 @@ builder.mutationFields((t) => ({
           throw err;
         });
 
+      const p = alias(Pages, 'p');
+
+      await db.execute(sql`
+          WITH RECURSIVE sq AS (
+            SELECT ${Pages.id}, ${Pages.parentId}
+            FROM ${Pages}
+            WHERE ${eq(Pages.id, input.pageId)}
+            UNION ALL
+            SELECT ${p.id}, ${p.parentId}
+            FROM ${Pages} AS p
+            INNER JOIN sq ON ${p.parentId} = sq.id
+          )
+          UPDATE ${Pages} SET ${Pages.categoryId} = ${input.categoryId} WHERE id IN (SELECT id FROM sq);
+        `);
+
       pubsub.publish('site:update', page.siteId, { scope: 'site' });
       await invalidateSiteCache(page.siteId);
 
