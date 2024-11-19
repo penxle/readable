@@ -222,7 +222,7 @@
   let currentPageId = $state<string | null>(null);
   const openPage = (pageId: string) => {
     if (import.meta.env.PROD) {
-      window.open(`${site.url}/go/${pageId}`, '_blank');
+      window.open(`${site.url}/_/go/${pageId}`, '_blank');
     } else {
       currentPageId = pageId;
     }

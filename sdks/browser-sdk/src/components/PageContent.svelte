@@ -11,5 +11,5 @@
 </script>
 
 <div class={flex({ flexGrow: '1', paddingX: '16px' })}>
-  <iframe class={css({ flexGrow: '1', width: 'full' })} src={`${siteUrl}/r/${pageId}`} title=""></iframe>
+  <iframe class={css({ flexGrow: '1', width: 'full' })} src={`${siteUrl}/_/render/${pageId}`} title=""></iframe>
 </div>

@@ -294,7 +294,7 @@ const extensions = [
         attrs = {
           target: this.editor?.isEditable ? '_blank' : null,
           rel: null,
-          href: attrs.href.replace('page:///', '/go/'),
+          href: attrs.href.replace('page:///', '/_/go/'),
         };
       }
 
