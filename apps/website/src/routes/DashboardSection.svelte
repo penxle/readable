@@ -1,7 +1,8 @@
 <script lang="ts">
-  import { css } from '@readable/styled-system/css';
+  import { css, cx } from '@readable/styled-system/css';
   import { flex } from '@readable/styled-system/patterns';
   import { Icon } from '@readable/ui/components';
+  import { onMount } from 'svelte';
   import ChevronLeftIcon from '~icons/lucide/chevron-left';
   import ChevronRightIcon from '~icons/lucide/chevron-right';
   import Branding from '$assets/dashboard-section/branding.svg?component';
@@ -10,12 +11,8 @@
   import EditingExperience from '$assets/dashboard-section/editing-experience.webp';
   import ModifyUrl from '$assets/dashboard-section/modify-url.svg?component';
 
-  type Props = {
-    section: HTMLElement | undefined;
-  };
-
-  let { section = $bindable() }: Props = $props();
-
+  let visible = $state(false);
+  let containerEl = $state<HTMLDivElement>();
   let currentScroll = $state(0);
   let carouselEl = $state<HTMLDivElement>();
 
@@ -23,7 +20,7 @@
     {
       title: '콘텐츠 최신화',
       description: '현재 운영중인 서비스의 변경사항을 지속적으로 추적하고 발행된 문서와의 불일치점을 찾아냅니다',
-      badge: 'COMING SOON',
+      badge: 'BETA',
       asset: ContentUpdate,
       assetStyle: css({
         marginTop: { base: '11px', lg: '40px' },
@@ -98,44 +95,77 @@
     const newScroll = currentScroll - containerWidth;
     carouselEl.scrollTo({ left: newScroll, behavior: 'smooth' });
   }
+
+  onMount(() => {
+    if (containerEl) {
+      const observer = new IntersectionObserver((entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          observer.disconnect();
+          visible = true;
+        }
+      });
+
+      observer.observe(containerEl);
+
+      return () => observer.disconnect();
+    }
+  });
 </script>
 
 <div
-  bind:this={section}
   class={css({
-    paddingTop: '120px',
-    paddingBottom: '134px',
-    backgroundColor: 'neutral.100',
-    lg: { paddingTop: '140px', paddingBottom: '100px' },
+    paddingY: '54px',
+    backgroundColor: 'neutral.90',
+    lg: { paddingTop: '80px', paddingBottom: '100px' },
   })}
 >
-  <div>
+  <div bind:this={containerEl} class={cx('animate', visible && 'loaded')}>
+    <div
+      class={css({
+        marginX: 'auto',
+        marginBottom: '20px',
+        borderRadius: 'full',
+        paddingX: '14px',
+        paddingY: '6px',
+        textStyle: '14sb',
+        backgroundColor: 'neutral.0',
+        width: 'fit',
+      })}
+    >
+      협업
+    </div>
+
     <h2
       class={css({
         paddingX: '20px',
-        fontSize: { base: '24px', lg: '[45px]' },
+        fontSize: { base: '28px', lg: '[36px]' },
         fontWeight: '[800]',
         color: 'white',
         textAlign: 'center',
       })}
     >
-      원활한 협업과 스마트한 문서 관리
+      원활한 협업과
+      <br />
+      스마트한 문서 관리
     </h2>
+
     <p
       class={css({
-        marginTop: { base: '10px', lg: '16px' },
+        marginTop: '16px',
         paddingX: '20px',
-        textStyle: { base: '14m', lg: '22m' },
         color: 'white',
         textAlign: 'center',
         opacity: '80',
+        lg: { textStyle: '18r' },
       })}
     >
       빨리 움직이는 팀을 위한 가이드 문서 도구,
       <br />
       실시간 협업과 간편한 설정으로 사용자들에게 사랑받는 사이트를 만들어보세요
     </p>
+  </div>
 
+  <div class={cx('animate', 'delayed-400', visible && 'loaded')}>
     <div class={css({ marginTop: { base: '48px', lg: '80px' }, overflow: 'hidden' })}>
       <div
         bind:this={carouselEl}
@@ -151,9 +181,9 @@
             content: '""',
             height: '1px',
             minWidth: {
-              // max(calc((100vw - 1280px) / 2 - carouselGap), calc(paddingX - carouselGap))
+              // max(calc((100vw - 960px) / 2 - carouselGap), calc(paddingX - carouselGap))
               base: '4px',
-              lg: '[calc((100vw - 1280px) / 2 - 20px)]',
+              lg: '[calc((100vw - 960px) / 2 - 20px)]',
             },
           },
           _after: {
@@ -161,9 +191,9 @@
             content: '""',
             height: '1px',
             minWidth: {
-              // max(calc((100vw - 1280px) / 2 - carouselGap), calc(paddingX - carouselGap))
+              // max(calc((100vw - 960px) / 2 - carouselGap), calc(paddingX - carouselGap))
               base: '4px',
-              lg: '[calc((100vw - 1280px) / 2 - 20px)]',
+              lg: '[calc((100vw - 960px) / 2 - 20px)]',
             },
           },
         })}
@@ -179,8 +209,8 @@
               borderColor: 'border.primary',
               borderRadius: '[20px]',
               paddingTop: { base: '22px', lg: '34px' },
-              width: { base: '248px', lg: '376px' },
-              height: { base: '320px', lg: '442px' },
+              width: { base: '230px', lg: '376px' },
+              height: { base: '284px', lg: '442px' },
               backgroundColor: 'surface.primary',
               scrollSnapAlign: 'center',
               overflow: 'hidden',

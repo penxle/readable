@@ -13,8 +13,7 @@
   import SearchSection from './SearchSection.svelte';
 
   let heroSection = $state<HTMLElement>();
-  let dashboardSection = $state<HTMLElement>();
-  const darkSections = $derived([heroSection, dashboardSection].filter((v) => !!v));
+  const darkSections = $derived([heroSection].filter((v) => !!v));
 </script>
 
 <Helmet
@@ -47,13 +46,13 @@
 
 <HookingSection />
 
+<DashboardSection />
+
 <MachineFriendlySection />
 
 <SearchSection />
 
 <A11ySection />
-
-<DashboardSection bind:section={dashboardSection} />
 
 <ClientsSection />
 

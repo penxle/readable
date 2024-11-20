@@ -199,29 +199,6 @@
 </div>
 
 <style>
-  .animate {
-    opacity: 0;
-    filter: blur(3px);
-    transform: translateY(30px);
-    transition:
-      opacity 0.5s ease,
-      filter 0.5s ease,
-      transform 0.5s ease;
-  }
-
-  .animate.delayed-200 {
-    transition-delay: 0.2s;
-  }
-
-  .animate.delayed-400 {
-    transition-delay: 0.4s;
-  }
-
-  .animate.loaded {
-    opacity: 1;
-    filter: blur(0px);
-    transform: translateY(0);
-  }
   .hero-image {
     opacity: 0;
     filter: blur(5px);
