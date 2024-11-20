@@ -1,64 +1,35 @@
 <script lang="ts">
   import { css, cx } from '@readable/styled-system/css';
-  import { flex } from '@readable/styled-system/patterns';
-  import { Icon } from '@readable/ui/components';
+  import { center, flex } from '@readable/styled-system/patterns';
+  import { Button, Icon } from '@readable/ui/components';
   import { onMount } from 'svelte';
-  import { fly } from 'svelte/transition';
   import ChevronRightIcon from '~icons/lucide/chevron-right';
-  import EditorMockupImage from '$assets/hero/editor-mockup.webp';
+  import DashboardMockupImage from '$assets/hero/dashboard-mockup.webp';
   import SiteMockupImage from '$assets/hero/site-mockup.webp';
+  import WidgetMockupImage from '$assets/hero/widget-mockup.webp';
   import { env } from '$env/dynamic/public';
   import { withUtm } from '$lib/utm';
-  import SegmentButtons from './SegmentButtons.svelte';
+  import Tabs from './Tabs.svelte';
 
-  type Props = {
-    section: HTMLElement | undefined;
-  };
-
-  let { section = $bindable() }: Props = $props();
-
-  const keywords = ['도움센터', '유저 가이드', '업데이트 노트', '개발자 문서'];
-
-  let i = $state(0);
-  const idx = $derived(i % keywords.length);
-
-  let selectedHeroMockup = $state('site');
+  let selectedHeroMockup = $state('dashboard');
   let visible = $state(false);
-
-  let interval: ReturnType<typeof setInterval>;
 
   onMount(() => {
     visible = true;
-
-    setTimeout(() => {
-      i += 1;
-      interval = setInterval(() => {
-        i += 1;
-      }, 2000);
-    }, 1000); // 1초 뒤에 시작
-
-    return () => clearInterval(interval);
   });
 </script>
 
 <div
-  bind:this={section}
   class={flex({
     position: 'relative',
     flexDirection: 'column',
     alignItems: 'center',
-    backgroundColor: 'neutral.100',
-    height: 'screen',
-    minHeight: '1096px',
     overflow: 'hidden',
-    color: 'white',
-    paddingTop: '180px',
-    lgDown: {
-      minHeight: '1002px',
-      paddingTop: '128px',
-    },
+    marginTop: '60px',
+    paddingX: '20px',
+    paddingY: '120px',
     mdDown: {
-      minHeight: '739px',
+      paddingY: '54px',
     },
   })}
 >
@@ -67,119 +38,83 @@
       'animate',
       visible && 'loaded',
       css({
-        fontSize: { base: '32px', md: '[48px]', lg: '[64px]' },
-        fontWeight: '[900]',
+        fontSize: { base: '[34px]', md: '[40px]', lg: '[44px]' },
+        fontWeight: '[800]',
         textAlign: 'center',
         marginTop: 'auto',
         lineHeight: '[1.3]',
       }),
     )}
   >
-    <div>이용자를 붙잡을</div>
-    <div class={css({ position: 'relative' })}>
-      &nbsp;
-      {#key i}
-        <div class={flex({ position: 'absolute', inset: '0', justifyContent: 'center' })}>
-          <div
-            class={flex({
-              textGradient: 'to-b',
-              gradientFrom: '[#FFCB9A 0%]',
-              gradientTo: '[#FF5D00 83.5%]',
-            })}
-            in:fly={{ y: 50, opacity: 0 }}
-            out:fly={{ y: -20, opacity: 0 }}
-          >
-            {keywords[idx]}
-          </div>
-        </div>
-      {/key}
+    <div>
+      도움센터, <br />
+      드디어 읽히다.
     </div>
-    <div>만들기</div>
   </div>
   <div
-    class={cx('animate', 'delayed-200', visible && 'loaded', flex({ flexDirection: 'column', alignItems: 'center' }))}
+    class={cx(
+      'animate',
+      'delayed-200',
+      visible && 'loaded',
+      flex({ width: 'full', flexDirection: 'column', alignItems: 'center' }),
+    )}
   >
     <div
       class={flex({
         marginTop: '40px',
-        gap: '32px',
+        gap: '12px',
         alignItems: 'center',
         lgDown: {
           flexDirection: 'column',
-          gap: '16px',
+        },
+        smOnly: {
+          width: 'full',
+          '& > a': {
+            width: 'full',
+          },
         },
       })}
     >
-      <a
-        class={flex({
-          borderRadius: '10px',
-          paddingX: '24px',
-          paddingY: '10px',
-          textStyle: '16sb',
-          lgDown: {
-            paddingX: '20px',
-            paddingY: '9px',
-            textStyle: '15sb',
-          },
-          color: 'white',
-          backgroundColor: 'brand.600',
-          _hover: { backgroundColor: 'brand.500' },
-          _focusVisible: { backgroundColor: 'brand.500' },
-          _active: { backgroundColor: 'brand.700' },
-          _pressed: { backgroundColor: 'brand.700' },
-        })}
+      <Button
+        glossy
         href={withUtm(env.PUBLIC_DASHBOARD_URL)}
         rel="noopener noreferrer"
+        size="lg"
         target="_blank"
+        type="link"
       >
         30초만에 시작하기
-      </a>
-      <a
-        class={flex({
-          gap: '6px',
-          alignItems: 'center',
-          paddingY: '10px',
-          paddingLeft: '8px',
-          textStyle: '16sb',
-          lgDown: {
-            textStyle: '15sb',
-          },
-          color: 'white/80',
-        })}
-        href="/preview"
-      >
+      </Button>
+      <Button href="/preview" size="lg" type="link" variant="secondary">
         이사 신청하기
         <Icon icon={ChevronRightIcon} size={20} />
-      </a>
+      </Button>
     </div>
   </div>
 
-  <!-- SegmentButtons과 목업 이미지 -->
   <div
     class={flex({
       flexDirection: 'column',
       alignItems: 'center',
-      marginTop: 'auto',
+      marginTop: '64px',
     })}
   >
-    <div class={cx('animate', 'delayed-400', visible && 'loaded')}>
-      <div class={css({ marginTop: '60px', lgDown: { marginTop: '54px' } })}>
-        <SegmentButtons
-          items={[
-            { label: '사이트', value: 'site' },
-            { label: '에디터', value: 'editor' },
-          ]}
-          onselect={(value) => (selectedHeroMockup = value)}
-        />
-      </div>
+    <div class={cx('animate', 'delayed-400', visible && 'loaded', center({ width: 'full' }))}>
+      <Tabs
+        items={[
+          { label: '대시보드', value: 'dashboard' },
+          { label: '사이트', value: 'site' },
+          { label: '위젯', value: 'widget' },
+        ]}
+        onselect={(value) => (selectedHeroMockup = value)}
+      />
     </div>
     <div
       class={flex({
         position: 'relative',
-        marginTop: '34px',
+        marginTop: '24px',
         width: 'full',
-        maxWidth: '889px',
-        height: '502px',
+        maxWidth: '960px',
         marginX: 'auto',
         lgDown: {
           marginTop: '24px',
@@ -190,9 +125,24 @@
         },
       })}
     >
-      <div class={cx('hero-image', visible && 'loaded')}>
+      <div
+        class={cx(
+          'hero-image',
+          visible && 'loaded',
+          css({
+            borderRadius: '[20px]',
+            smOnly: {
+              borderRadius: '10px',
+            },
+            borderWidth: '1px',
+            borderColor: 'border.secondary',
+            boxShadow: '[0px 20px 44px -10px rgba(74, 68, 65, 0.08)]',
+          }),
+        )}
+      >
+        <img alt="대시보드 이미지" hidden={selectedHeroMockup !== 'dashboard'} src={DashboardMockupImage} />
         <img alt="사이트 이미지" hidden={selectedHeroMockup !== 'site'} src={SiteMockupImage} />
-        <img alt="에디터 이미지" hidden={selectedHeroMockup !== 'editor'} src={EditorMockupImage} />
+        <img alt="위젯 이미지" hidden={selectedHeroMockup !== 'widget'} src={WidgetMockupImage} />
       </div>
     </div>
   </div>

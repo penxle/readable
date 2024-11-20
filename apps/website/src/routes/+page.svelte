@@ -1,7 +1,5 @@
 <script lang="ts">
-  import { css } from '@readable/styled-system/css';
   import { Helmet } from '@readable/ui/components';
-  import HeroLight from '$assets/hero/light.svg?component';
   import A11ySection from './A11ySection.svelte';
   import ClientsSection from './ClientsSection.svelte';
   import CtaSection from './CtaSection.svelte';
@@ -11,9 +9,6 @@
   import HookingSection from './HookingSection.svelte';
   import MachineFriendlySection from './MachineFriendlySection.svelte';
   import SearchSection from './SearchSection.svelte';
-
-  let heroSection = $state<HTMLElement>();
-  const darkSections = $derived([heroSection].filter((v) => !!v));
 </script>
 
 <Helmet
@@ -23,26 +18,9 @@
   trailing={null}
 />
 
-<HeroLight
-  class={css({
-    position: 'absolute',
-    top: '-121px',
-    left: '0',
-    right: '0',
-    marginX: 'auto',
-    zIndex: '50',
-    width: '1280px',
-    height: '360px',
-    lgDown: {
-      width: 'full',
-      height: '300px',
-    },
-  })}
-/>
+<Header theme="light" />
 
-<Header {darkSections} theme="dark" />
-
-<HeroSection bind:section={heroSection} />
+<HeroSection />
 
 <HookingSection />
 

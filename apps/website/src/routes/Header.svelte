@@ -52,7 +52,7 @@
     }
   });
 
-  const headerBgColor = $derived(($headerTheme === 'light' ? 'white' : 'neutral.100') as ColorToken);
+  const headerBgColor = $derived(($headerTheme === 'light' ? 'white/90' : 'neutral.100') as ColorToken);
 
   beforeNavigate(() => {
     $isMenuOpen = false;
@@ -75,18 +75,24 @@
     },
     zIndex: '100',
     backgroundColor: scrollY > 100 ? headerBgColor : 'transparent',
+    backdropFilter: 'auto',
+    backdropBlur: scrollY > 100 ? '[20px]' : '[0px]',
     transition: '[all 500ms cubic-bezier(0.3, 0, 0, 1)]',
   })}
 >
   <div
-    class={flex({
-      marginX: 'auto',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      width: '1080px',
-      borderBottom:
-        $headerTheme === 'dark' ? '[1px solid rgba(63, 63, 70, 0.40)]' : '[1px solid rgba(228, 228, 231, 0.40)]',
-    })}
+    class={css(
+      flex.raw({
+        marginX: 'auto',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        width: '1080px',
+      }),
+      scrollY > 100 && {
+        borderBottom:
+          $headerTheme === 'dark' ? '[1px solid rgba(63, 63, 70, 0.40)]' : '[1px solid rgba(228, 228, 231, 0.40)]',
+      },
+    )}
   >
     <a href="/">
       <img
