@@ -75,22 +75,22 @@
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingY: '140px',
-    backgroundColor: 'neutral.20',
-    lgDown: {
-      paddingY: '100px',
+    paddingY: '80px',
+    smOnly: {
+      paddingTop: '54px',
+      paddingBottom: '40px',
     },
   })}
 >
   <h1
     class={css({
-      fontSize: '[45px]',
+      fontSize: '[36px]',
       fontWeight: '[800]',
-      lineHeight: '[138%]',
-      letterSpacing: '-0.9px',
+      lineHeight: '[140%]',
+      letterSpacing: '-0.144px',
       textAlign: 'center',
-      lgDown: {
-        fontSize: '24px',
+      mdDown: {
+        fontSize: '28px',
       },
     })}
   >
@@ -100,16 +100,15 @@
   </h1>
   <p
     class={css({
-      marginTop: '16px',
+      marginTop: '20px',
       color: 'text.secondary',
-      fontSize: '[22px]',
+      fontSize: '[18px]',
       fontWeight: '[500]',
       lineHeight: '[144%]',
       letterSpacing: '-0.088px',
       textAlign: 'center',
-      lgDown: {
-        marginTop: '10px',
-        fontSize: '14px',
+      mdDown: {
+        fontSize: '16px',
       },
     })}
   >
@@ -121,16 +120,15 @@
   <div
     class={flex({
       position: 'relative',
-      marginTop: '86px',
+      marginTop: '102px',
       width: 'full',
-      maxWidth: '1280px',
+      maxWidth: '960px',
       marginX: 'auto',
       flexDirection: 'column',
       gap: '16px',
       overflow: 'hidden',
-      lgDown: {
-        marginTop: '40px',
-        gap: '10px',
+      mdDown: {
+        marginTop: '64px',
       },
     })}
   >
@@ -141,7 +139,7 @@
         left: '0',
         width: '80px',
         height: 'full',
-        background: '[linear-gradient(270deg, rgba(244, 244, 245, 0.00) 0%, #F4F4F5 93.07%)]',
+        background: '[linear-gradient(90deg, #FFF 0%, rgba(255, 255, 255, 0.00) 103.69%)]',
         zIndex: '10',
       })}
     ></div>
@@ -152,7 +150,7 @@
         right: '0',
         width: '80px',
         height: 'full',
-        background: '[linear-gradient(90deg, rgba(244, 244, 245, 0.00) 0%, #F4F4F5 93.07%)]',
+        background: '[linear-gradient(90deg, rgba(255, 255, 255, 0.00) 0%, #FFF 103.69%)]',
         zIndex: '10',
       })}
     ></div>
