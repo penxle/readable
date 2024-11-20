@@ -1,20 +1,23 @@
 <script lang="ts">
   import { css } from '@readable/styled-system/css';
-  import { flex } from '@readable/styled-system/patterns';
+  import { center, flex } from '@readable/styled-system/patterns';
   import type { Snippet } from 'svelte';
 
   type Props = {
     subtitle?: Snippet;
     title?: Snippet;
     description?: Snippet;
+    color: string;
   };
 
-  let { subtitle, title, description }: Props = $props();
+  let { subtitle, title, description, color }: Props = $props();
 </script>
 
 <div
   class={flex({
     flexDirection: 'column',
+    alignItems: 'center',
+    textAlign: 'center',
     gap: '16px',
     lgDown: {
       gap: '10px',
@@ -22,12 +25,14 @@
   })}
 >
   <div
-    class={css({
-      fontSize: '20px',
-      fontWeight: '[600]',
-      lgDown: {
-        fontSize: '13px',
-      },
+    style:background-color={color}
+    class={center({
+      textStyle: '14sb',
+      borderRadius: '[24px]',
+      color: 'white',
+      paddingX: '14px',
+      paddingY: '6px',
+      marginBottom: '4px',
     })}
   >
     {@render subtitle?.()}
@@ -35,12 +40,11 @@
 
   <h1
     class={css({
-      fontSize: '[45px]',
+      fontSize: '[36px]',
       fontWeight: '[800]',
-      lineHeight: '[138%]',
+      lineHeight: '[140%]',
       lgDown: {
-        fontSize: '24px',
-        marginTop: '2px',
+        fontSize: '28px',
       },
     })}
   >
@@ -51,19 +55,19 @@
     class={css({
       fontSize: '0',
       '& > * > span': {
-        fontSize: '20px',
+        fontSize: '18px',
         fontWeight: '[500]',
         color: 'text.tertiary',
         lgDown: {
-          fontSize: '14px',
+          fontSize: '16px',
         },
       },
       '& > * > em': {
-        fontSize: '20px',
+        fontSize: '18px',
         fontWeight: '[700]',
         color: 'text.primary',
         lgDown: {
-          fontSize: '14px',
+          fontSize: '16px',
         },
       },
     })}

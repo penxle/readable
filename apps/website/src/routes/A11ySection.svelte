@@ -30,84 +30,86 @@
   ];
 </script>
 
-<div class={css({ background: '[linear-gradient(180deg, #FFF 54.37%, #F7FAFF 100%)]' })}>
+<div
+  class={flex({
+    flexDirection: 'column',
+    alignItems: 'center',
+    width: '960px',
+    marginX: 'auto',
+    paddingX: '20px',
+    paddingTop: '80px',
+    paddingBottom: '120px',
+    lgDown: {
+      width: 'full',
+      paddingY: '54px',
+    },
+  })}
+>
+  <SectionTitle color="#175DE5">
+    {#snippet subtitle()}
+      접근성
+    {/snippet}
+    {#snippet title()}
+      <span>
+        모두가
+        <br />
+        이용 가능한
+      </span>
+    {/snippet}
+    {#snippet description()}
+      <span>
+        <span>리더블로 만들어진 사이트는</span>
+        <em>&nbsp;다양한 사용자들이 문제 없이&nbsp;</em>
+        <span>콘텐츠에 접근할 수 있도록 설계되었습니다.</span>
+        <br />
+        <span>
+          어떤 기기를 사용하든지, 나이나 신체적 특성 등에 관계없이 원하는 내용을 손쉽게 찾아 읽을 수 있습니다.
+        </span>
+      </span>
+    {/snippet}
+  </SectionTitle>
+
   <div
-    class={css({
-      width: '1280px',
-      marginX: 'auto',
-      paddingX: '20px',
-      paddingY: '120px',
-      lgDown: {
-        width: 'full',
-        paddingTop: '84px',
-        paddingBottom: '60px',
-      },
+    class={flex({
+      maxWidth: '960px',
+      marginTop: '60px',
+      gap: '16px',
+      lgDown: { marginTop: '34px', flexWrap: 'wrap' },
+      mdDown: { width: 'full', flexDirection: 'column' },
     })}
   >
-    <SectionTitle>
-      {#snippet subtitle()}
-        <span class={css({ color: '[#175DE5]' })}>접근성</span>
-      {/snippet}
-      {#snippet title()}
-        <span>
-          모두가
-          <br />
-          이용 가능한
-        </span>
-      {/snippet}
-      {#snippet description()}
-        <span>
-          <span>리더블로 만들어진 사이트는</span>
-          <em>&nbsp;다양한 사용자들이 문제 없이&nbsp;</em>
-          <span>콘텐츠에 접근할 수 있도록 설계되었습니다.</span>
-          <br />
-          <span>
-            어떤 기기를 사용하든지, 나이나 신체적 특성 등에 관계없이 원하는 내용을 손쉽게 찾아 읽을 수 있습니다.
-          </span>
-        </span>
-      {/snippet}
-    </SectionTitle>
-
-    <div
-      class={flex({
-        marginTop: '120px',
-        gap: '16px',
-        lgDown: { marginTop: '74px', flexWrap: 'wrap' },
-      })}
-    >
-      {#each cards as card (card.title)}
-        <div class={flex({ flexDirection: 'column', gap: '10px', width: 'full', maxWidth: '403px' })}>
+    {#each cards as card (card.title)}
+      <div class={flex({ flexDirection: 'column', gap: '10px' })}>
+        <div
+          class={flex({
+            flexDirection: 'column',
+            gap: '6px',
+            flex: '1',
+            height: '84px',
+          })}
+        >
+          <div class={flex({ alignItems: 'center', gap: '8px' })}>
+            <div class={css({ fontSize: '22px', fontWeight: '[700]', lgDown: { fontSize: '15px' } })}>
+              {card.title}
+            </div>
+          </div>
           <div
-            class={flex({
-              flexDirection: 'column',
-              gap: '6px',
-              flex: '1',
-              height: '84px',
+            class={css({
+              fontSize: '16px',
+              fontWeight: '[500]',
+              color: 'text.tertiary',
+              whiteSpace: 'pre-line',
+              lgDown: { fontSize: '13px' },
             })}
           >
-            <div class={flex({ alignItems: 'center', gap: '8px' })}>
-              <div class={css({ fontSize: '22px', fontWeight: '[700]', lgDown: { fontSize: '15px' } })}>
-                {card.title}
-              </div>
-            </div>
-            <div
-              class={css({
-                fontSize: '16px',
-                fontWeight: '[500]',
-                color: 'text.tertiary',
-                whiteSpace: 'pre-line',
-                lgDown: { fontSize: '13px' },
-              })}
-            >
-              {card.description}
-            </div>
-          </div>
-
-          <div class={center({ width: '403px', height: '177px', lgDown: { width: 'full' } })}>
-            <card.image />
+            {card.description}
           </div>
         </div>
-      {/each}
-    </div>
+
+        <div class={center({ width: '293px', height: '177px', lgDown: { width: 'full' } })}>
+          <card.image />
+        </div>
+      </div>
+    {/each}
   </div>
 </div>

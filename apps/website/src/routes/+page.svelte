@@ -26,9 +26,9 @@
 
 <DashboardSection />
 
-<MachineFriendlySection />
-
 <SearchSection />
+
+<MachineFriendlySection />
 
 <A11ySection />
 
