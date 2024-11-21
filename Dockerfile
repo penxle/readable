@@ -1,4 +1,6 @@
-FROM oven/bun:1-slim AS builder
+FROM oven/bun:1.1.34-slim AS base
+
+FROM base AS builder
 WORKDIR /build
 
 ARG TURBO_TEAM
@@ -12,13 +14,13 @@ COPY . .
 RUN bun install --frozen-lockfile --ignore-scripts
 RUN bun run build
 
-FROM oven/bun:1-slim AS deps
+FROM base AS deps
 WORKDIR /deps
 
 COPY . .
 RUN bun install --production
 
-FROM oven/bun:1-slim AS runner
+FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
