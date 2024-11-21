@@ -21,7 +21,7 @@
     class={flex({
       marginX: 'auto',
       width: 'full',
-      maxWidth: '1280px',
+      maxWidth: '960px',
       direction: 'column',
       gap: '40px',
       paddingX: { base: '24px', lg: '32px' },

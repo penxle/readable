@@ -9,7 +9,11 @@
 
 <div
   class={css({
-    paddingY: { base: '100px', lg: '140px' },
+    paddingTop: '54px',
+    paddingBottom: '29px',
+    lg: {
+      paddingY: '120px',
+    },
     background: '[linear-gradient(110deg, rgba(255, 122, 45, 1.00) 4.65%, rgba(255, 94, 0, 1.00) 92.57%)]',
   })}
 >
@@ -20,7 +24,7 @@
       gap: '40px',
       marginX: 'auto',
       paddingX: '20px',
-      maxWidth: '1280px',
+      maxWidth: '960px',
       lgDown: { flexDirection: 'column' },
     })}
   >
