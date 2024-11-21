@@ -78,6 +78,7 @@
         autoplay
         loop
         muted
+        playsinline
       >
         <source src={widgetDemoWebm} type="video/webm" />
         <source src={widgetDemoMp4} type="video/mp4" />
