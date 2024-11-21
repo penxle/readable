@@ -126,12 +126,14 @@
     {#each cards as card (card.title)}
       <div
         class={flex({
-          maxWidth: '240px',
           flexDirection: 'column',
           gap: '6px',
           lgDown: {
             width: 'full',
             padding: '16px',
+          },
+          lg: {
+            maxWidth: '240px',
           },
         })}
       >

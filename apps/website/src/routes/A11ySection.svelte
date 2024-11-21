@@ -106,8 +106,8 @@
               fontSize: '16px',
               fontWeight: '[500]',
               color: 'text.tertiary',
-              whiteSpace: 'pre-line',
-              lgDown: { fontSize: '13px' },
+              lgDown: { fontSize: '14px' },
+              md: { whiteSpace: 'pre-line' },
             })}
           >
             {card.description}
