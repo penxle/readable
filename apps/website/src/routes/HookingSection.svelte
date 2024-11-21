@@ -1,7 +1,8 @@
 <script lang="ts">
-  import { css } from '@readable/styled-system/css';
+  import { css, cx } from '@readable/styled-system/css';
   import { flex } from '@readable/styled-system/patterns';
   import { Icon } from '@readable/ui/components';
+  import { onMount } from 'svelte';
   import AccessibilityIcon from '~icons/lucide/accessibility';
   import BarChartIcon from '~icons/lucide/bar-chart';
   import BotIcon from '~icons/lucide/bot';
@@ -12,6 +13,9 @@
   import RefreshCwIcon from '~icons/lucide/refresh-cw';
   import SearchIcon from '~icons/lucide/search';
   import UsersIcon from '~icons/lucide/users';
+
+  let visible = $state(false);
+  let animateEl = $state<HTMLDivElement>();
 
   const cards = [
     {
@@ -66,6 +70,21 @@
     },
   ];
 
+  onMount(() => {
+    if (animateEl) {
+      const observer = new IntersectionObserver((entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          observer.disconnect();
+          visible = true;
+        }
+      });
+
+      observer.observe(animateEl);
+
+      return () => observer.disconnect();
+    }
+  });
+
   const topCards = cards.slice(0, Math.ceil(cards.length / 2));
   const bottomCards = cards.slice(Math.ceil(cards.length / 2));
 </script>
@@ -82,55 +101,62 @@
     },
   })}
 >
-  <h1
-    class={css({
-      fontSize: '[36px]',
-      fontWeight: '[800]',
-      lineHeight: '[140%]',
-      letterSpacing: '-0.144px',
-      textAlign: 'center',
-      mdDown: {
-        fontSize: '28px',
-      },
-    })}
-  >
-    내용에만 집중하세요
-    <br />
-    나머지는 리더블이 해드려요
-  </h1>
-  <p
-    class={css({
-      marginTop: '20px',
-      color: 'text.secondary',
-      fontSize: '[18px]',
-      fontWeight: '[500]',
-      lineHeight: '[144%]',
-      letterSpacing: '-0.088px',
-      textAlign: 'center',
-      mdDown: {
-        fontSize: '16px',
-      },
-    })}
-  >
-    리더블은 도움센터 구축의 복잡성을 제거했습니다.
-    <br />
-    더 이상 기술적인 세부사항에 시간을 소모하지 마세요.
-  </p>
+  <div bind:this={animateEl} class={cx('animate', visible && 'loaded')}>
+    <h1
+      class={css({
+        fontSize: '[36px]',
+        fontWeight: '[800]',
+        lineHeight: '[140%]',
+        letterSpacing: '-0.144px',
+        textAlign: 'center',
+        mdDown: {
+          fontSize: '28px',
+        },
+      })}
+    >
+      내용에만 집중하세요
+      <br />
+      나머지는 리더블이 해드려요
+    </h1>
+    <p
+      class={css({
+        marginTop: '20px',
+        color: 'text.secondary',
+        fontSize: '[18px]',
+        fontWeight: '[500]',
+        lineHeight: '[144%]',
+        letterSpacing: '-0.088px',
+        textAlign: 'center',
+        mdDown: {
+          fontSize: '16px',
+        },
+      })}
+    >
+      리더블은 도움센터 구축의 복잡성을 제거했습니다.
+      <br />
+      더 이상 기술적인 세부사항에 시간을 소모하지 마세요.
+    </p>
+  </div>
 
   <div
-    class={flex({
-      position: 'relative',
-      marginTop: '102px',
-      width: 'full',
-      maxWidth: '960px',
-      marginX: 'auto',
-      flexDirection: 'column',
-      gap: '16px',
-      overflow: 'hidden',
-      mdDown: {
-        marginTop: '64px',
-      },
-    })}
+    class={cx(
+      'animate',
+      'delayed-200',
+      visible && 'loaded',
+      flex({
+        position: 'relative',
+        marginTop: '102px',
+        width: 'full',
+        maxWidth: '960px',
+        marginX: 'auto',
+        flexDirection: 'column',
+        gap: '16px',
+        overflow: 'hidden',
+        mdDown: {
+          marginTop: '64px',
+        },
+      }),
+    )}
   >
     <div
       class={css({
