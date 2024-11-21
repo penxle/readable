@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { css } from '@readable/styled-system/css';
+  import { css, cx } from '@readable/styled-system/css';
   import { center, flex, grid } from '@readable/styled-system/patterns';
   import { HorizontalDivider, Icon } from '@readable/ui/components';
   import { onMount } from 'svelte';
@@ -27,6 +27,9 @@
       comingSoon: true,
     },
   ];
+
+  let visible = $state(false);
+  let animateEl = $state<HTMLDivElement>();
 
   const typewriter = (node: HTMLElement, { speed = 1, delay = 0, suffix = '' }): TransitionConfig => {
     const getAllTextNodes = (node: Node): Node[] => {
@@ -122,7 +125,7 @@
     },
   })}
 >
-  <SectionTitle color="#9C3BE8">
+  <SectionTitle {animateEl} color="#9C3BE8" bind:visible>
     {#snippet subtitle()}
       Search
     {/snippet}
@@ -144,15 +147,20 @@
   </SectionTitle>
 
   <div
-    class={flex({
-      width: 'full',
-      marginTop: '42px',
-      alignItems: 'flex-start',
-      minHeight: { base: '260px', lg: '230px' },
-      lgDown: {
-        marginTop: '34px',
-      },
-    })}
+    class={cx(
+      'animate',
+      'delayed-200',
+      visible && 'loaded',
+      flex({
+        width: 'full',
+        marginTop: '42px',
+        alignItems: 'flex-start',
+        minHeight: { base: '260px', lg: '230px' },
+        lgDown: {
+          marginTop: '34px',
+        },
+      }),
+    )}
   >
     <div
       bind:this={containerEl}
@@ -297,15 +305,20 @@
   </div>
 
   <div
-    class={grid({
-      marginTop: '48px',
-      columns: { base: 1, md: 2 },
-      gap: '15px',
-      lgDown: {
-        marginTop: '34px',
-        gap: '24px',
-      },
-    })}
+    class={cx(
+      'animate',
+      'delayed-400',
+      visible && 'loaded',
+      grid({
+        marginTop: '48px',
+        columns: { base: 1, md: 2 },
+        gap: '15px',
+        lgDown: {
+          marginTop: '34px',
+          gap: '24px',
+        },
+      }),
+    )}
   >
     {#each cards as card (card.title)}
       <div

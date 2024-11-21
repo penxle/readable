@@ -2,7 +2,6 @@
   import { css, cx } from '@readable/styled-system/css';
   import { flex } from '@readable/styled-system/patterns';
   import { Icon } from '@readable/ui/components';
-  import { onMount } from 'svelte';
   import ChevronLeftIcon from '~icons/lucide/chevron-left';
   import ChevronRightIcon from '~icons/lucide/chevron-right';
   import Branding from '$assets/dashboard-section/branding.svg?component';
@@ -10,9 +9,10 @@
   import ContentUpdate from '$assets/dashboard-section/content-update.svg?component';
   import EditingExperience from '$assets/dashboard-section/editing-experience.webp';
   import ModifyUrl from '$assets/dashboard-section/modify-url.svg?component';
+  import SectionTitle from './SectionTitle.svelte';
 
   let visible = $state(false);
-  let containerEl = $state<HTMLDivElement>();
+  let animateEl = $state<HTMLDivElement>();
   let currentScroll = $state(0);
   let carouselEl = $state<HTMLDivElement>();
 
@@ -95,21 +95,6 @@
     const newScroll = currentScroll - containerWidth;
     carouselEl.scrollTo({ left: newScroll, behavior: 'smooth' });
   }
-
-  onMount(() => {
-    if (containerEl) {
-      const observer = new IntersectionObserver((entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
-          observer.disconnect();
-          visible = true;
-        }
-      });
-
-      observer.observe(containerEl);
-
-      return () => observer.disconnect();
-    }
-  });
 </script>
 
 <div
@@ -119,51 +104,29 @@
     lg: { paddingTop: '80px', paddingBottom: '100px' },
   })}
 >
-  <div bind:this={containerEl} class={cx('animate', visible && 'loaded')}>
-    <div
-      class={css({
-        marginX: 'auto',
-        marginBottom: '20px',
-        borderRadius: 'full',
-        paddingX: '14px',
-        paddingY: '6px',
-        textStyle: '14sb',
-        backgroundColor: 'neutral.0',
-        width: 'fit',
-      })}
-    >
-      협업
-    </div>
-
-    <h2
-      class={css({
-        paddingX: '20px',
-        fontSize: { base: '28px', lg: '[36px]' },
-        fontWeight: '[800]',
-        color: 'white',
-        textAlign: 'center',
-      })}
-    >
+  <SectionTitle style={css.raw({ color: 'neutral.0' })} {animateEl} color="#FFFFFF" bind:visible>
+    {#snippet subtitle()}
+      <span class={css({ color: 'text.primary' })}>협업</span>
+    {/snippet}
+    {#snippet title()}
       원활한 협업과
       <br />
       스마트한 문서 관리
-    </h2>
-
-    <p
-      class={css({
-        marginTop: '16px',
-        paddingX: '20px',
-        color: 'white',
-        textAlign: 'center',
-        opacity: '80',
-        lg: { textStyle: '18r' },
-      })}
-    >
-      빨리 움직이는 팀을 위한 가이드 문서 도구,
-      <br />
-      실시간 협업과 간편한 설정으로 사용자들에게 사랑받는 사이트를 만들어보세요
-    </p>
-  </div>
+    {/snippet}
+    {#snippet description()}
+      <p
+        class={css({
+          fontSize: { lg: '18px' },
+          fontWeight: '[500]',
+          color: 'neutral.0',
+        })}
+      >
+        빨리 움직이는 팀을 위한 가이드 문서 도구,
+        <br />
+        실시간 협업과 간편한 설정으로 사용자들에게 사랑받는 사이트를 만들어보세요
+      </p>
+    {/snippet}
+  </SectionTitle>
 
   <div class={cx('animate', 'delayed-400', visible && 'loaded')}>
     <div class={css({ marginTop: { base: '48px', lg: '80px' }, overflow: 'hidden' })}>

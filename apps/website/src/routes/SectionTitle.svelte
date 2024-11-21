@@ -1,6 +1,8 @@
 <script lang="ts">
-  import { css } from '@readable/styled-system/css';
-  import { center, flex } from '@readable/styled-system/patterns';
+  import { css, cx } from '@readable/styled-system/css';
+  import { center } from '@readable/styled-system/patterns';
+  import { onMount } from 'svelte';
+  import type { SystemStyleObject } from '@readable/styled-system/types';
   import type { Snippet } from 'svelte';
 
   type Props = {
@@ -8,21 +10,48 @@
     title?: Snippet;
     description?: Snippet;
     color: string;
+    style?: SystemStyleObject;
+    animateEl?: HTMLElement;
+    visible: boolean;
   };
 
-  let { subtitle, title, description, color }: Props = $props();
+  let { subtitle, title, description, color, style, animateEl, visible = $bindable() }: Props = $props();
+
+  onMount(() => {
+    if (animateEl) {
+      const observer = new IntersectionObserver((entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          observer.disconnect();
+          visible = true;
+        }
+      });
+
+      observer.observe(animateEl);
+
+      return () => observer.disconnect();
+    }
+  });
 </script>
 
 <div
-  class={flex({
-    flexDirection: 'column',
-    alignItems: 'center',
-    textAlign: 'center',
-    gap: '16px',
-    lgDown: {
-      gap: '10px',
-    },
-  })}
+  bind:this={animateEl}
+  class={cx(
+    'animate',
+    visible && 'loaded',
+    css(
+      {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        textAlign: 'center',
+        gap: '16px',
+        lgDown: {
+          gap: '10px',
+        },
+      },
+      style,
+    ),
+  )}
 >
   <div
     style:background-color={color}

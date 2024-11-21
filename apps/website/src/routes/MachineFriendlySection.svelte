@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { css } from '@readable/styled-system/css';
+  import { css, cx } from '@readable/styled-system/css';
   import { flex, grid } from '@readable/styled-system/patterns';
   import { Icon } from '@readable/ui/components';
   import MapIcon from '~icons/lucide/map';
@@ -7,6 +7,9 @@
   import ShareIcon from '~icons/lucide/share';
   import Lighthouse from './Lighthouse.svelte';
   import SectionTitle from './SectionTitle.svelte';
+
+  let visible = $state(false);
+  let animateEl = $state<HTMLDivElement>();
 
   const cards = [
     {
@@ -42,7 +45,7 @@
     },
   })}
 >
-  <SectionTitle color="#13AC60">
+  <SectionTitle {animateEl} color="#13AC60" bind:visible>
     {#snippet subtitle()}
       SEO
     {/snippet}
@@ -77,19 +80,24 @@
   </SectionTitle>
 
   <div
-    class={grid({
-      columns: 4,
-      alignItems: 'flex-start',
-      marginTop: '48px',
-      marginX: 'auto',
-      width: 'full',
-      maxWidth: '960px',
-      justifyContent: 'space-between',
-      lgDown: {
-        marginTop: '34px',
-        gap: '16px',
-      },
-    })}
+    class={cx(
+      'animate',
+      'delayed-200',
+      visible && 'loaded',
+      grid({
+        columns: 4,
+        alignItems: 'flex-start',
+        marginTop: '48px',
+        marginX: 'auto',
+        width: 'full',
+        maxWidth: '960px',
+        justifyContent: 'space-between',
+        lgDown: {
+          marginTop: '34px',
+          gap: '16px',
+        },
+      }),
+    )}
   >
     <Lighthouse title="Performance" />
     <Lighthouse title="Accessibility" />
@@ -98,17 +106,22 @@
   </div>
 
   <div
-    class={flex({
-      marginTop: '48px',
-      justifyContent: 'space-between',
-      width: 'full',
-      maxWidth: '960px',
-      mdDown: {
-        marginTop: '34px',
-        flexDirection: 'column',
-        gap: '24px',
-      },
-    })}
+    class={cx(
+      'animate',
+      'delayed-400',
+      visible && 'loaded',
+      flex({
+        marginTop: '48px',
+        justifyContent: 'space-between',
+        width: 'full',
+        maxWidth: '960px',
+        mdDown: {
+          marginTop: '34px',
+          flexDirection: 'column',
+          gap: '24px',
+        },
+      }),
+    )}
   >
     {#each cards as card (card.title)}
       <div

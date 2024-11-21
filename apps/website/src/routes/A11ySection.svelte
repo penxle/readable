@@ -1,10 +1,13 @@
 <script lang="ts">
-  import { css } from '@readable/styled-system/css';
+  import { css, cx } from '@readable/styled-system/css';
   import { center, flex } from '@readable/styled-system/patterns';
   import KeyboardImage from '$assets/a11y-section/keyboard.svg?component';
   import ResponsiveImage from '$assets/a11y-section/responsive.svg?component';
   import ScreenReaderImage from '$assets/a11y-section/screen-reader.svg?component';
   import SectionTitle from './SectionTitle.svelte';
+
+  let visible = $state(false);
+  let animateEl = $state<HTMLDivElement>();
 
   const cards = [
     {
@@ -45,7 +48,7 @@
     },
   })}
 >
-  <SectionTitle color="#175DE5">
+  <SectionTitle {animateEl} color="#175DE5" bind:visible>
     {#snippet subtitle()}
       접근성
     {/snippet}
@@ -70,13 +73,18 @@
   </SectionTitle>
 
   <div
-    class={flex({
-      maxWidth: '960px',
-      marginTop: '60px',
-      gap: '16px',
-      lgDown: { marginTop: '34px', flexWrap: 'wrap' },
-      mdDown: { width: 'full', flexDirection: 'column' },
-    })}
+    class={cx(
+      'animate',
+      'delayed-200',
+      visible && 'loaded',
+      flex({
+        maxWidth: '960px',
+        marginTop: '60px',
+        gap: '16px',
+        lgDown: { marginTop: '34px', flexWrap: 'wrap' },
+        mdDown: { width: 'full', flexDirection: 'column' },
+      }),
+    )}
   >
     {#each cards as card (card.title)}
       <div class={flex({ flexDirection: 'column', gap: '10px' })}>

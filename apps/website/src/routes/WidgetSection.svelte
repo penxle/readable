@@ -1,11 +1,30 @@
 <script lang="ts">
-  import { css } from '@readable/styled-system/css';
+  import { css, cx } from '@readable/styled-system/css';
   import { flex, wrap } from '@readable/styled-system/patterns';
   import image1 from '../assets/widget-section/widget-1.webp';
   import image2 from '../assets/widget-section/widget-2.webp';
   import widgetDemoMp4 from '../assets/widget-section/widget-demo.mp4';
   import widgetDemoWebm from '../assets/widget-section/widget-demo.webm';
   import SectionTitle from './SectionTitle.svelte';
+
+  let visible = $state(false);
+  let animateEl = $state<HTMLDivElement>();
+
+  let cardStyle = $derived(
+    cx(
+      'animate',
+      'delayed-400',
+      visible && 'loaded',
+      flex({
+        direction: 'column',
+        padding: '32px',
+        paddingBottom: '0',
+        borderRadius: '[20px]',
+        color: 'white',
+        width: { base: 'full', md: '[calc(50% - 10px)]', lg: '[calc(50% - 16px)]' },
+      }),
+    ),
+  );
 </script>
 
 <div class={css({ backgroundColor: '[#FFF2EA]' })}>
@@ -23,7 +42,7 @@
       },
     })}
   >
-    <SectionTitle color="#FF5E00">
+    <SectionTitle {animateEl} color="#FF5E00" bind:visible>
       {#snippet subtitle()}
         컴패니언 위젯
       {/snippet}
@@ -50,7 +69,12 @@
       })}
     >
       <video
-        class={css({ width: 'full', borderRadius: '[20px]', borderWidth: '1px', borderColor: 'border.primary' })}
+        class={cx(
+          'animate',
+          'delayed-200',
+          visible && 'loaded',
+          css({ width: 'full', borderRadius: '[20px]', borderWidth: '1px', borderColor: 'border.primary' }),
+        )}
         autoplay
         loop
         muted
@@ -61,17 +85,7 @@
         브라우저가 비디오를 지원하지 않습니다.
       </video>
 
-      <div
-        class={flex({
-          direction: 'column',
-          padding: '32px',
-          paddingBottom: '0',
-          backgroundColor: '[#FF7B2E]',
-          borderRadius: '[20px]',
-          color: 'white',
-          width: { base: 'full', md: '[calc(50% - 10px)]', lg: '[calc(50% - 16px)]' },
-        })}
-      >
+      <div style:background-color="#FF7B2E" class={cardStyle}>
         <h2 class={css({ fontSize: '22px', fontWeight: '[700]', smOnly: { fontSize: '18px' } })}>
           맥락을 이해하는 문서 제안
         </h2>
@@ -100,17 +114,7 @@
         />
       </div>
 
-      <div
-        class={flex({
-          direction: 'column',
-          padding: '32px',
-          paddingBottom: '0',
-          backgroundColor: 'neutral.90',
-          borderRadius: '[20px]',
-          color: 'white',
-          width: { base: 'full', md: '[calc(50% - 10px)]', lg: '[calc(50% - 16px)]' },
-        })}
-      >
+      <div style:background-color="#27272A" class={cardStyle}>
         <h2 class={css({ fontSize: '22px', fontWeight: '[700]', smOnly: { fontSize: '18px' } })}>AI 문의</h2>
         <p
           class={css({
