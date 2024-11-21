@@ -4,6 +4,7 @@
   import { css } from '@readable/styled-system/css';
   import { flex } from '@readable/styled-system/patterns';
   import { onMount } from 'svelte';
+  import { dev } from '$app/environment';
   import FullLogo from '$assets/logos/full.svg?component';
   import { persistUtm } from '$lib/utm';
 
@@ -13,6 +14,14 @@
     persistUtm();
   });
 </script>
+
+<svelte:head>
+  <script
+    data-site-id="S0000000DOCS"
+    defer
+    src={dev ? 'http://localhost:3100/script.js' : 'https://sdk.rdbl.io/script.js'}
+  ></script>
+</svelte:head>
 
 <div class={flex({ direction: 'column', grow: '1', minHeight: 'screen', wordBreak: 'keep-all' })}>
   {@render children()}
