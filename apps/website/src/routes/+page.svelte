@@ -9,6 +9,7 @@
   import HookingSection from './HookingSection.svelte';
   import MachineFriendlySection from './MachineFriendlySection.svelte';
   import SearchSection from './SearchSection.svelte';
+  import WidgetSection from './WidgetSection.svelte';
 </script>
 
 <Helmet
@@ -23,6 +24,8 @@
 <HeroSection />
 
 <HookingSection />
+
+<WidgetSection />
 
 <DashboardSection />
 

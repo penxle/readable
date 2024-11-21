@@ -12,7 +12,6 @@
   import FullWhiteLogo from '$assets/logos/full-white.svg';
   import { env } from '$env/dynamic/public';
   import { withUtm } from '$lib/utm';
-  import type { ColorToken } from '@readable/styled-system/tokens';
 
   type Props = {
     theme: HeaderTheme;
@@ -52,8 +51,6 @@
     }
   });
 
-  const headerBgColor = $derived(($headerTheme === 'light' ? 'white/90' : 'neutral.100') as ColorToken);
-
   beforeNavigate(() => {
     $isMenuOpen = false;
   });
@@ -74,7 +71,7 @@
       paddingX: '20px',
     },
     zIndex: '100',
-    backgroundColor: scrollY > 100 ? headerBgColor : 'transparent',
+    backgroundColor: scrollY > 100 ? ($headerTheme === 'dark' ? 'neutral.100' : 'white/90') : 'transparent',
     backdropFilter: 'auto',
     backdropBlur: scrollY > 100 ? '[20px]' : '[0px]',
     transition: '[all 500ms cubic-bezier(0.3, 0, 0, 1)]',
