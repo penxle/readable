@@ -62,32 +62,38 @@
       </video>
 
       <div
-        class={css({
+        class={flex({
+          direction: 'column',
           padding: '32px',
           paddingBottom: '0',
           backgroundColor: '[#FF7B2E]',
           borderRadius: '[20px]',
           color: 'white',
-          width: 'full',
-          lg: {
-            width: '[calc(50% - 16px)]',
-          },
+          width: { base: 'full', md: '[calc(50% - 10px)]', lg: '[calc(50% - 16px)]' },
         })}
       >
         <h2 class={css({ fontSize: '22px', fontWeight: '[700]', smOnly: { fontSize: '18px' } })}>
           맥락을 이해하는 문서 제안
         </h2>
-        <p class={css({ marginTop: '4px', fontSize: '16px', fontWeight: '[500]', smOnly: { fontSize: '14px' } })}>
+        <p
+          class={css({
+            marginTop: '4px',
+            marginBottom: '49px',
+            fontSize: '16px',
+            fontWeight: '[500]',
+            smOnly: { fontSize: '14px' },
+          })}
+        >
           지금 이용자가 보고 있는 내용을 이해하고
           <br />
           가장 필요한 가이드 문서를 자동으로 제안합니다
         </p>
         <img
           class={css({
-            marginTop: '49px',
+            marginTop: 'auto',
             marginX: 'auto',
-            mdOnly: { maxWidth: '400px' },
-            smOnly: { maxWidth: '[calc(100% - 64px)]' },
+            width: 'full',
+            maxWidth: '400px',
           })}
           alt="위젯이 현재 페이지에 대한 추천 문서를 보여주는 예시"
           src={image1}
@@ -95,29 +101,35 @@
       </div>
 
       <div
-        class={css({
+        class={flex({
+          direction: 'column',
           padding: '32px',
           paddingBottom: '0',
           backgroundColor: 'neutral.90',
           borderRadius: '[20px]',
           color: 'white',
-          width: 'full',
-          lg: {
-            width: '[calc(50% - 16px)]',
-          },
+          width: { base: 'full', md: '[calc(50% - 10px)]', lg: '[calc(50% - 16px)]' },
         })}
       >
         <h2 class={css({ fontSize: '22px', fontWeight: '[700]', smOnly: { fontSize: '18px' } })}>AI 문의</h2>
-        <p class={css({ marginTop: '4px', fontSize: '16px', fontWeight: '[500]', smOnly: { fontSize: '14px' } })}>
+        <p
+          class={css({
+            marginTop: '4px',
+            marginBottom: '49px',
+            fontSize: '16px',
+            fontWeight: '[500]',
+            smOnly: { fontSize: '14px' },
+          })}
+        >
           도움센터를 통째로 이해하는 AI 문의를 통해 <br />
           어떤 질문이든 서비스 내에서 빠르게 해결할 수 있습니다
         </p>
         <img
           class={css({
-            marginTop: '49px',
+            marginTop: 'auto',
             marginX: 'auto',
-            mdOnly: { maxWidth: '400px' },
-            smOnly: { maxWidth: '[calc(100% - 64px)]' },
+            width: 'full',
+            maxWidth: '400px',
           })}
           alt="위젯이 유저의 질문을 이해하고 답변을 제공하는 예시"
           src={image2}
