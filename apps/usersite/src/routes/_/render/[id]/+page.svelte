@@ -1,6 +1,7 @@
 <script lang="ts">
   import { css } from '@readable/styled-system/css';
   import { TiptapRenderer } from '@readable/ui/tiptap';
+  import { beforeNavigate } from '$app/navigation';
   import { graphql } from '$graphql';
 
   const query = graphql(`
@@ -22,19 +23,20 @@
     }
   `);
 
-  const handleClick = (e: MouseEvent) => {
-    if (e.target instanceof HTMLAnchorElement) {
-      e.preventDefault();
-      window.open(e.target.href, '_blank');
+  beforeNavigate(({ to, willUnload, cancel }) => {
+    if (willUnload) {
+      return;
     }
-  };
+
+    cancel();
+
+    if (to) {
+      window.open(to.url, '_blank');
+    }
+  });
 </script>
 
-<div
-  style:--usersite-theme-color={$query.publicSite.themeColor}
-  class={css({ display: 'contents' })}
-  onclickcapture={handleClick}
->
+<div style:--usersite-theme-color={$query.publicSite.themeColor} class={css({ display: 'contents' })}>
   <h1 class={css({ textStyle: '34b', marginBottom: '32px' })}>{$query.publicPageById.title}</h1>
   <TiptapRenderer content={$query.publicPageById.content.content} />
 </div>
