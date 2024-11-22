@@ -37,6 +37,6 @@
 </script>
 
 <div style:--usersite-theme-color={$query.publicSite.themeColor} class={css({ display: 'contents' })}>
-  <h1 class={css({ textStyle: '34b', marginBottom: '32px' })}>{$query.publicPageById.title}</h1>
-  <TiptapRenderer content={$query.publicPageById.content.content} />
+  <h1 class={css({ textStyle: '34b', marginTop: '28px', marginBottom: '32px' })}>{$query.publicPageById.title}</h1>
+  <TiptapRenderer style={css.raw({ marginBottom: '28px' })} content={$query.publicPageById.content.content} />
 </div>
