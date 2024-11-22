@@ -25,6 +25,7 @@
     "@sveltejs/kit": "^2.8.1",
     "@sveltejs/vite-plugin-svelte": "^4.0.1",
     "dayjs": "^1.11.13",
+    "es-hangul": "^2.2.3",
     "nanoid": "^5.0.8",
     "query-string": "^9.1.1",
     "remeda": "^2.17.3",

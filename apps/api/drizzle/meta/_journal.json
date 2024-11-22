@@ -127,6 +127,13 @@
       "when": 1731226314421,
       "tag": "0017_awesome_sunspot",
       "breakpoints": false
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1732266329789,
+      "tag": "0018_kind_centennial",
+      "breakpoints": false
     }
   ]
 }

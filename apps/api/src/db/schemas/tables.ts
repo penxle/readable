@@ -499,6 +499,25 @@ export const SiteHeaderLinks = pgTable('site_header_links', {
     .default(sql`now()`),
 });
 
+export const SiteLogs = pgTable(
+  'site_logs',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => createDbId('SLOG')),
+    siteId: text('site_id')
+      .notNull()
+      .references(() => Sites.id, { onUpdate: 'cascade', onDelete: 'restrict' }),
+    kind: text('kind').notNull(),
+    deviceId: text('device_id'),
+    data: jsonb('data').notNull(),
+    createdAt: datetime('created_at')
+      .notNull()
+      .default(sql`now()`),
+  },
+  (t) => [index().on(t.siteId, t.kind, t.createdAt), index().on(t.siteId, t.deviceId, t.createdAt)],
+);
+
 export const SiteWidgets = pgTable('site_widgets', {
   id: text('id')
     .primaryKey()

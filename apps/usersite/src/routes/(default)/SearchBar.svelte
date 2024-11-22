@@ -2,6 +2,7 @@
   import { css } from '@readable/styled-system/css';
   import { center, flex } from '@readable/styled-system/patterns';
   import { HorizontalDivider, Icon, MarkdownRenderer } from '@readable/ui/components';
+  import { disassemble } from 'es-hangul';
   import * as R from 'remeda';
   import { getContext, tick } from 'svelte';
   import ChevronLeftIcon from '~icons/lucide/chevron-left';
@@ -11,6 +12,7 @@
   import { beforeNavigate, goto, replaceState } from '$app/navigation';
   import { page } from '$app/stores';
   import { fragment, graphql } from '$graphql';
+  import { track } from '$lib/utils/track';
   import { pageUrl } from '$lib/utils/url';
   import AiIcon from './@ai/AiIcon.svelte';
   import AiLoading from './@ai/AiLoading.svelte';
@@ -99,6 +101,25 @@
     {
       timing: 'trailing',
       waitMs: 16,
+    },
+  );
+
+  let beforeDisassembledQuery = '';
+  const updateQueryForStatistics = (query: string) => {
+    const disassembledQuery = disassemble(query);
+    if (disassembledQuery.length >= beforeDisassembledQuery.length) {
+      debouncedStatistics.call(query);
+    }
+
+    beforeDisassembledQuery = disassembledQuery;
+  };
+
+  const debouncedStatistics = R.debounce(
+    async (query: string) => {
+      await track({ siteId: $publicSite.id, kind: 'search', data: { query, searchResultCount: searchResults.length } });
+    },
+    {
+      waitMs: 1500,
     },
   );
 
@@ -241,6 +262,7 @@
   $effect(() => {
     if (searchQuery.length > 0 && aiState === 'idle') {
       debouncedSearch.call(searchQuery);
+      updateQueryForStatistics(searchQuery);
     } else if (searchQuery.length === 0 && aiState !== 'idle') {
       aiState = 'idle';
       aiSearchResult = null;
