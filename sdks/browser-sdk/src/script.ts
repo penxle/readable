@@ -1,8 +1,8 @@
 import '@readable/lib/dayjs';
-import './App.svelte';
 
 import mixpanel from 'mixpanel-browser';
-import styles from './app.css?inline';
+import { mount } from 'svelte';
+import App from './App.svelte';
 
 mixpanel.init(import.meta.env.VITE_MIXPANEL_TOKEN, {
   api_host: 'https://t.rdbl.app',
@@ -25,10 +25,14 @@ mixpanel.register({
 });
 
 const dom = document.createElement('rdbl-widget');
-dom.setAttribute('site-id', siteId);
+const shadow = dom.attachShadow({ mode: 'open' });
 
-const sheet = new CSSStyleSheet();
-sheet.replaceSync(styles);
-dom.shadowRoot?.adoptedStyleSheets.push(sheet);
+mount(App, {
+  target: shadow,
+  props: {
+    dom,
+    siteId,
+  },
+});
 
 document.body.append(dom);

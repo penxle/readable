@@ -2,6 +2,7 @@ import path from 'node:path';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import icons from 'unplugin-icons/vite';
 import { defineConfig } from 'vite';
+import { css } from './src/vite/css';
 
 export default defineConfig({
   plugins: [
@@ -10,6 +11,7 @@ export default defineConfig({
       scale: 1,
       compiler: 'svelte',
     }),
+    css(),
   ],
   resolve: {
     alias: {
@@ -18,6 +20,7 @@ export default defineConfig({
   },
   build: {
     target: 'es2020',
+    cssCodeSplit: false,
     lib: {
       name: 'Readable',
       entry: './src/script.ts',

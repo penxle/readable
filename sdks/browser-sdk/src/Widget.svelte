@@ -11,6 +11,7 @@
   import mixpanel from 'mixpanel-browser';
   import { onMount, tick, untrack } from 'svelte';
   import { fly, scale } from 'svelte/transition';
+  import viteStyle from 'virtual:style.css?inline';
   import { z } from 'zod';
   import ArrowUpIcon from '~icons/lucide/arrow-up';
   import IconChevronLeft from '~icons/lucide/chevron-left';
@@ -20,6 +21,7 @@
   import IconHeadset from '~icons/lucide/headset';
   import IconSquareArrowOurUpRight from '~icons/lucide/square-arrow-out-up-right';
   import IconX from '~icons/lucide/x';
+  import appStyle from './app.css?inline';
   import ReadableLogo from './assets/readable-logo.svg';
   import Sparkles from './assets/Sparkles.svelte';
   import { BOT_MESSAGE } from './assets/strings';
@@ -30,16 +32,27 @@
   import type { TRPCOutput } from './trpc';
 
   type Props = {
+    dom: HTMLElement;
     site: TRPCOutput['widget']['site'];
   };
 
-  let { site }: Props = $props();
+  let { dom, site }: Props = $props();
+
+  $effect(() => {
+    const sheet = new CSSStyleSheet();
+    sheet.replaceSync(appStyle + viteStyle);
+    sheet.insertRule(`:host { --widget-theme-color: ${site.themeColor}; --widget-theme-color-2: ${themeColor2} }`);
+
+    if (dom.shadowRoot) {
+      dom.shadowRoot.adoptedStyleSheets = [sheet];
+    }
+  });
+
+  const themeColor2 = $derived(new TinyColor(site.themeColor).spin(26).toString());
 
   let popoverEl: HTMLDivElement;
   let open = $state(false);
   let expanded = $state(false);
-
-  const themeColor2 = $derived(new TinyColor(site.themeColor).spin(26).toString());
 
   const selectors = [
     'title',
@@ -69,11 +82,8 @@
     const topLayerElement = topLayerElements.at(-1) ?? null;
     if (topLayerElement !== lastTopLayerElement) {
       lastTopLayerElement = topLayerElement;
-      const widgetEl = document.querySelector('rdbl-widget');
-      if (widgetEl) {
-        (topLayerElement ?? document.body).append(widgetEl);
-        popoverEl.showPopover();
-      }
+      (topLayerElement ?? document.body).append(dom);
+      popoverEl.showPopover();
     }
 
     try {
@@ -149,6 +159,7 @@
     // textarea 높이 자동 조정
     chatFormTextareaEl.style.height = 'auto';
     chatFormTextareaEl.style.height = `${chatFormTextareaEl.scrollHeight}px`;
+    chatFormTextareaEl.style.maxHeight = `${textareaLineHeightPx * 5}px`;
   });
 
   const {
@@ -290,8 +301,6 @@
   >
     {#if open}
       <div
-        style:--widget-theme-color={site.themeColor}
-        style:--widget-theme-color-2={themeColor2}
         class={center({
           position: 'absolute',
           inset: '0',
@@ -308,8 +317,6 @@
       </div>
     {:else}
       <div
-        style:--widget-theme-color={site.themeColor}
-        style:--widget-theme-color-2={themeColor2}
         class={center({
           position: 'absolute',
           inset: '0',
@@ -327,11 +334,7 @@
   </button>
 
   {#if open}
-    <div
-      style:--widget-theme-color={site.themeColor}
-      style:--widget-theme-color-2={themeColor2}
-      class={css({ display: 'contents' })}
-    >
+    <div class={css({ display: 'contents' })}>
       <div
         class={css(
           {
@@ -673,7 +676,6 @@
                 <textarea
                   bind:this={chatFormTextareaEl}
                   name="question"
-                  style:max-height={`${textareaLineHeightPx * 5}px`}
                   class={css({
                     flexGrow: '1',
                     paddingLeft: '14px',

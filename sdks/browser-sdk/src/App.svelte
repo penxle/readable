@@ -1,16 +1,15 @@
-<svelte:options customElement={{ tag: 'rdbl-widget' }} />
-
 <script lang="ts">
   import { trpc } from './trpc';
   import Widget from './Widget.svelte';
 
   type Props = {
-    'site-id': string;
+    dom: HTMLElement;
+    siteId: string;
   };
 
-  let { 'site-id': siteId }: Props = $props();
+  let { dom, siteId }: Props = $props();
 </script>
 
 {#await trpc.widget.site.query({ siteId }) then site}
-  <Widget {site} />
+  <Widget {dom} {site} />
 {/await}
