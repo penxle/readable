@@ -71,23 +71,24 @@
       paddingX: '20px',
     },
     zIndex: '100',
-    backgroundColor: scrollY > 100 ? ($headerTheme === 'dark' ? 'neutral.100' : 'white/90') : 'transparent',
+    backgroundColor: scrollY > 64 ? ($headerTheme === 'dark' ? 'neutral.100' : 'white/90') : 'transparent',
     backdropFilter: 'auto',
-    backdropBlur: scrollY > 100 ? '[20px]' : '[0px]',
+    backdropBlur: scrollY > 64 ? '[20px]' : '[0px]',
     transition: '[all 500ms cubic-bezier(0.3, 0, 0, 1)]',
   })}
 >
   <div
     class={css(
       flex.raw({
-        marginX: 'auto',
         alignItems: 'center',
         justifyContent: 'space-between',
+        marginX: 'auto',
+        borderBottomWidth: '1px',
+        borderBottomColor: 'transparent',
         width: '1080px',
       }),
-      scrollY > 100 && {
-        borderBottom:
-          $headerTheme === 'dark' ? '[1px solid rgba(63, 63, 70, 0.40)]' : '[1px solid rgba(228, 228, 231, 0.40)]',
+      scrollY > 64 && {
+        borderBottomColor: $headerTheme === 'dark' ? 'gray.800/40' : 'gray.300/40',
       },
     )}
   >
