@@ -103,7 +103,7 @@
             <p class={css({ marginBottom: '3px', textStyle: '14m', lineClamp: 1 })}>
               {node.attrs.title ?? '(제목 없음)'}
             </p>
-            <p class={css({ textStyle: '12m', color: 'text.secondary', lineClamp: 2, whiteSpace: 'pre-wrap' })}>
+            <p class={css({ textStyle: '12m', color: 'text.secondary', lineClamp: 2, whiteSpace: 'pre-line' })}>
               {node.attrs.description ?? ''}
             </p>
             <p class={css({ marginTop: 'auto', textStyle: '12m', lineClamp: 1 })}>{new URL(node.attrs.url).origin}</p>
