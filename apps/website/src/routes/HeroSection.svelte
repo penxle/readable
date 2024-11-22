@@ -61,16 +61,18 @@
   >
     <div
       class={flex({
-        marginTop: '40px',
+        direction: { base: 'column', lg: 'row' },
         gap: '12px',
         alignItems: 'center',
-        lgDown: {
-          flexDirection: 'column',
-        },
-        smOnly: {
+        justify: 'center',
+        marginTop: '40px',
+        width: 'full',
+        '& > a': {
+          flex: 'none',
+          padding: '0',
           width: 'full',
-          '& > a': {
-            width: 'full',
+          md: {
+            maxWidth: '156px',
           },
         },
       })}
@@ -85,7 +87,7 @@
       >
         30초만에 시작하기
       </Button>
-      <Button href="/preview" size="lg" type="link" variant="secondary">
+      <Button style={css.raw({ gap: '4px' })} href="/preview" size="lg" type="link" variant="secondary">
         이사 신청하기
         <Icon icon={ChevronRightIcon} size={20} />
       </Button>
