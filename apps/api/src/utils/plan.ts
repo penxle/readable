@@ -84,5 +84,12 @@ export const assertTeamPlanRule = async <T extends keyof PlanRules>(params: GetP
       }
       break;
     }
+
+    default: {
+      if (!value) {
+        throw new ReadableError({ code: 'feature_not_available' });
+      }
+      break;
+    }
   }
 };
