@@ -1,6 +1,5 @@
 import { browser } from '$app/environment';
 import { env } from '$env/dynamic/public';
-import { getFingerprint } from './fingerprint';
 
 type TrackParams = {
   siteId: string;
@@ -10,6 +9,7 @@ type TrackParams = {
 
 export const track = async ({ siteId, kind, data }: TrackParams) => {
   if (browser) {
+    const { getFingerprint } = await import('$lib/utils/fingerprint');
     navigator.sendBeacon(
       `${env.PUBLIC_API_URL}/logs`,
       JSON.stringify({ siteId, kind, deviceId: await getFingerprint(), data }),
