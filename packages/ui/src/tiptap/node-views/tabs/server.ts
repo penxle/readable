@@ -9,7 +9,7 @@ export const Tabs = createServerNodeView({
 
 export const Tab = Node.create({
   name: 'tab',
-  content: '(paragraph|orderedList|bulletList|image|file|embed)+',
+  content: '(paragraph|orderedList|bulletList|image|file|embed|codeBlock)+',
   isolating: true,
 
   addAttributes() {
