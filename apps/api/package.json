@@ -17,6 +17,7 @@
     "@faker-js/faker": "^9.2.0",
     "@graphql-yoga/redis-event-target": "^3.0.1",
     "@hono/trpc-server": "^0.3.2",
+    "@inquirer/prompts": "^7.1.0",
     "@langchain/anthropic": "^0.3.8",
     "@langchain/community": "^0.3.15",
     "@langchain/core": "^0.3.18",
