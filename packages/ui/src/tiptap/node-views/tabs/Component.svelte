@@ -180,7 +180,6 @@
           position: 'sticky',
           top: '0',
           right: '0',
-          zIndex: '1',
           display: 'flex',
           alignItems: 'center',
           flex: 'none',
@@ -191,7 +190,7 @@
           height: '34px',
           backgroundColor: 'neutral.20',
         },
-        editor?.isEditable && { paddingX: '5px', minWidth: '34px' },
+        editor?.isEditable && { zIndex: '1', paddingX: '5px', minWidth: '34px' },
       )}
     >
       {#if editor?.isEditable}
